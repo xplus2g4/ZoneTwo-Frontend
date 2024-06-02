@@ -2,18 +2,19 @@ package com.orbital.zonetwo.ui.dashboard
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import be.tarsos.dsp.AudioEvent
-import be.tarsos.dsp.AudioProcessor
-import be.tarsos.dsp.onsets.BeatRootSpectralFluxOnsetDetector
-import com.orbital.zonetwo.R
 import com.orbital.zonetwo.databinding.FragmentDashboardBinding
+import java.io.File
+
 
 class DashboardFragment : Fragment() {
 
@@ -52,22 +53,32 @@ class DashboardFragment : Fragment() {
     }
 
     fun audioTest() {
-        mediaPlayer = MediaPlayer.create(activity, R.raw.tabako)
-        mediaPlayer?.setOnPreparedListener {
-            println("ready to go!")
+
+        val externalStorage = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        Log.d("Files", "Path: " + externalStorage.absolutePath)
+        val f: File = File(externalStorage.absolutePath)
+        val file = f.listFiles()
+        Log.d("Files", "Size: " + file.size)
+        for (i in file.indices) {
+            Log.d("Files", "FileName:" + file[i].name)
         }
-        binding.button.setOnTouchListener { _, event ->
-            handleTouch(event)
+
+
+        val mp3 = File(externalStorage.absolutePath, "tabako.mp3")
+        mediaPlayer = MediaPlayer.create(activity, mp3.toUri())
+        mediaPlayer?.setOnPreparedListener { mediaPlayer?.start() }
+
+        binding.button.setOnTouchListener { _, e ->
+            handleTouch(e)
             true
         }
-//        val dispatcher = AudioDispatcherFactory.fromFile()
     }
 
     private fun handleTouch(event: MotionEvent) {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                println("down")
-                mediaPlayer?.start()
+                Log.d("ZoneTwo", "Mouse Down")
+                mediaPlayer?.pause()
             }
         }
     }

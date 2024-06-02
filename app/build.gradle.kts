@@ -45,10 +45,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.tarsos.dsp.core)
-    implementation(libs.tarsos.dsp.jvm)
-
-//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
