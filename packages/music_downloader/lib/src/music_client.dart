@@ -1,54 +1,68 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:id3_codec/id3_decoder.dart';
 import 'package:music_downloader/music_downloader.dart';
-import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class MusicClient {
-  MusicClient({
-    required this.cacheDirectory,
-    http.Client? httpClient,
-    this.baseUrl = 'http://localhost:3000',
-  }) : httpClient = httpClient ?? http.Client();
+  MusicClient({Dio? httpClient, this.baseUrl = 'http://10.0.2.2:7771'})
+      : httpClient = httpClient ?? Dio();
 
+  final Dio httpClient;
   final String baseUrl;
-  final http.Client httpClient;
-  final Directory cacheDirectory;
 
-  Future<Music> downloadByYoutubeLink(String link) async {
-    final response = await httpClient.get(Uri.parse(link));
+  Future<MusicInfo> downloadByYoutubeLink(
+    String link,
+    ProgressCallback progressCallback,
+  ) async {
+    final response = await httpClient.get<List<int>>(
+      "$baseUrl/api/musics/download",
+      onReceiveProgress: progressCallback,
+      queryParameters: {
+        "json_data": jsonEncode({
+          "url": link,
+        }),
+      },
+      options: Options(responseType: ResponseType.bytes),
+    );
 
-    if (response.statusCode == 200) {
-      final contentDisposition = response.headers['content-disposition'];
+    if (response.statusCode == 200 && response.data != null) {
+      final contentDisposition = response.headers.value('content-disposition');
 
-      String? filename;
+      String? rawFilename;
       if (contentDisposition != null &&
           contentDisposition.contains('filename=')) {
         // Extract the filename from the header
-        final regex = RegExp(r'filename="?(.+)"?');
+        final regex = RegExp(r"filename\*=UTF-8\'\'?(.+)?");
         final match = regex.firstMatch(contentDisposition);
         if (match != null) {
-          filename = match.group(1);
+          rawFilename = match.group(1);
         }
       }
 
-      if (filename != null) {
-        final bpm = await _decodeMusicMetadata(response.bodyBytes);
-        final filePath = await _writeToFile(filename, response.bodyBytes);
-        return Music(title: filename, savePath: filePath, bpm: bpm);
+      if (rawFilename != null) {
+        final filename = Uri.decodeFull(rawFilename);
+        final bpm = await _decodeMusicMetadata(response.data!);
+        final filePath = await _writeToFile(filename, response.data!);
+        return MusicInfo(title: filename, savePath: filePath, bpm: bpm);
       } else {
         throw ApiError(message: "Filename not found in response");
       }
     } else {
-      final results = json.decode(response.body) as Map<String, dynamic>;
+      final results =
+          json.decode(utf8.decode(response.data!)) as Map<String, dynamic>;
       throw ApiError.fromJson(results);
     }
   }
 
   Future<String> _writeToFile(String filename, List<int> bytes) async {
-    final path = '${cacheDirectory.path}/$filename';
+    final cacheDirectory = await getApplicationCacheDirectory();
+    final path = p.join(cacheDirectory.path, filename);
     final file = File(path);
     await file.writeAsBytes(bytes);
     return path;

@@ -1,144 +1,156 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:music_downloader/music_downloader.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  final musicRepository = MusicRepository(MusicClient());
+  runApp(App(musicRepository: musicRepository));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({required this.musicRepository, super.key});
 
+  final MusicRepository musicRepository;
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: Scaffold(
+            appBar: AppBar(title: const Text('Music Download')),
+            body: BlocProvider(
+                create: (_) =>
+                    MusicDownloadBloc(musicRepository: musicRepository),
+                child: const MyHomePage())));
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _AddMusicDialog(),
+        _DownloadList(),
+      ],
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class _AddMusicDialog extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<_AddMusicDialog> createState() => __AddMusicDialogState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _bpm = 0;
-  String _loadingStatus = "idle";
-  String _link =
-      "http://zonetwo-backend-env-ms1.eba-5cybfzhj.ap-southeast-2.elasticbeanstalk.com/api/musics/download?json_data=%7B%22url%22:%22https://www.youtube.com/watch?v=SBjQ9tuuTJQ%22%7D";
+class __AddMusicDialogState extends State<_AddMusicDialog> {
+  final _textController = TextEditingController();
+  late MusicDownloadBloc _musicDownloadBloc;
 
-  void _testGetMusic() {
-    try {
-      setState(() {
-        _loadingStatus = "requesting";
-        getApplicationCacheDirectory().then((directory) =>
-            MusicClient(cacheDirectory: directory)
-                .downloadByYoutubeLink(_link)
-                .then((music) => setState(() {
-                      _bpm = music.bpm.round();
-                      _loadingStatus = music.savePath;
-                    })));
-      });
-    } catch (e) {
-      setState(() {
-        _loadingStatus = "failed";
-      });
-      debugPrint(e.toString());
-    }
+  @override
+  void initState() {
+    super.initState();
+    _musicDownloadBloc = context.read<MusicDownloadBloc>();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    return TextField(
+      controller: _textController,
+      autocorrect: false,
+      onEditingComplete: _onConfirm,
+      decoration: const InputDecoration(
+        prefixIcon: Icon(Icons.search),
+        border: InputBorder.none,
+        hintText: 'Enter a youtube link',
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'BPM of the music is:',
+    );
+  }
+
+  void _onConfirm() {
+    _musicDownloadBloc.add(DownloadClicked(link: _textController.text));
+    _textController.text = '';
+  }
+}
+
+class _DownloadList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MusicDownloadBloc, MusicDownloadState>(
+      builder: (context, state) {
+        return switch (state) {
+          MusicDownloadStateIdle() =>
+            const Text('Please enter a term to begin'),
+          MusicDownloadStateLoading() => _DownloadLoading(
+              percentage: state.percentage,
             ),
-            Text(
-              '$_bpm',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            Text(
-              'Status: $_loadingStatus',
-            ),
-          ],
+          MusicDownloadStateError() => Text(state.error),
+          MusicDownloadStateSuccess() =>
+            _DownloadSuccess(musicInfo: state.musicInfo)
+        };
+      },
+    );
+  }
+}
+
+class _DownloadLoading extends StatelessWidget {
+  const _DownloadLoading({required this.percentage});
+
+  final String percentage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      const CircularProgressIndicator.adaptive(),
+      Text("Progress: $percentage%")
+    ]);
+  }
+}
+
+class _DownloadSuccess extends StatelessWidget {
+  _DownloadSuccess({required this.musicInfo, AudioPlayer? player})
+      : player = player ?? AudioPlayer();
+
+  final MusicInfo musicInfo;
+  final AudioPlayer player;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text("The BPM of the music is ${musicInfo.bpm}"),
+        Text("Saved at ${musicInfo.savePath}"),
+        ElevatedButton(
+          onPressed: () async {
+            switch (player.state) {
+              case PlayerState.stopped:
+                player.play(DeviceFileSource(musicInfo.savePath));
+                break;
+              case PlayerState.playing:
+                player.pause();
+                break;
+              case PlayerState.paused:
+                player.resume();
+                break;
+              default:
+                player.play(DeviceFileSource(musicInfo.savePath));
+            }
+          },
+          child: const Text('Play'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _testGetMusic,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ],
     );
   }
 }

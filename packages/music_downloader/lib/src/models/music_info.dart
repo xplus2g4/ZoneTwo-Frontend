@@ -1,5 +1,5 @@
-class Music {
-  const Music({
+class MusicInfo {
+  const MusicInfo({
     required this.title,
     required this.savePath,
     required this.bpm,

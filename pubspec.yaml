@@ -38,7 +38,7 @@ dependencies:
 
   music_downloader:
     path: packages/music_downloader
-  path_provider: ^2.1.3
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
