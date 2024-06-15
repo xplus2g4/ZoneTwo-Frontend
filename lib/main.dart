@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:music_downloader/music_downloader.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,17 +59,29 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _bpm = 0;
+  String _loadingStatus = "idle";
+  String _link =
+      "http://zonetwo-backend-env-ms1.eba-5cybfzhj.ap-southeast-2.elasticbeanstalk.com/api/musics/download?json_data=%7B%22url%22:%22https://www.youtube.com/watch?v=SBjQ9tuuTJQ%22%7D";
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  void _testGetMusic() {
+    try {
+      setState(() {
+        _loadingStatus = "requesting";
+        getApplicationCacheDirectory().then((directory) =>
+            MusicClient(cacheDirectory: directory)
+                .downloadByYoutubeLink(_link)
+                .then((music) => setState(() {
+                      _bpm = music.bpm.round();
+                      _loadingStatus = music.savePath;
+                    })));
+      });
+    } catch (e) {
+      setState(() {
+        _loadingStatus = "failed";
+      });
+      debugPrint(e.toString());
+    }
   }
 
   @override
@@ -106,17 +122,20 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'BPM of the music is:',
             ),
             Text(
-              '$_counter',
+              '$_bpm',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            Text(
+              'Status: $_loadingStatus',
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _testGetMusic,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.

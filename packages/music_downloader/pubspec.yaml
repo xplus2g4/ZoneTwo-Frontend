@@ -1,0 +1,23 @@
+name: music_downloader
+description: "A new Flutter package project."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ">=3.4.3 <4.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  bloc: ^8.1.0
+  equatable: ^2.0.3
+  http: ^1.2.1
+  stream_transform: ^2.0.0
+  permission_handler: ^11.3.1
+  id3_codec: ^1.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
