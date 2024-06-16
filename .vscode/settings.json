@@ -8,5 +8,12 @@
     "editor.inlayHints.enabled": "offUnlessPressed",
     "editor.formatOnSave": true
   },
+  "[yaml]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "prettier.singleQuote": true
+  },
   "files.eol": "\n"
 }
