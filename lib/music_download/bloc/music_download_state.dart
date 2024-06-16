@@ -25,7 +25,7 @@ final class MusicDownloadStateLoading extends MusicDownloadState {
 final class MusicDownloadStateSuccess extends MusicDownloadState {
   const MusicDownloadStateSuccess(this.music);
 
-  final MusicEntity music;
+  final MusicDownloadInfo music;
 
   @override
   List<Object> get props => [music];

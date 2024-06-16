@@ -21,13 +21,6 @@ class DatabaseMigrator {
       _schemaV1(batch);
       await batch.commit();
     }, onDowngrade: onDatabaseDowngradeDelete);
-    await db.execute('DROP TABLE IF EXISTS musics');
-    await db.execute('''CREATE TABLE musics (
-      id TEXT PRIMARY KEY,
-      title TEXT,
-      save_path TEXT,
-      bpm REAL
-  )''');
     return db;
   }
 }

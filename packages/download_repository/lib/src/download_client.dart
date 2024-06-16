@@ -7,16 +7,17 @@ import 'package:dio/dio.dart';
 import 'package:id3_codec/id3_decoder.dart';
 import 'package:download_repository/download_repository.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class DownloadClient {
   DownloadClient(
-      {required this.saveFolder,
+      {this.saveFolder,
       Dio? httpClient,
       String baseUrl = 'http://10.0.2.2:7771'})
       : httpClient = httpClient ?? Dio(BaseOptions(baseUrl: baseUrl));
 
   final Dio httpClient;
-  final String saveFolder;
+  final String? saveFolder;
 
   Future<MusicDownloadInfo> downloadByYoutubeLink(
     String link,
@@ -37,8 +38,7 @@ class DownloadClient {
       final contentDisposition = response.headers.value('content-disposition');
 
       String? rawFilename;
-      if (contentDisposition != null &&
-          contentDisposition.contains('filename=')) {
+      if (contentDisposition != null) {
         // Extract the filename from the header
         final regex = RegExp(r"filename\*=UTF-8\'\'?(.+)?");
         final match = regex.firstMatch(contentDisposition);
@@ -63,6 +63,8 @@ class DownloadClient {
   }
 
   Future<String> _writeToFile(String filename, List<int> bytes) async {
+    final saveFolder =
+        this.saveFolder ?? (await getApplicationCacheDirectory()).path;
     final path = p.join(saveFolder, filename);
     final file = File(path);
     await file.writeAsBytes(bytes);

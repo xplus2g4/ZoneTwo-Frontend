@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class MusicData {
   final String id;
   final String title;
@@ -20,7 +18,6 @@ class MusicData {
   }) : id = "";
 
   factory MusicData.fromRow(Map<String, Object?> row) {
-    debugPrint(row.toString());
     return MusicData(
       id: row['id'] as String,
       title: row['title'] as String,

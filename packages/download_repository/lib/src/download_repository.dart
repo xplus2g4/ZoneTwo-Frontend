@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:download_repository/download_repository.dart';
 
 class DownloadRepository {
-  DownloadRepository(String saveFolder)
+  DownloadRepository({String? saveFolder})
       : _client = DownloadClient(saveFolder: saveFolder);
 
   final DownloadClient _client;
