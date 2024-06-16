@@ -1,0 +1,10 @@
+name: database
+description: "A new Flutter package project."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ">=3.4.3 <4.0.0"
+
+dependencies:
+  sqflite: ^2.3.3+1

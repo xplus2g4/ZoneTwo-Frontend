@@ -1,13 +1,23 @@
 import 'package:bloc/bloc.dart';
-import 'package:music_downloader/music_downloader.dart';
+import 'package:download_repository/download_repository.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:music_repository/music_repository.dart';
+
+import '../entities/music_entity.dart';
+
+part 'music_download_event.dart';
+part 'music_download_state.dart';
 
 class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
-  MusicDownloadBloc({required this.musicRepository})
+  MusicDownloadBloc(
+      {required this.downloadRepository, required this.musicRepository})
       : super(MusicDownloadStateIdle()) {
     on<DownloadClicked>(_onDownloadClicked, transformer: droppable());
   }
 
+  final DownloadRepository downloadRepository;
   final MusicRepository musicRepository;
 
   Future<void> _onDownloadClicked(
@@ -21,12 +31,20 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
     emit(MusicDownloadStateLoading(0));
 
     try {
-      final musicInfo = await musicRepository
+      final musicDownloadInfo = await downloadRepository
           .downloadByYoutubeLink(downloadLink, (actualBytes, int totalBytes) {
         emit(MusicDownloadStateLoading((actualBytes / totalBytes * 100)));
       });
-      emit(MusicDownloadStateSuccess(musicInfo));
+      final musicData = await musicRepository.addMusicData(MusicData(
+          id: "",
+          title: musicDownloadInfo.title,
+          savePath: musicDownloadInfo.savePath,
+          bpm: musicDownloadInfo.bpm));
+      final allMusics = await musicRepository.getAllMusicData();
+      debugPrint(allMusics.toString());
+      emit(MusicDownloadStateSuccess(MusicEntity.fromData(musicData)));
     } catch (error) {
+      debugPrint(error.toString());
       emit(
         error is ApiError
             ? MusicDownloadStateError(error.message)

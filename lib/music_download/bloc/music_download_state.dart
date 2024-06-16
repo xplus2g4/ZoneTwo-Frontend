@@ -1,5 +1,4 @@
-import 'package:music_downloader/music_downloader.dart';
-import 'package:equatable/equatable.dart';
+part of "music_download_bloc.dart";
 
 sealed class MusicDownloadState extends Equatable {
   const MusicDownloadState();
@@ -24,16 +23,15 @@ final class MusicDownloadStateLoading extends MusicDownloadState {
 }
 
 final class MusicDownloadStateSuccess extends MusicDownloadState {
-  const MusicDownloadStateSuccess(this.musicInfo);
+  const MusicDownloadStateSuccess(this.music);
 
-  final MusicInfo musicInfo;
-
-  @override
-  List<Object> get props => [musicInfo];
+  final MusicEntity music;
 
   @override
-  String toString() =>
-      'MusicDownloadStateSuccess { music: ${musicInfo.title} }';
+  List<Object> get props => [music];
+
+  @override
+  String toString() => 'MusicDownloadStateSuccess { music: ${music.title} }';
 }
 
 final class MusicDownloadStateError extends MusicDownloadState {

@@ -1,16 +1,35 @@
+import 'package:database/database.dart';
+import 'package:download_repository/download_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:music_downloader/music_downloader.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:music_repository/music_repository.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'music_download/music_download.dart';
 
 void main() async {
-  final musicRepository = MusicRepository(MusicClient());
-  runApp(App(musicRepository: musicRepository));
+  WidgetsFlutterBinding.ensureInitialized();
+  final appDirectory = await getApplicationDocumentsDirectory();
+  final migrator = DatabaseMigrator("${appDirectory.path}/zonetwo.db");
+  final database = await migrator.open();
+
+  final downloadRepository = DownloadRepository(appDirectory.path);
+  final musicRepository = MusicRepository(database);
+
+  runApp(App(
+    musicRepository: musicRepository,
+    downloadRepository: downloadRepository,
+  ));
 }
 
 class App extends StatelessWidget {
-  const App({required this.musicRepository, super.key});
+  const App(
+      {required this.musicRepository,
+      required this.downloadRepository,
+      super.key});
 
+  final DownloadRepository downloadRepository;
   final MusicRepository musicRepository;
   // This widget is the root of your application.
   @override
@@ -24,8 +43,9 @@ class App extends StatelessWidget {
         home: Scaffold(
             appBar: AppBar(title: const Text('Music Download')),
             body: BlocProvider(
-                create: (_) =>
-                    MusicDownloadBloc(musicRepository: musicRepository),
+                create: (_) => MusicDownloadBloc(
+                    musicRepository: musicRepository,
+                    downloadRepository: downloadRepository),
                 child: const MyHomePage())));
   }
 }
@@ -97,8 +117,7 @@ class _DownloadList extends StatelessWidget {
               percentage: state.percentage,
             ),
           MusicDownloadStateError() => Text(state.error),
-          MusicDownloadStateSuccess() =>
-            _DownloadSuccess(musicInfo: state.musicInfo)
+          MusicDownloadStateSuccess() => _DownloadSuccess(music: state.music)
         };
       },
     );
@@ -120,23 +139,23 @@ class _DownloadLoading extends StatelessWidget {
 }
 
 class _DownloadSuccess extends StatelessWidget {
-  _DownloadSuccess({required this.musicInfo, AudioPlayer? player})
+  _DownloadSuccess({required this.music, AudioPlayer? player})
       : player = player ?? AudioPlayer();
 
-  final MusicInfo musicInfo;
+  final MusicEntity music;
   final AudioPlayer player;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text("The BPM of the music is ${musicInfo.bpm}"),
-        Text("Saved at ${musicInfo.savePath}"),
+        Text("The BPM of the music is ${music.bpm}"),
+        Text("Saved at ${music.savePath}"),
         ElevatedButton(
           onPressed: () async {
             switch (player.state) {
               case PlayerState.stopped:
-                player.play(DeviceFileSource(musicInfo.savePath));
+                player.play(DeviceFileSource(music.savePath));
                 break;
               case PlayerState.playing:
                 player.pause();
@@ -145,7 +164,7 @@ class _DownloadSuccess extends StatelessWidget {
                 player.resume();
                 break;
               default:
-                player.play(DeviceFileSource(musicInfo.savePath));
+                player.play(DeviceFileSource(music.savePath));
             }
           },
           child: const Text('Play'),

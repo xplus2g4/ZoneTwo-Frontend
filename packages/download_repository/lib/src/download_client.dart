@@ -5,23 +5,25 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:id3_codec/id3_decoder.dart';
-import 'package:music_downloader/music_downloader.dart';
+import 'package:download_repository/download_repository.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
-class MusicClient {
-  MusicClient({Dio? httpClient, this.baseUrl = 'http://10.0.2.2:7771'})
-      : httpClient = httpClient ?? Dio();
+class DownloadClient {
+  DownloadClient(
+      {required this.saveFolder,
+      Dio? httpClient,
+      String baseUrl = 'http://10.0.2.2:7771'})
+      : httpClient = httpClient ?? Dio(BaseOptions(baseUrl: baseUrl));
 
   final Dio httpClient;
-  final String baseUrl;
+  final String saveFolder;
 
-  Future<MusicInfo> downloadByYoutubeLink(
+  Future<MusicDownloadInfo> downloadByYoutubeLink(
     String link,
     ProgressCallback progressCallback,
   ) async {
     final response = await httpClient.get<List<int>>(
-      "$baseUrl/api/musics/download",
+      "/api/musics/download",
       onReceiveProgress: progressCallback,
       queryParameters: {
         "json_data": jsonEncode({
@@ -49,7 +51,7 @@ class MusicClient {
         final filename = Uri.decodeFull(rawFilename);
         final bpm = await _decodeMusicMetadata(response.data!);
         final filePath = await _writeToFile(filename, response.data!);
-        return MusicInfo(title: filename, savePath: filePath, bpm: bpm);
+        return MusicDownloadInfo(title: filename, savePath: filePath, bpm: bpm);
       } else {
         throw ApiError(message: "Filename not found in response");
       }
@@ -61,8 +63,7 @@ class MusicClient {
   }
 
   Future<String> _writeToFile(String filename, List<int> bytes) async {
-    final cacheDirectory = await getApplicationCacheDirectory();
-    final path = p.join(cacheDirectory.path, filename);
+    final path = p.join(saveFolder, filename);
     final file = File(path);
     await file.writeAsBytes(bytes);
     return path;

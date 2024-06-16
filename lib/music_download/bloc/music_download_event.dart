@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+part of 'music_download_bloc.dart';
 
 sealed class MusicDownloadEvent extends Equatable {
   const MusicDownloadEvent();
