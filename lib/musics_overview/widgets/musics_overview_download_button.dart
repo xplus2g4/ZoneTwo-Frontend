@@ -10,9 +10,9 @@ class MusicsOverviewDownloadButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return FloatingActionButton(
       onPressed: () => _showSimpleModalDialog(context),
-      child: const Text('Download'),
+      child: const Icon(Icons.music_note_outlined),
     );
   }
 

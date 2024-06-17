@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
 
+import 'theme/theme.dart';
+
 class App extends StatelessWidget {
   const App({required this.musicRepository, super.key});
 
@@ -22,8 +24,10 @@ class AppView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MusicsOverviewPage(),
+    return MaterialApp(
+      theme: FlutterZoneTwoTheme.dark,
+      darkTheme: FlutterZoneTwoTheme.dark,
+      home: const MusicsOverviewPage(),
     );
   }
 }

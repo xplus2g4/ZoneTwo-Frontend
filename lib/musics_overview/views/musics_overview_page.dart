@@ -29,9 +29,6 @@ class MusicsOverviewView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("All Musics"),
-        actions: [
-          MusicsOverviewDownloadButton(),
-        ],
       ),
       body: BlocListener<MusicsOverviewBloc, MusicsOverviewState>(
         listenWhen: (previous, current) => previous.status != current.status,
@@ -63,17 +60,21 @@ class MusicsOverviewView extends StatelessWidget {
               }
             }
 
-            return CupertinoScrollbar(
-              child: ListView(
-                children: [
-                  for (final music in state.musics)
-                    MusicListTile(
-                      music: music,
-                      onTap: () {
-                        player.play(DeviceFileSource(music.savePath));
-                      },
-                    ),
-                ],
+            return Scaffold(
+              floatingActionButton: MusicsOverviewDownloadButton(),
+              body: ListView.builder(
+                itemCount: state.musics.length,
+                itemBuilder: (context, index) => MusicListTile(
+                  music: state.musics[index],
+                  onTap: () {
+                    if (player.state == PlayerState.playing) {
+                      player.stop();
+                    }
+                    player
+                        .setSourceDeviceFile(state.musics[index].savePath)
+                        .then((_) => player.resume());
+                  },
+                ),
               ),
             );
           },

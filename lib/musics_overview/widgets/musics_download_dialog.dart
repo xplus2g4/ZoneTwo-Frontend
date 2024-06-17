@@ -19,7 +19,7 @@ class MusicsDownloadDialog extends StatelessWidget {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
         child: Container(
-          constraints: const BoxConstraints(maxHeight: 350),
+          constraints: const BoxConstraints(maxHeight: 300),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
