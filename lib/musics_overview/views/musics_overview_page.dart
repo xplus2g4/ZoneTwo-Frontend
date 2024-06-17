@@ -27,7 +27,6 @@ class MusicsOverviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: MusicsOverviewDownloadButton(),
       appBar: AppBar(
         title: const Text("All Musics"),
       ),
@@ -61,18 +60,21 @@ class MusicsOverviewView extends StatelessWidget {
               }
             }
 
-            return ListView.builder(
-              itemCount: state.musics.length,
-              itemBuilder: (context, index) => MusicListTile(
-                music: state.musics[index],
-                onTap: () {
-                  if (player.state == PlayerState.playing) {
-                    player.stop();
-                  }
-                  player
-                      .setSourceDeviceFile(state.musics[index].savePath)
-                      .then((_) => player.resume());
-                },
+            return Scaffold(
+              floatingActionButton: MusicsOverviewDownloadButton(),
+              body: ListView.builder(
+                itemCount: state.musics.length,
+                itemBuilder: (context, index) => MusicListTile(
+                  music: state.musics[index],
+                  onTap: () {
+                    if (player.state == PlayerState.playing) {
+                      player.stop();
+                    }
+                    player
+                        .setSourceDeviceFile(state.musics[index].savePath)
+                        .then((_) => player.resume());
+                  },
+                ),
               ),
             );
           },
