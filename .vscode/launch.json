@@ -1,11 +1,14 @@
 {
   "configurations": [
-  {
-    "name": "Flutter",
-    "request": "launch",
-    "type": "dart",
-    "flutterMode": "debug",
-    "program": "lib/main.dart"
-  }
-]
+    {
+      "name": "Flutter",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771"
+      ]
+    }
+  ]
 }

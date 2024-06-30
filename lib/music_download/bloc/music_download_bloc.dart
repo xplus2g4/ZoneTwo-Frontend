@@ -32,8 +32,7 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
           .downloadByYoutubeLink(downloadLink, (actualBytes, int totalBytes) {
         emit(MusicDownloadStateLoading((actualBytes / totalBytes * 100)));
       });
-      await musicRepository.addMusicData(MusicData(
-          id: "",
+      await musicRepository.addMusicData(MusicData.newData(
           title: musicDownloadInfo.title,
           savePath: musicDownloadInfo.savePath,
           bpm: musicDownloadInfo.bpm));

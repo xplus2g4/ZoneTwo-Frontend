@@ -10,11 +10,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class DownloadClient {
-  DownloadClient(
-      {this.saveFolder,
-      Dio? httpClient,
-      String baseUrl = 'http://10.0.2.2:7771'})
-      : httpClient = httpClient ?? Dio(BaseOptions(baseUrl: baseUrl));
+  DownloadClient({this.saveFolder})
+      : httpClient = Dio(BaseOptions(
+            baseUrl: const String.fromEnvironment("downloader_api_endpoint",
+                defaultValue: "http://10.0.2.2:7771")));
 
   final Dio httpClient;
   final String? saveFolder;
