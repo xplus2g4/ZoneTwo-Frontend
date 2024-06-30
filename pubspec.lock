@@ -429,6 +429,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.5"
+  playlist_repository:
+    dependency: "direct main"
+    description:
+      path: "packages/playlist_repository"
+      relative: true
+    source: path
+    version: "0.0.1"
   plugin_platform_interface:
     dependency: transitive
     description:

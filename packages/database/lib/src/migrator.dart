@@ -12,6 +12,22 @@ class DatabaseMigrator {
       save_path TEXT,
       bpm REAL
   )''');
+    batch.execute('''
+      CREATE TABLE playlists (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        bpm REAL
+      )
+    ''');
+    batch.execute('''
+      CREATE TABLE playlist_musics (
+        playlist_id TEXT NOT NULL,
+        music_id TEXT NOT NULL,
+        FOREIGN KEY(playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
+        FOREIGN KEY(music_id) REFERENCES musics(id) ON DELETE CASCADE,
+        PRIMARY KEY(playlist_id, music_id)
+      )
+    ''');
   }
 
   Future<Database> open() async {
@@ -21,6 +37,8 @@ class DatabaseMigrator {
       _schemaV1(batch);
       await batch.commit();
     }, onDowngrade: onDatabaseDowngradeDelete);
+    var batch = db.batch();
+    _schemaV1(batch);
     return db;
   }
 }

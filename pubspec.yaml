@@ -49,6 +49,8 @@ dependencies:
     path: packages/download_repository
   music_repository:
     path: packages/music_repository
+  playlist_repository:
+    path: packages/playlist_repository
 
 dev_dependencies:
   flutter_test:

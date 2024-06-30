@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
-import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
 
+import 'home/home.dart';
 import 'theme/theme.dart';
 
 class App extends StatelessWidget {
@@ -27,7 +27,7 @@ class AppView extends StatelessWidget {
     return MaterialApp(
       theme: FlutterZoneTwoTheme.dark,
       darkTheme: FlutterZoneTwoTheme.dark,
-      home: const MusicsOverviewPage(),
+      home: const HomePage(),
     );
   }
 }
