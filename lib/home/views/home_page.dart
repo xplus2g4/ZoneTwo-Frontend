@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
+import 'package:zonetwo/playlists_overview/views/playlists_overview_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,9 +17,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: [
         const MusicsOverviewPage(),
-        const Center(
-          child: Text('Business'),
-        ),
+        const PlaylistsOverviewPage(),
         const Center(
           child: Text('School'),
         ),

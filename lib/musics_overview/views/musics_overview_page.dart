@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
+import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/musics_overview/musics_overview.dart';
 
 class MusicsOverviewPage extends StatelessWidget {
@@ -13,25 +14,9 @@ class MusicsOverviewPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => MusicsOverviewBloc(
         musicRepository: context.read<MusicRepository>(),
+        playlistRepository: context.read<PlaylistRepository>(),
       )..add(const MusicsOverviewSubscriptionRequested()),
-      child: MusicsOverviewView(),
-    );
-  }
-}
-
-class MusicsOverviewView extends StatelessWidget {
-  MusicsOverviewView({super.key}) : player = AudioPlayer();
-
-  final AudioPlayer player;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: MusicsOverviewDownloadButton(),
-      appBar: AppBar(
-        title: const Text("All Musics"),
-      ),
-      body: BlocListener<MusicsOverviewBloc, MusicsOverviewState>(
+      child: BlocListener<MusicsOverviewBloc, MusicsOverviewState>(
         listenWhen: (previous, current) => previous.status != current.status,
         listener: (context, state) {
           if (state.status == MusicsOverviewStatus.failure) {
@@ -44,8 +29,53 @@ class MusicsOverviewView extends StatelessWidget {
               );
           }
         },
-        child: BlocBuilder<MusicsOverviewBloc, MusicsOverviewState>(
-          builder: (context, state) {
+        child: const MusicsOverviewView(),
+      ),
+    );
+  }
+}
+
+class MusicsOverviewView extends StatefulWidget {
+  const MusicsOverviewView({super.key});
+
+  @override
+  MusicsOverviewViewState createState() => MusicsOverviewViewState();
+}
+
+class MusicsOverviewViewState extends State<MusicsOverviewView> {
+  late MusicsOverviewBloc _musicsOverviewBloc;
+  late final AudioPlayer player;
+
+  @override
+  void initState() {
+    super.initState();
+    _musicsOverviewBloc = context.read<MusicsOverviewBloc>();
+    player = AudioPlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MusicsOverviewBloc, MusicsOverviewState>(
+        builder: (context, state) {
+      return Scaffold(
+        floatingActionButton: state.isSelectionMode
+            ? CreatePlaylistFAB(_musicsOverviewBloc)
+            : const MusicsOverviewDownloadButton(),
+        appBar: AppBar(
+          title: const Text("All Musics"),
+          leading: state.isSelectionMode
+              ? IconButton(
+                  icon: Icon(Icons.close,
+                      color: Theme.of(context).colorScheme.primary),
+                  onPressed: () {
+                    _musicsOverviewBloc
+                        .add(const MusicOverviewExitSelectionMode());
+                  },
+                )
+              : const SizedBox(),
+        ),
+        body: Builder(
+          builder: (context) {
             if (state.musics.isEmpty) {
               if (state.status == MusicsOverviewStatus.loading) {
                 return const Center(child: CupertinoActivityIndicator());
@@ -53,31 +83,40 @@ class MusicsOverviewView extends StatelessWidget {
                 return const SizedBox();
               } else {
                 return Center(
-                  child: Text(
-                    "Add your music now!",
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                );
+                    child: Text(
+                  "Add your music now!",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ));
               }
             }
-
             return ListView.builder(
               itemCount: state.musics.length,
               itemBuilder: (context, index) => MusicListTile(
                 music: state.musics[index],
+                isSelectionMode: state.isSelectionMode,
+                isSelected: state.selected[index],
                 onTap: () {
-                  if (player.state == PlayerState.playing) {
-                    player.stop();
+                  if (state.isSelectionMode) {
+                    _musicsOverviewBloc
+                        .add(MusicOverviewToggleSelectedMusic(index));
+                  } else {
+                    if (player.state == PlayerState.playing) {
+                      player.stop();
+                    }
+                    player
+                        .setSourceDeviceFile(state.musics[index].savePath)
+                        .then((_) => player.resume());
                   }
-                  player
-                      .setSourceDeviceFile(state.musics[index].savePath)
-                      .then((_) => player.resume());
+                },
+                onLongPress: () {
+                  _musicsOverviewBloc
+                      .add(MusicOverviewEnterSelectionMode(index));
                 },
               ),
             );
           },
         ),
-      ),
-    );
+      );
+    });
   }
 }

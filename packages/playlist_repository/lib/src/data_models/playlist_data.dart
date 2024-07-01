@@ -3,27 +3,32 @@ import 'package:music_repository/music_repository.dart';
 class PlaylistData {
   final String id;
   final String name;
+  final int songCount;
 
   const PlaylistData({
     required this.id,
     required this.name,
+    required this.songCount,
   });
 
   PlaylistData.newData({
     required this.name,
-  }) : id = "";
+  })  : id = "",
+        songCount = 0;
 
   factory PlaylistData.fromRow(Map<String, Object?> row) {
     return PlaylistData(
       id: row['id'] as String,
       name: row['name'] as String,
+      songCount: row['song_count'] as int,
     );
   }
 
-  PlaylistData update({String? id, String? name, num? bpm}) {
+  PlaylistData update({String? id, String? name, int? songCount}) {
     return PlaylistData(
       id: id ?? this.id,
       name: name ?? this.name,
+      songCount: songCount ?? this.songCount,
     );
   }
 
@@ -31,6 +36,7 @@ class PlaylistData {
     return {
       'id': id,
       'name': name,
+      'song_count': songCount,
     };
   }
 
@@ -47,11 +53,10 @@ class PlaylistWithMusicData extends PlaylistData {
     required super.id,
     required super.name,
     required this.musics,
-  });
+  }) : super(songCount: musics.length);
 
-  @override
-  PlaylistWithMusicData update(
-      {String? id, String? name, num? bpm, List<MusicData>? musics}) {
+  PlaylistWithMusicData updateData(
+      {String? id, String? name, List<MusicData>? musics}) {
     return PlaylistWithMusicData(
       id: id ?? this.id,
       name: name ?? this.name,

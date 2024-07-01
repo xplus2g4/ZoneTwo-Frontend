@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
+import 'package:playlist_repository/playlist_repository.dart';
 
 import 'home/home.dart';
 import 'theme/theme.dart';
 
 class App extends StatelessWidget {
-  const App({required this.musicRepository, super.key});
+  const App(
+      {required this.musicRepository,
+      required this.playlistRepository,
+      super.key});
 
   final MusicRepository musicRepository;
+  final PlaylistRepository playlistRepository;
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: musicRepository,
-      child: const AppView(),
-    );
+    return MultiRepositoryProvider(providers: [
+      RepositoryProvider.value(value: musicRepository),
+      RepositoryProvider.value(value: playlistRepository),
+    ], child: const AppView());
   }
 }
 

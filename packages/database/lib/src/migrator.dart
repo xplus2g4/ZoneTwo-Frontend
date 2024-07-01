@@ -16,7 +16,7 @@ class DatabaseMigrator {
       CREATE TABLE playlists (
         id TEXT PRIMARY KEY,
         name TEXT,
-        bpm REAL
+        song_count INTEGER
       )
     ''');
     batch.execute('''
@@ -37,8 +37,6 @@ class DatabaseMigrator {
       _schemaV1(batch);
       await batch.commit();
     }, onDowngrade: onDatabaseDowngradeDelete);
-    var batch = db.batch();
-    _schemaV1(batch);
     return db;
   }
 }

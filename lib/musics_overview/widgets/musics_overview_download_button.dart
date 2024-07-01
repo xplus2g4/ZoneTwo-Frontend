@@ -1,12 +1,8 @@
-import 'package:download_repository/download_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:zonetwo/musics_overview/widgets/musics_download_dialog.dart';
 
 class MusicsOverviewDownloadButton extends StatelessWidget {
-  MusicsOverviewDownloadButton({super.key})
-      : downloadRepository = DownloadRepository();
-
-  final DownloadRepository downloadRepository;
+  const MusicsOverviewDownloadButton({super.key});
 
   @override
   Widget build(BuildContext context) {

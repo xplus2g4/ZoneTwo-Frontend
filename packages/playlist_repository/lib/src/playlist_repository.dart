@@ -29,32 +29,37 @@ class PlaylistRepository {
   Future<void> addMusicsToPlaylist(
       List<MusicData> musics, PlaylistData playlist) async {
     // Update database
-    await _db.rawInsert('''
-      INSERT INTO $joinTableName (playlist_id, music_id)
-      VALUES ${musics.map((music) => "(${playlist.id}, ${music.id})").join(", ")}
-    ''');
+    await _db.transaction((txn) async {
+      await txn.rawUpdate('''
+        UPDATE $tableName SET song_count = song_count + ?
+        WHERE id = ?
+      ''', [musics.length, playlist.id]);
+      await txn.rawInsert('''
+        INSERT INTO $joinTableName (playlist_id, music_id)
+        VALUES ${musics.map((music) => "(${playlist.id}, ${music.id})").join(", ")}
+      ''');
+    });
     final playlistWithMusic = _playlistWithMusicStreamController.value;
     if (playlistWithMusic.id == playlist.id) {
       _playlistWithMusicStreamController.add(
         playlistWithMusic
-            .update(musics: [...playlistWithMusic.musics, ...musics]),
+            .updateData(musics: [...playlistWithMusic.musics, ...musics]),
       );
     }
   }
 
-  Future<void> createPlaylist(
-      PlaylistData playlist, List<MusicData> musics) async {
+  Future<void> createPlaylist(PlaylistWithMusicData playlist) async {
     // Update database
+    final newId = const UuidV4().generate();
     await _db.transaction((txn) async {
-      final newId = const UuidV4().generate();
       await txn.rawInsert('''
-        INSERT INTO $tableName (id, name)
-        VALUES (?, ?)
-      ''', [newId, playlist.name]);
+        INSERT INTO $tableName (id, name, song_count)
+        VALUES (?, ?, ?)
+      ''', [newId, playlist.name, playlist.musics.length]);
 
       await txn.rawInsert('''
         INSERT INTO $joinTableName (playlist_id, music_id)
-        VALUES ${musics.map((music) => "('$newId', '${music.id}')").join(", ")}
+        VALUES ${playlist.musics.map((music) => "('$newId', '${music.id}')").join(", ")}
       ''');
     });
 
@@ -70,9 +75,9 @@ class PlaylistRepository {
 
     _playlistWithMusicStreamController.add(
       PlaylistWithMusicData(
-        id: playlist.id,
+        id: newId,
         name: playlist.name,
-        musics: musics,
+        musics: playlist.musics,
       ),
     );
   }
@@ -116,7 +121,7 @@ class PlaylistRepository {
 
     if (_playlistWithMusicStreamController.value.id == playlist.id) {
       _playlistWithMusicStreamController.add(
-        _playlistWithMusicStreamController.value.update(
+        _playlistWithMusicStreamController.value.updateData(
           name: playlist.name,
         ),
       );

@@ -1,31 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import '../entities/playlist_entity.dart';
 
-class MusicListTile extends StatelessWidget {
-  const MusicListTile({
-    required this.music,
-    required this.isSelectionMode,
-    required this.isSelected,
+class PlaylistListTile extends StatelessWidget {
+  const PlaylistListTile({
+    required this.playlist,
     super.key,
     this.onTap,
-    this.onLongPress,
   });
 
-  final MusicEntity music;
-  final bool isSelectionMode;
-  final bool isSelected;
+  final PlaylistEntity playlist;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Card(
-        key: Key('todoListTile_${music.id}'),
+        key: Key('todoListTile_${playlist.id}'),
         child: InkWell(
             onTap: onTap,
-            onLongPress: onLongPress,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -43,24 +36,14 @@ class MusicListTile extends StatelessWidget {
                 Expanded(
                   child: ListTile(
                     title: Text(
-                      music.title,
+                      playlist.name,
                       maxLines: 1,
                       overflow: TextOverflow.fade,
                     ),
                     textColor: theme.textTheme.bodySmall?.color,
-                    subtitle: Text(
-                      "BPM: ${music.bpm.round()}",
-                    ),
+                    subtitle: Text("${playlist.songCount} songs"),
                   ),
                 ),
-                isSelectionMode
-                    ? Checkbox(
-                        value: isSelected,
-                        onChanged: (bool? x) {
-                          onTap!();
-                        },
-                      )
-                    : const SizedBox.shrink(),
               ],
             )));
   }

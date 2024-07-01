@@ -23,4 +23,13 @@ class MusicEntity {
       bpm: data.bpm,
     );
   }
+
+  MusicData toData() {
+    return MusicData(
+      id: id,
+      title: title,
+      savePath: savePath,
+      bpm: bpm,
+    );
+  }
 }
