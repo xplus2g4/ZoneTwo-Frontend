@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:zonetwo/musics_overview/musics_overview.dart';
 
@@ -38,7 +36,7 @@ class MusicListTile extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.memory(
-                      base64Decode(music.coverBase64String),
+                      music.coverImage,
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,

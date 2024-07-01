@@ -8,17 +8,17 @@ class DatabaseMigrator {
     batch.execute('DROP TABLE IF EXISTS musics');
     batch.execute('''CREATE TABLE musics (
       id TEXT PRIMARY KEY,
-      title TEXT,
-      save_path TEXT,
-      bpm REAL,
-      cover_base64_string TEXT
+      title TEXT NOT NULL,
+      save_path TEXT NOT NULL,
+      bpm REAL NOT NULL,
+      cover_image BLOB NOT NULL
   )''');
     batch.execute('DROP TABLE IF EXISTS playlists');
     batch.execute('''
       CREATE TABLE playlists (
         id TEXT PRIMARY KEY,
-        name TEXT,
-        song_count INTEGER
+        name TEXT NOT NULL,
+        song_count INTEGER NOT NULL
       )
     ''');
     batch.execute('DROP TABLE IF EXISTS playlist_musics');

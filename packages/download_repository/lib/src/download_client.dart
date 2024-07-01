@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:download_repository/download_repository.dart';
@@ -56,7 +57,7 @@ class DownloadClient {
             title: filename,
             savePath: filePath,
             bpm: metadata.bpm,
-            coverBase64String: metadata.base64image);
+            coverImage: metadata.image);
       } else {
         throw ApiError(message: "Filename not found in response");
       }
@@ -80,12 +81,12 @@ class DownloadClient {
     try {
       final parser = ID3TagReader.path(filePath);
       final metadata = parser.readTagSync();
-      final int bpm =
-          int.parse(metadata.frameWithName("TBPM")!.toDictionary()["value"]);
-      final String base64image =
-          base64Encode(metadata.pictures.first.imageData);
+      final num bpm =
+          num.parse(metadata.frameWithName("TBPM")!.toDictionary()["value"]);
+      final Uint8List image =
+          Uint8List.fromList(metadata.pictures.first.imageData);
 
-      return MusicMetadata(base64image: base64image, bpm: bpm);
+      return MusicMetadata(image: image, bpm: bpm);
     } catch (e) {
       throw ApiError(message: e.toString());
     }

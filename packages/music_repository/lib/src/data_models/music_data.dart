@@ -1,8 +1,10 @@
+import 'dart:typed_data';
+
 class MusicData {
   final String id;
   final String title;
   final num bpm;
-  final String coverBase64String;
+  final Uint8List coverImage;
   final String savePath;
 
   const MusicData({
@@ -10,14 +12,14 @@ class MusicData {
     required this.title,
     required this.savePath,
     required this.bpm,
-    required this.coverBase64String,
+    required this.coverImage,
   });
 
   const MusicData.newData({
     required this.title,
     required this.savePath,
     required this.bpm,
-    required this.coverBase64String,
+    required this.coverImage,
   }) : id = "";
 
   factory MusicData.fromRow(Map<String, Object?> row) {
@@ -26,7 +28,7 @@ class MusicData {
       title: row['title'] as String,
       savePath: row['save_path'] as String,
       bpm: row['bpm'] as num,
-      coverBase64String: row['cover_base64_string'] as String,
+      coverImage: row['cover_image'] as Uint8List,
     );
   }
 
@@ -36,7 +38,7 @@ class MusicData {
       title: title ?? this.title,
       savePath: savePath ?? this.savePath,
       bpm: bpm ?? this.bpm,
-      coverBase64String: coverBase64String,
+      coverImage: coverImage,
     );
   }
 
@@ -46,6 +48,7 @@ class MusicData {
       'title': title,
       'bpm': bpm,
       'save_path': savePath,
+      'cover_image': coverImage,
     };
   }
 

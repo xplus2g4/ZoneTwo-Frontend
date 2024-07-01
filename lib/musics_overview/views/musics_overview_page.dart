@@ -1,9 +1,9 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
+import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/musics_overview/musics_overview.dart';
 
 class MusicsOverviewPage extends StatelessWidget {
@@ -44,13 +44,13 @@ class MusicsOverviewView extends StatefulWidget {
 
 class MusicsOverviewViewState extends State<MusicsOverviewView> {
   late MusicsOverviewBloc _musicsOverviewBloc;
-  late final AudioPlayer player;
+  late MusicPlayerBloc _musicPlayerBloc;
 
   @override
   void initState() {
     super.initState();
     _musicsOverviewBloc = context.read<MusicsOverviewBloc>();
-    player = AudioPlayer();
+    _musicPlayerBloc = context.read<MusicPlayerBloc>();
   }
 
   @override
@@ -100,12 +100,8 @@ class MusicsOverviewViewState extends State<MusicsOverviewView> {
                     _musicsOverviewBloc
                         .add(MusicOverviewToggleSelectedMusic(index));
                   } else {
-                    if (player.state == PlayerState.playing) {
-                      player.stop();
-                    }
-                    player
-                        .setSourceDeviceFile(state.musics[index].savePath)
-                        .then((_) => player.resume());
+                    _musicPlayerBloc
+                        .add(MusicPlayerInsertNext(state.musics[index]));
                   }
                 },
                 onLongPress: () {

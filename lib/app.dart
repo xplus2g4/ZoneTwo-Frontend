@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
+import 'package:zonetwo/music_player/music_player.dart';
 
 import 'home/home.dart';
 import 'theme/theme.dart';
@@ -29,10 +30,13 @@ class AppView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: FlutterZoneTwoTheme.dark,
-      darkTheme: FlutterZoneTwoTheme.dark,
-      home: const HomePage(),
+    return BlocProvider(
+      create: (BuildContext context) => MusicPlayerBloc(),
+      child: MaterialApp(
+        theme: FlutterZoneTwoTheme.dark,
+        darkTheme: FlutterZoneTwoTheme.dark,
+        home: const HomePage(),
+      ),
     );
   }
 }

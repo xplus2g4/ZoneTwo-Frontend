@@ -36,7 +36,7 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
           title: musicDownloadInfo.title,
           savePath: musicDownloadInfo.savePath,
           bpm: musicDownloadInfo.bpm,
-          coverBase64String: musicDownloadInfo.coverBase64String));
+          coverImage: musicDownloadInfo.coverImage));
       emit(MusicDownloadStateSuccess(musicDownloadInfo));
     } catch (error) {
       emit(

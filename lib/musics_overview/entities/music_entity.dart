@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:music_repository/music_repository.dart';
 
 // Note to whoever sees this,
@@ -6,7 +8,7 @@ class MusicEntity {
   final String id;
   final String title;
   final num bpm;
-  final String coverBase64String;
+  final Uint8List coverImage;
   final String savePath;
 
   const MusicEntity({
@@ -14,7 +16,7 @@ class MusicEntity {
     required this.title,
     required this.savePath,
     required this.bpm,
-    required this.coverBase64String,
+    required this.coverImage,
   });
 
   factory MusicEntity.fromData(MusicData data) {
@@ -23,7 +25,7 @@ class MusicEntity {
       title: data.title,
       savePath: data.savePath,
       bpm: data.bpm,
-      coverBase64String: data.coverBase64String,
+      coverImage: data.coverImage,
     );
   }
 
@@ -33,7 +35,7 @@ class MusicEntity {
       title: title,
       savePath: savePath,
       bpm: bpm,
-      coverBase64String: coverBase64String,
+      coverImage: coverImage,
     );
   }
 }

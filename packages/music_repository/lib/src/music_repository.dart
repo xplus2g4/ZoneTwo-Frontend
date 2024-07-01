@@ -21,12 +21,13 @@ class MusicRepository {
     // Update database
     final newId = const UuidV4().generate();
     await _db.rawInsert(
-        "INSERT INTO $tableName(id, title, save_path, bpm) VALUES(?, ?, ?, ?)",
+        "INSERT INTO $tableName(id, title, save_path, bpm, cover_image) VALUES(?, ?, ?, ?, ?)",
         [
           newId,
           music.title,
           music.savePath,
           music.bpm,
+          music.coverImage,
         ]);
     final musics = [..._musicStreamController.value];
     final newMusic = music.update(id: newId);

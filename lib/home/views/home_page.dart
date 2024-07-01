@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
 import 'package:zonetwo/playlists_overview/views/playlists_overview_page.dart';
 
@@ -15,13 +16,16 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: [
-        const MusicsOverviewPage(),
-        const PlaylistsOverviewPage(),
-        const Center(
-          child: Text('School'),
-        ),
-      ][_selectedIndex],
+      body: Scaffold(
+        body: [
+          const MusicsOverviewPage(),
+          const PlaylistsOverviewPage(),
+          const Center(
+            child: Text('School'),
+          ),
+        ][_selectedIndex],
+        bottomNavigationBar: const FloatingMusicPlayer(),
+      ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (index) {
           setState(() {
