@@ -10,8 +10,10 @@ class DatabaseMigrator {
       id TEXT PRIMARY KEY,
       title TEXT,
       save_path TEXT,
-      bpm REAL
+      bpm REAL,
+      cover_base64_string TEXT
   )''');
+    batch.execute('DROP TABLE IF EXISTS playlists');
     batch.execute('''
       CREATE TABLE playlists (
         id TEXT PRIMARY KEY,
@@ -19,6 +21,7 @@ class DatabaseMigrator {
         song_count INTEGER
       )
     ''');
+    batch.execute('DROP TABLE IF EXISTS playlist_musics');
     batch.execute('''
       CREATE TABLE playlist_musics (
         playlist_id TEXT NOT NULL,

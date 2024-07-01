@@ -2,6 +2,7 @@ class MusicData {
   final String id;
   final String title;
   final num bpm;
+  final String coverBase64String;
   final String savePath;
 
   const MusicData({
@@ -9,12 +10,14 @@ class MusicData {
     required this.title,
     required this.savePath,
     required this.bpm,
+    required this.coverBase64String,
   });
 
   const MusicData.newData({
     required this.title,
     required this.savePath,
     required this.bpm,
+    required this.coverBase64String,
   }) : id = "";
 
   factory MusicData.fromRow(Map<String, Object?> row) {
@@ -23,6 +26,7 @@ class MusicData {
       title: row['title'] as String,
       savePath: row['save_path'] as String,
       bpm: row['bpm'] as num,
+      coverBase64String: row['cover_base64_string'] as String,
     );
   }
 
@@ -32,6 +36,7 @@ class MusicData {
       title: title ?? this.title,
       savePath: savePath ?? this.savePath,
       bpm: bpm ?? this.bpm,
+      coverBase64String: coverBase64String,
     );
   }
 

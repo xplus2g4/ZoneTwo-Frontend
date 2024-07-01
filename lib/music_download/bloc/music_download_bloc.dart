@@ -35,7 +35,8 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
       await musicRepository.addMusicData(MusicData.newData(
           title: musicDownloadInfo.title,
           savePath: musicDownloadInfo.savePath,
-          bpm: musicDownloadInfo.bpm));
+          bpm: musicDownloadInfo.bpm,
+          coverBase64String: musicDownloadInfo.coverBase64String));
       emit(MusicDownloadStateSuccess(musicDownloadInfo));
     } catch (error) {
       emit(

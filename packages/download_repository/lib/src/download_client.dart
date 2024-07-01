@@ -4,10 +4,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:id3_codec/id3_decoder.dart';
 import 'package:download_repository/download_repository.dart';
+import 'package:id3tag/id3tag.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
+import 'models/music_metadata.dart';
 
 class DownloadClient {
   DownloadClient({this.saveFolder})
@@ -48,9 +50,13 @@ class DownloadClient {
 
       if (rawFilename != null) {
         final filename = Uri.decodeFull(rawFilename);
-        final bpm = await _decodeMusicMetadata(response.data!);
         final filePath = await _writeToFile(filename, response.data!);
-        return MusicDownloadInfo(title: filename, savePath: filePath, bpm: bpm);
+        final metadata = await _decodeMusicMetadata(filePath);
+        return MusicDownloadInfo(
+            title: filename,
+            savePath: filePath,
+            bpm: metadata.bpm,
+            coverBase64String: metadata.base64image);
       } else {
         throw ApiError(message: "Filename not found in response");
       }
@@ -70,12 +76,16 @@ class DownloadClient {
     return path;
   }
 
-  Future<double> _decodeMusicMetadata(List<int> bytes) async {
+  Future<MusicMetadata> _decodeMusicMetadata(String filePath) async {
     try {
-      final decoder = ID3Decoder(bytes);
-      final List metadata = decoder.decodeSync().first.toTagMap()["Frames"];
-      final Map tbpmFrame = metadata.firstWhere((f) => f["Frame ID"] == "TBPM");
-      return double.parse(tbpmFrame["Content"]["Information"]);
+      final parser = ID3TagReader.path(filePath);
+      final metadata = parser.readTagSync();
+      final int bpm =
+          int.parse(metadata.frameWithName("TBPM")!.toDictionary()["value"]);
+      final String base64image =
+          base64Encode(metadata.pictures.first.imageData);
+
+      return MusicMetadata(base64image: base64image, bpm: bpm);
     } catch (e) {
       throw ApiError(message: e.toString());
     }
