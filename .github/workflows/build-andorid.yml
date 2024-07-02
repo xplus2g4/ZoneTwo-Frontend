@@ -18,10 +18,10 @@ jobs:
           channel: stable
           flutter-version-file: pubspec.yaml # path to pubspec.yaml
       - run: flutter pub get
-      - run: flutter build apk --debug --dart-define=downloader_api_endpoint=${{ secrets.DOWNLOADER_API_ENDPOINT }}
+      - run: flutter build apk --dart-define=downloader_api_endpoint=${{ secrets.DOWNLOADER_API_ENDPOINT }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

@@ -72,7 +72,7 @@ class MusicsOverviewViewState extends State<MusicsOverviewView> {
                         .add(const MusicOverviewExitSelectionMode());
                   },
                 )
-              : const SizedBox(),
+              : null,
         ),
         body: Builder(
           builder: (context) {
