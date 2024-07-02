@@ -13,11 +13,13 @@ class FloatingMusicPlayer extends StatefulWidget {
 class _FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   late AudioPlayer _audioPlayer;
   late MusicPlayerBloc _musicPlayerBloc;
+  late num _bpm;
 
   @override
   void initState() {
     super.initState();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
+    _bpm = _musicPlayerBloc.state.bpm;
     _audioPlayer = AudioPlayer();
     _audioPlayer.onPlayerStateChanged.listen((event) {
       if (event == PlayerState.completed) {
@@ -32,6 +34,9 @@ class _FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
         listenWhen: (previous, current) =>
             previous.status != current.status || current.bpm != previous.bpm,
         listener: (context, state) {
+          setState(() {
+            _bpm = state.bpm;
+          });
           switch (state.status) {
             case MusicPlayerStatus.idle:
               break;
@@ -98,15 +103,21 @@ class _FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                               const Spacer(),
                               IconButton(
                                   onPressed: () {
+                                    setState(() {
+                                      _bpm -= 1;
+                                    });
                                     _musicPlayerBloc
-                                        .add(const MusicPlayerDecrementBpm());
+                                        .add(MusicPlayerSetBpm(_bpm));
                                   },
                                   icon: const Icon(Icons.remove)),
-                              Text(state.bpm.round().toString()),
+                              Text(_bpm.round().toString()),
                               IconButton(
                                   onPressed: () {
+                                    setState(() {
+                                      _bpm += 1;
+                                    });
                                     _musicPlayerBloc
-                                        .add(const MusicPlayerIncrementBpm());
+                                        .add(MusicPlayerSetBpm(_bpm));
                                   },
                                   icon: const Icon(Icons.add)),
                               if (state.status == MusicPlayerStatus.playing)

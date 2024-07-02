@@ -33,10 +33,8 @@ final class MusicPlayerResume extends MusicPlayerEvent {
   const MusicPlayerResume();
 }
 
-final class MusicPlayerIncrementBpm extends MusicPlayerEvent {
-  const MusicPlayerIncrementBpm();
-}
+final class MusicPlayerSetBpm extends MusicPlayerEvent {
+  const MusicPlayerSetBpm(this.bpm);
 
-final class MusicPlayerDecrementBpm extends MusicPlayerEvent {
-  const MusicPlayerDecrementBpm();
+  final num bpm;
 }

@@ -17,10 +17,7 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     on<MusicPlayerInsertNext>(_onInsertNext);
     on<MusicPlayerPause>(_onPause);
     on<MusicPlayerResume>(_onResume);
-    on<MusicPlayerIncrementBpm>(_onIncrementBpm,
-        transformer: debounce(_duration));
-    on<MusicPlayerDecrementBpm>(_onDecrementBpm,
-        transformer: debounce(_duration));
+    on<MusicPlayerSetBpm>(_onSetBpm, transformer: debounce(_duration));
   }
 
   Future<void> _onInsertNext(
@@ -54,17 +51,10 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(status: () => MusicPlayerStatus.playing));
   }
 
-  Future<void> _onIncrementBpm(
-    MusicPlayerIncrementBpm event,
+  Future<void> _onSetBpm(
+    MusicPlayerSetBpm event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    emit(state.copyWith(bpm: () => state.bpm + 1));
-  }
-
-  Future<void> _onDecrementBpm(
-    MusicPlayerDecrementBpm event,
-    Emitter<MusicPlayerState> emit,
-  ) async {
-    emit(state.copyWith(bpm: () => state.bpm - 1));
+    emit(state.copyWith(bpm: () => event.bpm));
   }
 }
