@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - "v*.*.*" # Triggers the workflow on version tags like v1.0.0
-    branches:
-      - staging
 
 jobs:
   Build-APK:
