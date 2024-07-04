@@ -53,9 +53,9 @@ class PlaylistRepository {
     final newId = const UuidV4().generate();
     await _db.transaction((txn) async {
       await txn.rawInsert('''
-        INSERT INTO $tableName (id, name, song_count)
-        VALUES (?, ?, ?)
-      ''', [newId, playlist.name, playlist.musics.length]);
+        INSERT INTO $tableName (id, name, song_count, cover_image)
+        VALUES (?, ?, ?, ?)
+      ''', [newId, playlist.name, playlist.musics.length, playlist.coverImage]);
 
       await txn.rawInsert('''
         INSERT INTO $joinTableName (playlist_id, music_id)
@@ -105,9 +105,9 @@ class PlaylistRepository {
     // Update database
     await _db.rawUpdate('''
       UPDATE $tableName
-      SET name = ?
+      SET name = ?, cover_image = ?
       WHERE id = ?
-    ''', [playlist.name, playlist.id]);
+    ''', [playlist.name, playlist.coverImage, playlist.id]);
 
     // Publish to stream
     final playlists = [..._playlistStreamController.value];
