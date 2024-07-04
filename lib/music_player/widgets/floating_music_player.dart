@@ -11,8 +11,8 @@ class FloatingMusicPlayer extends StatefulWidget {
 }
 
 class _FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
-  late AudioPlayer _audioPlayer;
-  late MusicPlayerBloc _musicPlayerBloc;
+  late final AudioPlayer _audioPlayer;
+  late final MusicPlayerBloc _musicPlayerBloc;
   late num _bpm;
 
   @override
