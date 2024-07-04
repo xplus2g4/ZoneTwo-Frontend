@@ -9,10 +9,8 @@ class DownloadRepository {
 
   final DownloadClient _client;
 
-  Future<MusicDownloadInfo> downloadByYoutubeLink(
-    String link,
-    ProgressCallback progressCallback,
-  ) async {
+  Future<MusicDownloadInfo> downloadByYoutubeLink(String link,
+      {ProgressCallback? progressCallback}) async {
     return await _client.downloadByYoutubeLink(link, progressCallback);
   }
 }

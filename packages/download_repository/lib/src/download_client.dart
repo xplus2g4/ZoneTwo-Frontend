@@ -23,7 +23,7 @@ class DownloadClient {
 
   Future<MusicDownloadInfo> downloadByYoutubeLink(
     String link,
-    ProgressCallback progressCallback,
+    ProgressCallback? progressCallback,
   ) async {
     final response = await httpClient.get<List<int>>(
       "/api/musics/download",

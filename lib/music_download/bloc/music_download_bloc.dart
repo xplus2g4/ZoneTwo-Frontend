@@ -17,21 +17,42 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
   final DownloadRepository downloadRepository;
   final MusicRepository musicRepository;
 
+  String? validateLink(String link) {
+    final desktopLink =
+        RegExp(r"^https://(?:www\.)?youtube\.com/watch\?v=([^&]+)")
+            .firstMatch(link)
+            ?.group(1);
+    if (desktopLink != null) return desktopLink;
+    final mobileLink =
+        RegExp(r"^https://youtu\.be/([^?]+)").firstMatch(link)?.group(1);
+    if (mobileLink != null) return mobileLink;
+    return null;
+  }
+
   Future<void> _onDownloadClicked(
     DownloadClicked event,
     Emitter<MusicDownloadState> emit,
   ) async {
-    final downloadLink = event.link;
+    if (event.link.isEmpty) {
+      emit(const MusicDownloadStateError('link is empty'));
+      return;
+    }
+    final videoIdentifier = validateLink(event.link);
+    if (videoIdentifier == null) {
+      emit(const MusicDownloadStateError('invalid link'));
+      return;
+    }
 
-    if (downloadLink.isEmpty) return emit(MusicDownloadStateIdle());
-
+    final downloadLink = 'https://www.youtube.com/watch?v=$videoIdentifier';
     emit(MusicDownloadStateLoading(0));
 
     try {
-      final musicDownloadInfo = await downloadRepository
-          .downloadByYoutubeLink(downloadLink, (actualBytes, int totalBytes) {
-        emit(MusicDownloadStateLoading((actualBytes / totalBytes * 100)));
-      });
+      final musicDownloadInfo = await downloadRepository.downloadByYoutubeLink(
+        downloadLink,
+        progressCallback: (actualBytes, int totalBytes) {
+          emit(MusicDownloadStateLoading((actualBytes / totalBytes * 100)));
+        },
+      );
       await musicRepository.addMusicData(MusicData.newData(
           title: musicDownloadInfo.title,
           savePath: musicDownloadInfo.savePath,
