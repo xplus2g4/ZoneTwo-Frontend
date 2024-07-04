@@ -92,6 +92,7 @@ class MusicsOverviewBloc
     await _playlistRepository.createPlaylist(PlaylistWithMusicData(
       id: "",
       name: event.playlistName,
+      coverImage: state.musics.isNotEmpty ? state.musics[0].coverImage : null,
       musics: state.musics
           .asMap()
           .entries

@@ -18,7 +18,8 @@ class DatabaseMigrator {
       CREATE TABLE playlists (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        song_count INTEGER NOT NULL
+        song_count INTEGER NOT NULL,
+        cover_image BLOB
       )
     ''');
     batch.execute('DROP TABLE IF EXISTS playlist_musics');

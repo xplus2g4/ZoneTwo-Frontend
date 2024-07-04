@@ -28,9 +28,14 @@ class PlaylistListTile extends StatelessWidget {
                       border: Border.all(color: theme.highlightColor)),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
-                    child: const SizedBox.square(
-                      dimension: 80,
-                    ),
+                    child: playlist.coverImage != null
+                        ? Image.memory(
+                            playlist.coverImage!,
+                            fit: BoxFit.cover,
+                            width: 80,
+                            height: 80,
+                          )
+                        : const Icon(Icons.image, size: 80),
                   ),
                 ),
                 Expanded(
