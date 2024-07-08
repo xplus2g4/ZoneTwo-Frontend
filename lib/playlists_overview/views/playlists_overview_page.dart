@@ -16,13 +16,13 @@ class PlaylistsOverviewPage extends StatelessWidget {
       create: (context) => PlaylistsOverviewBloc(
         playlistRepository: context.read<PlaylistRepository>(),
       )..add(const PlaylistsOverviewSubscriptionRequested()),
-      child: const MusicsOverviewView(),
+      child: const MusicOverviewView(),
     );
   }
 }
 
-class MusicsOverviewView extends StatelessWidget {
-  const MusicsOverviewView({super.key});
+class MusicOverviewView extends StatelessWidget {
+  const MusicOverviewView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -6,7 +6,7 @@ import 'package:uuid/v4.dart';
 import 'package:rxdart/subjects.dart';
 
 class MusicRepository {
-  static const tableName = "musics";
+  static const tableName = "music";
   MusicRepository(this._db);
 
   final Database _db;
@@ -14,65 +14,65 @@ class MusicRepository {
     const [],
   );
 
-  Stream<List<MusicData>> getMusics() =>
+  Stream<List<MusicData>> getMusic() =>
       _musicStreamController.asBroadcastStream();
 
-  Future<void> addMusicData(MusicData music) async {
+  Future<void> addMusicData(MusicData musicData) async {
     // Update database
     final newId = const UuidV4().generate();
     await _db.rawInsert(
         "INSERT INTO $tableName(id, title, save_path, bpm, cover_image) VALUES(?, ?, ?, ?, ?)",
         [
           newId,
-          music.title,
-          music.savePath,
-          music.bpm,
-          music.coverImage,
+          musicData.title,
+          musicData.savePath,
+          musicData.bpm,
+          musicData.coverImage,
         ]);
-    final musics = [..._musicStreamController.value];
-    final newMusic = music.update(id: newId);
-    musics.add(newMusic);
-    _musicStreamController.add(musics);
+    final music = [..._musicStreamController.value];
+    final newMusic = musicData.update(id: newId);
+    music.add(newMusic);
+    _musicStreamController.add(music);
   }
 
   Future<void> getAllMusicData() async {
-    final musics = (await _db.query(tableName)).map(MusicData.fromRow).toList();
-    _musicStreamController.add(musics);
+    final music = (await _db.query(tableName)).map(MusicData.fromRow).toList();
+    _musicStreamController.add(music);
   }
 
-  Future<void> updateMusicData(MusicData music) async {
+  Future<void> updateMusicData(MusicData musicData) async {
     // Update database
     await _db.rawUpdate(
         "UPDATE $tableName SET title = ?, save_path = ? bpm = ? WHERE id = ?", [
-      music.title,
-      music.savePath,
-      music.bpm,
-      music.id,
+      musicData.title,
+      musicData.savePath,
+      musicData.bpm,
+      musicData.id,
     ]);
 
     // Publish to stream
-    final musics = [..._musicStreamController.value];
-    final musicIndex = musics.indexWhere((t) => t.id == music.id);
+    final music = [..._musicStreamController.value];
+    final musicIndex = music.indexWhere((t) => t.id == musicData.id);
     if (musicIndex >= 0) {
-      musics[musicIndex] = music;
+      music[musicIndex] = musicData;
     } else {
-      musics.add(music);
+      music.add(musicData);
     }
-    _musicStreamController.add(musics);
+    _musicStreamController.add(music);
   }
 
-  Future<void> deleteMusicData(MusicData music) async {
+  Future<void> deleteMusicData(MusicData musicData) async {
     // Update database
-    await _db.delete(tableName, where: "id = ?", whereArgs: [music.id]);
+    await _db.delete(tableName, where: "id = ?", whereArgs: [musicData.id]);
 
     // Publish to stream
-    final musics = [..._musicStreamController.value];
-    final musicIndex = musics.indexWhere((t) => t.id == music.id);
+    final music = [..._musicStreamController.value];
+    final musicIndex = music.indexWhere((t) => t.id == musicData.id);
     if (musicIndex == -1) {
       // TODO: Handle Error
     } else {
-      musics.removeAt(musicIndex);
-      _musicStreamController.add(musics);
+      music.removeAt(musicIndex);
+      _musicStreamController.add(music);
     }
   }
 }

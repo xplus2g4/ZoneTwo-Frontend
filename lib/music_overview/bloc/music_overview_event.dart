@@ -1,18 +1,18 @@
 part of 'music_overview_bloc.dart';
 
-sealed class MusicsOverviewEvent extends Equatable {
-  const MusicsOverviewEvent();
+sealed class MusicOverviewEvent extends Equatable {
+  const MusicOverviewEvent();
 
   @override
   List<Object> get props => [];
 }
 
-final class MusicsOverviewSubscriptionRequested extends MusicsOverviewEvent {
-  const MusicsOverviewSubscriptionRequested();
+final class MusicOverviewSubscriptionRequested extends MusicOverviewEvent {
+  const MusicOverviewSubscriptionRequested();
 }
 
-final class MusicsOverviewCreatePlaylist extends MusicsOverviewEvent {
-  const MusicsOverviewCreatePlaylist(this.playlistName);
+final class MusicOverviewCreatePlaylist extends MusicOverviewEvent {
+  const MusicOverviewCreatePlaylist(this.playlistName);
 
   final String playlistName;
 
@@ -20,7 +20,7 @@ final class MusicsOverviewCreatePlaylist extends MusicsOverviewEvent {
   List<Object> get props => [playlistName];
 }
 
-final class MusicOverviewEnterSelectionMode extends MusicsOverviewEvent {
+final class MusicOverviewEnterSelectionMode extends MusicOverviewEvent {
   const MusicOverviewEnterSelectionMode(this.startIndex);
 
   final int? startIndex;
@@ -29,14 +29,14 @@ final class MusicOverviewEnterSelectionMode extends MusicsOverviewEvent {
   List<Object> get props => [];
 }
 
-final class MusicOverviewExitSelectionMode extends MusicsOverviewEvent {
+final class MusicOverviewExitSelectionMode extends MusicOverviewEvent {
   const MusicOverviewExitSelectionMode();
 
   @override
   List<Object> get props => [];
 }
 
-final class MusicOverviewToggleSelectedMusic extends MusicsOverviewEvent {
+final class MusicOverviewToggleSelectedMusic extends MusicOverviewEvent {
   const MusicOverviewToggleSelectedMusic(this.index);
 
   final int index;
@@ -45,8 +45,8 @@ final class MusicOverviewToggleSelectedMusic extends MusicsOverviewEvent {
   List<Object> get props => [index];
 }
 
-// class MusicsOverviewFilterChanged extends MusicsOverviewEvent {
-//   const MusicsOverviewFilterChanged(this.filter);
+// class MusicOverviewFilterChanged extends MusicOverviewEvent {
+//   const MusicOverviewFilterChanged(this.filter);
 
 //   final TodosViewFilter filter;
 

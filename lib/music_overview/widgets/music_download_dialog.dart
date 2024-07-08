@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:zonetwo/music_download/music_download.dart';
 
-class MusicsDownloadDialog extends StatelessWidget {
-  MusicsDownloadDialog({super.key}) : downloadRepository = DownloadRepository();
+class MusicDownloadDialog extends StatelessWidget {
+  MusicDownloadDialog({super.key}) : downloadRepository = DownloadRepository();
 
   final DownloadRepository downloadRepository;
   @override

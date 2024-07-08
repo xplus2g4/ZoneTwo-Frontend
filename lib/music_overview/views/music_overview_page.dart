@@ -6,20 +6,20 @@ import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
 
-class MusicsOverviewPage extends StatelessWidget {
-  const MusicsOverviewPage({super.key});
+class MusicOverviewPage extends StatelessWidget {
+  const MusicOverviewPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MusicsOverviewBloc(
+      create: (context) => MusicOverviewBloc(
         musicRepository: context.read<MusicRepository>(),
         playlistRepository: context.read<PlaylistRepository>(),
-      )..add(const MusicsOverviewSubscriptionRequested()),
-      child: BlocListener<MusicsOverviewBloc, MusicsOverviewState>(
+      )..add(const MusicOverviewSubscriptionRequested()),
+      child: BlocListener<MusicOverviewBloc, MusicOverviewState>(
         listenWhen: (previous, current) => previous.status != current.status,
         listener: (context, state) {
-          if (state.status == MusicsOverviewStatus.failure) {
+          if (state.status == MusicOverviewStatus.failure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
@@ -29,46 +29,46 @@ class MusicsOverviewPage extends StatelessWidget {
               );
           }
         },
-        child: const MusicsOverviewView(),
+        child: const MusicOverviewView(),
       ),
     );
   }
 }
 
-class MusicsOverviewView extends StatefulWidget {
-  const MusicsOverviewView({super.key});
+class MusicOverviewView extends StatefulWidget {
+  const MusicOverviewView({super.key});
 
   @override
-  MusicsOverviewViewState createState() => MusicsOverviewViewState();
+  MusicOverviewViewState createState() => MusicOverviewViewState();
 }
 
-class MusicsOverviewViewState extends State<MusicsOverviewView> {
-  late MusicsOverviewBloc _musicsOverviewBloc;
+class MusicOverviewViewState extends State<MusicOverviewView> {
+  late MusicOverviewBloc _musicOverviewBloc;
   late MusicPlayerBloc _musicPlayerBloc;
 
   @override
   void initState() {
     super.initState();
-    _musicsOverviewBloc = context.read<MusicsOverviewBloc>();
+    _musicOverviewBloc = context.read<MusicOverviewBloc>();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MusicsOverviewBloc, MusicsOverviewState>(
+    return BlocBuilder<MusicOverviewBloc, MusicOverviewState>(
         builder: (context, state) {
       return Scaffold(
         floatingActionButton: state.isSelectionMode
-            ? CreatePlaylistFAB(_musicsOverviewBloc)
-            : const MusicsOverviewDownloadButton(),
+            ? CreatePlaylistFAB(_musicOverviewBloc)
+            : const MusicOverviewDownloadButton(),
         appBar: AppBar(
-          title: const Text("All Musics"),
+          title: const Text("All Music"),
           leading: state.isSelectionMode
               ? IconButton(
                   icon: Icon(Icons.close,
                       color: Theme.of(context).colorScheme.primary),
                   onPressed: () {
-                    _musicsOverviewBloc
+                    _musicOverviewBloc
                         .add(const MusicOverviewExitSelectionMode());
                   },
                 )
@@ -76,10 +76,10 @@ class MusicsOverviewViewState extends State<MusicsOverviewView> {
         ),
         body: Builder(
           builder: (context) {
-            if (state.musics.isEmpty) {
-              if (state.status == MusicsOverviewStatus.loading) {
+            if (state.music.isEmpty) {
+              if (state.status == MusicOverviewStatus.loading) {
                 return const Center(child: CupertinoActivityIndicator());
-              } else if (state.status != MusicsOverviewStatus.success) {
+              } else if (state.status != MusicOverviewStatus.success) {
                 return const SizedBox();
               } else {
                 return Center(
@@ -90,22 +90,22 @@ class MusicsOverviewViewState extends State<MusicsOverviewView> {
               }
             }
             return ListView.builder(
-              itemCount: state.musics.length,
+              itemCount: state.music.length,
               itemBuilder: (context, index) => MusicListTile(
-                music: state.musics[index],
+                music: state.music[index],
                 isSelectionMode: state.isSelectionMode,
                 isSelected: state.selected[index],
                 onTap: () {
                   if (state.isSelectionMode) {
-                    _musicsOverviewBloc
+                    _musicOverviewBloc
                         .add(MusicOverviewToggleSelectedMusic(index));
                   } else {
                     _musicPlayerBloc
-                        .add(MusicPlayerInsertNext(state.musics[index]));
+                        .add(MusicPlayerInsertNext(state.music[index]));
                   }
                 },
                 onLongPress: () {
-                  _musicsOverviewBloc
+                  _musicOverviewBloc
                       .add(MusicOverviewEnterSelectionMode(index));
                 },
               ),

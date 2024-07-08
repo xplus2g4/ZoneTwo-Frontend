@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         body: Scaffold(
           body: [
-            const MusicsOverviewPage(),
+            const MusicOverviewPage(),
             const PlaylistsOverviewPage(),
             const Center(
               child: Text('School'),
@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.music_note),
-              label: 'Musics',
+              label: 'Music',
             ),
             NavigationDestination(
               icon: Icon(Icons.library_music),

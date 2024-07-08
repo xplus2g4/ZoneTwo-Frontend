@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/music_overview/widgets/music_download_dialog.dart';
 
-class MusicsOverviewDownloadButton extends StatelessWidget {
-  const MusicsOverviewDownloadButton({super.key});
+class MusicOverviewDownloadButton extends StatelessWidget {
+  const MusicOverviewDownloadButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class MusicsOverviewDownloadButton extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
-        return MusicsDownloadDialog();
+        return MusicDownloadDialog();
       },
     );
   }
