@@ -1,4 +1,4 @@
-part of 'musics_overview_bloc.dart';
+part of 'music_overview_bloc.dart';
 
 sealed class MusicsOverviewEvent extends Equatable {
   const MusicsOverviewEvent();

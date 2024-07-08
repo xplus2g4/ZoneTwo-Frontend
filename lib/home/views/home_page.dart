@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/music_download/widgets/share_media_listener.dart';
 import 'package:zonetwo/music_player/music_player.dart';
-import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
+import 'package:zonetwo/music_overview/views/music_overview_page.dart';
 import 'package:zonetwo/playlists_overview/views/playlists_overview_page.dart';
 
 class HomePage extends StatefulWidget {

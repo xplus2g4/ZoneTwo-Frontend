@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_player/music_player.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 class MusicsOverviewPage extends StatelessWidget {
   const MusicsOverviewPage({super.key});

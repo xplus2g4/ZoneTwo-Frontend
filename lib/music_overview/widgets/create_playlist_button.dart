@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/bloc/musics_overview_bloc.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/bloc/music_overview_bloc.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 import 'create_playlist_bottom_sheet.dart';
 

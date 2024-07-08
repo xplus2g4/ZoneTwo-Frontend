@@ -1,5 +1,5 @@
 import 'package:playlist_repository/playlist_repository.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 import 'playlist_entity.dart';
 

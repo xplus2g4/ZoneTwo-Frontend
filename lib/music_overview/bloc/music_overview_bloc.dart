@@ -2,10 +2,10 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
-part 'musics_overview_event.dart';
-part 'musics_overview_state.dart';
+part 'music_overview_event.dart';
+part 'music_overview_state.dart';
 
 class MusicsOverviewBloc
     extends Bloc<MusicsOverviewEvent, MusicsOverviewState> {

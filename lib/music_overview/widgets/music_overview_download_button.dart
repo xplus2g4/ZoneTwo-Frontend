@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/widgets/musics_download_dialog.dart';
+import 'package:zonetwo/music_overview/widgets/music_download_dialog.dart';
 
 class MusicsOverviewDownloadButton extends StatelessWidget {
   const MusicsOverviewDownloadButton({super.key});

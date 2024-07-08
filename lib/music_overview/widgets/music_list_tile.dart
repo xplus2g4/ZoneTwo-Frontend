@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 class MusicListTile extends StatelessWidget {
   const MusicListTile({
