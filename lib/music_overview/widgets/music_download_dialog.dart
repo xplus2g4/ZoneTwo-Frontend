@@ -102,9 +102,17 @@ class _DownloadLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String percentageToString =
+        percentage == '0.00' ? 'Initializing...' : 'Progress: $percentage%';
     return Row(children: [
-      const CircularProgressIndicator.adaptive(),
-      Text("Progress: $percentage%")
+      const SizedBox(width: 20),
+      const SizedBox(
+        height: 20.0,
+        width: 20.0,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      const SizedBox(width: 20),
+      Text(percentageToString)
     ]);
   }
 }

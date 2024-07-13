@@ -19,6 +19,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     on<MusicOverviewEnterSelectionMode>(_onEnterSelectionMode);
     on<MusicOverviewExitSelectionMode>(_onExitSelectionMode);
     on<MusicOverviewToggleSelectedMusic>(_onToggleSelectMusic);
+    on<MusicOverviewDeleteSelected>(_onDeleteSelected);
   }
 
   final MusicRepository _musicRepository;
@@ -99,6 +100,19 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
           .map((entry) => entry.value.toData())
           .toList(),
     ));
+    emit(state.copyWith(
+      isSelectionMode: () => false,
+      selected: () => List.generate(state.music.length, (_) => false),
+    ));
+  }
+
+  Future<void> _onDeleteSelected(
+    MusicOverviewDeleteSelected event,
+    Emitter<MusicOverviewState> emit,
+  ) async {
+    for (final musicData in event.selectedMusic) {
+      await _musicRepository.deleteMusicData(musicData.toData());
+    }
     emit(state.copyWith(
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),

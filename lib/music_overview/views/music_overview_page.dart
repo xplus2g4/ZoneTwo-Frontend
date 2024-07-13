@@ -62,7 +62,10 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
             ? CreatePlaylistFAB(_musicOverviewBloc)
             : const MusicOverviewDownloadButton(),
         appBar: AppBar(
-          title: const Text("All Music"),
+          title: state.isSelectionMode
+              ? Text(
+                  "${state.selected.where((selected) => selected).length} selected")
+              : const Text("All Music"),
           leading: state.isSelectionMode
               ? IconButton(
                   icon: Icon(Icons.close,
@@ -72,6 +75,50 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                         .add(const MusicOverviewExitSelectionMode());
                   },
                 )
+              : null,
+          actions: state.isSelectionMode
+              ? [
+                  IconButton(
+                    icon: Icon(Icons.delete,
+                        color: Theme.of(context).colorScheme.primary),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Confirm Delete"),
+                            content: const Text(
+                                "Are you sure you want to delete the selected music?"),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text("Cancel"),
+                                onPressed: () {
+                                  Navigator.of(context)
+                                      .pop(); // Close the dialog
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("Delete"),
+                                onPressed: () {
+                                  // Perform the delete operation
+                                  _musicOverviewBloc.add(
+                                      MusicOverviewDeleteSelected(state.music
+                                          .asMap()
+                                          .entries
+                                          .where((music) =>
+                                              state.selected[music.key])
+                                          .map((music) => music.value)));
+                                  Navigator.of(context)
+                                      .pop(); // Close the dialog
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ]
               : null,
         ),
         body: Builder(
@@ -116,3 +163,4 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
     });
   }
 }
+

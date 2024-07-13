@@ -62,17 +62,10 @@ class MusicRepository {
   }
 
   Future<void> deleteMusicData(MusicData musicData) async {
-    // Update database
     await _db.delete(tableName, where: "id = ?", whereArgs: [musicData.id]);
-
-    // Publish to stream
-    final music = [..._musicStreamController.value];
-    final musicIndex = music.indexWhere((t) => t.id == musicData.id);
-    if (musicIndex == -1) {
-      // TODO: Handle Error
-    } else {
-      music.removeAt(musicIndex);
-      _musicStreamController.add(music);
-    }
+    final music = [..._musicStreamController.value]
+        .where((music) => music.id != musicData.id)
+        .toList();
+    _musicStreamController.add(music);
   }
 }
