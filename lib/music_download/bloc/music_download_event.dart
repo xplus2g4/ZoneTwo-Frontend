@@ -15,3 +15,15 @@ final class DownloadClicked extends MusicDownloadEvent {
   @override
   String toString() => 'DownloadClicked { link: $link }';
 }
+
+final class LinkSharedEvent extends MusicDownloadEvent {
+  const LinkSharedEvent(this.sharedMediaFile);
+
+  final SharedMediaFile sharedMediaFile;
+
+  @override
+  List<Object> get props => [sharedMediaFile];
+
+  @override
+  String toString() => 'LinkSharedEvent { link: $sharedMediaFile }';
+}
