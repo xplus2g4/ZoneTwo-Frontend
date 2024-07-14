@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
-import 'package:flutter_sharing_intent/model/sharing_file.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../bloc/music_download_bloc.dart';
 
@@ -25,26 +24,22 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
     super.initState();
     _musicDownloadBloc = context.read<MusicDownloadBloc>();
     // For sharing images coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription = FlutterSharingIntent.instance
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
         .getMediaStream()
-        .listen((List<SharedFile> sharedMedia) {
+        .listen((List<SharedMediaFile> sharedMedia) {
       for (var media in sharedMedia) {
-        if (media.value != null) {
-          _musicDownloadBloc.add(DownloadClicked(link: media.value!));
-        }
+        _musicDownloadBloc.add(LinkSharedEvent(media));
       }
     }, onError: (err) {
       print("getIntentDataStream error: $err");
     });
 
     // For sharing images coming from outside the app while the app is closed
-    FlutterSharingIntent.instance
-        .getInitialSharing()
-        .then((List<SharedFile> sharedMedia) {
+    ReceiveSharingIntent.instance
+        .getInitialMedia()
+        .then((List<SharedMediaFile> sharedMedia) {
       for (var media in sharedMedia) {
-        if (media.value != null) {
-          _musicDownloadBloc.add(DownloadClicked(link: media.value!));
-        }
+        _musicDownloadBloc.add(LinkSharedEvent(media));
       }
     });
   }
