@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/bloc/musics_overview_bloc.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/bloc/music_overview_bloc.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 import 'create_playlist_bottom_sheet.dart';
 
 class CreatePlaylistFAB extends StatelessWidget {
-  const CreatePlaylistFAB(this.musicsOverviewBloc, {super.key});
+  const CreatePlaylistFAB(this.musicOverviewBloc, {super.key});
 
-  final MusicsOverviewBloc musicsOverviewBloc;
+  final MusicOverviewBloc musicOverviewBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class CreatePlaylistFAB extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return CreatePlaylistBottomSheet(musicsOverviewBloc);
+        return CreatePlaylistBottomSheet(musicOverviewBloc);
       },
     );
   }

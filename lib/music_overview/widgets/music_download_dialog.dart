@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:zonetwo/music_download/music_download.dart';
 
-class MusicsDownloadDialog extends StatelessWidget {
-  MusicsDownloadDialog({super.key}) : downloadRepository = DownloadRepository();
+class MusicDownloadDialog extends StatelessWidget {
+  MusicDownloadDialog({super.key}) : downloadRepository = DownloadRepository();
 
   final DownloadRepository downloadRepository;
   @override
@@ -102,9 +102,17 @@ class _DownloadLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String percentageToString =
+        percentage == '0.00' ? 'Initializing...' : 'Progress: $percentage%';
     return Row(children: [
-      const CircularProgressIndicator.adaptive(),
-      Text("Progress: $percentage%")
+      const SizedBox(width: 20),
+      const SizedBox(
+        height: 20.0,
+        width: 20.0,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      const SizedBox(width: 20),
+      Text(percentageToString)
     ]);
   }
 }

@@ -54,30 +54,30 @@ class PlaylistData {
 }
 
 class PlaylistWithMusicData extends PlaylistData {
-  final List<MusicData> musics;
+  final List<MusicData> music;
 
   const PlaylistWithMusicData({
     required super.id,
     required super.name,
-    required this.musics,
+    required this.music,
     super.coverImage,
-  }) : super(songCount: musics.length);
+  }) : super(songCount: music.length);
 
   PlaylistWithMusicData updateData(
       {String? id,
       String? name,
-      List<MusicData>? musics,
+      List<MusicData>? music,
       Uint8List? coverImage}) {
     return PlaylistWithMusicData(
       id: id ?? this.id,
       name: name ?? this.name,
-      musics: musics ?? this.musics,
+      music: music ?? this.music,
       coverImage: coverImage ?? this.coverImage,
     );
   }
 
   @override
   String toString() {
-    return 'PlaylistWithMusicData{id: $id, name: $name, musics: $musics}';
+    return 'PlaylistWithMusicData{id: $id, name: $name, music: $music}';
   }
 }

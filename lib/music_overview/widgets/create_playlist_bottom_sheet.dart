@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
 class CreatePlaylistBottomSheet extends StatelessWidget {
-  const CreatePlaylistBottomSheet(this.musicsOverviewBloc, {super.key});
+  const CreatePlaylistBottomSheet(this.musicOverviewBloc, {super.key});
 
-  final MusicsOverviewBloc musicsOverviewBloc;
+  final MusicOverviewBloc musicOverviewBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +18,8 @@ class CreatePlaylistBottomSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: _NameField(
-              onCreatePlaylist: (String playlistName) => musicsOverviewBloc
-                  .add(MusicsOverviewCreatePlaylist(playlistName)),
+              onCreatePlaylist: (String playlistName) => musicOverviewBloc
+                  .add(MusicOverviewCreatePlaylist(playlistName)),
             ),
           ),
           const Text('Modal BottomSheet'),

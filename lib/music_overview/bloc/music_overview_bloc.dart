@@ -2,59 +2,59 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
-import 'package:zonetwo/musics_overview/musics_overview.dart';
+import 'package:zonetwo/music_overview/music_overview.dart';
 
-part 'musics_overview_event.dart';
-part 'musics_overview_state.dart';
+part 'music_overview_event.dart';
+part 'music_overview_state.dart';
 
-class MusicsOverviewBloc
-    extends Bloc<MusicsOverviewEvent, MusicsOverviewState> {
-  MusicsOverviewBloc({
+class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
+  MusicOverviewBloc({
     required MusicRepository musicRepository,
     required PlaylistRepository playlistRepository,
   })  : _musicRepository = musicRepository,
         _playlistRepository = playlistRepository,
-        super(const MusicsOverviewState()) {
-    on<MusicsOverviewSubscriptionRequested>(_onSubscriptionRequested);
-    on<MusicsOverviewCreatePlaylist>(_onCreatePlaylists);
+        super(const MusicOverviewState()) {
+    on<MusicOverviewSubscriptionRequested>(_onSubscriptionRequested);
+    on<MusicOverviewCreatePlaylist>(_onCreatePlaylists);
     on<MusicOverviewEnterSelectionMode>(_onEnterSelectionMode);
     on<MusicOverviewExitSelectionMode>(_onExitSelectionMode);
     on<MusicOverviewToggleSelectedMusic>(_onToggleSelectMusic);
+    on<MusicOverviewDeleteSelected>(_onDeleteSelected);
   }
 
   final MusicRepository _musicRepository;
   final PlaylistRepository _playlistRepository;
 
   Future<void> _onSubscriptionRequested(
-    MusicsOverviewSubscriptionRequested event,
-    Emitter<MusicsOverviewState> emit,
+    MusicOverviewSubscriptionRequested event,
+    Emitter<MusicOverviewState> emit,
   ) async {
-    emit(state.copyWith(status: () => MusicsOverviewStatus.loading));
+    emit(state.copyWith(status: () => MusicOverviewStatus.loading));
 
     await _musicRepository.getAllMusicData();
     await emit.forEach<List<MusicEntity>>(
       _musicRepository
-          .getMusics()
+          .getMusic()
           .map((musicList) => musicList.map(MusicEntity.fromData).toList()),
-      onData: (musics) => state.copyWith(
-        status: () => MusicsOverviewStatus.success,
-        musics: () => musics,
-        selected: () => List.generate(musics.length, (_) => false),
+      onData: (music) => state.copyWith(
+        status: () => MusicOverviewStatus.success,
+        music: () => music,
+        selected: () => List.generate(music.length, (_) => false),
       ),
       onError: (_, __) => state.copyWith(
-        status: () => MusicsOverviewStatus.failure,
+        status: () => MusicOverviewStatus.failure,
       ),
     );
   }
 
   Future<void> _onEnterSelectionMode(
     MusicOverviewEnterSelectionMode event,
-    Emitter<MusicsOverviewState> emit,
+    Emitter<MusicOverviewState> emit,
   ) async {
     emit(state.copyWith(
         isSelectionMode: () => true,
         selected: () {
-          final newSelected = List.generate(state.musics.length, (_) => false);
+          final newSelected = List.generate(state.music.length, (_) => false);
           if (event.startIndex != null) {
             newSelected[event.startIndex!] = true;
           }
@@ -64,19 +64,19 @@ class MusicsOverviewBloc
 
   Future<void> _onExitSelectionMode(
     MusicOverviewExitSelectionMode event,
-    Emitter<MusicsOverviewState> emit,
+    Emitter<MusicOverviewState> emit,
   ) async {
     emit(state.copyWith(
         isSelectionMode: () => false,
         selected: () {
-          final newSelected = List.generate(state.musics.length, (_) => false);
+          final newSelected = List.generate(state.music.length, (_) => false);
           return newSelected;
         }));
   }
 
   Future<void> _onToggleSelectMusic(
     MusicOverviewToggleSelectedMusic event,
-    Emitter<MusicsOverviewState> emit,
+    Emitter<MusicOverviewState> emit,
   ) async {
     emit(state.copyWith(selected: () {
       final newSelected = List<bool>.from(state.selected);
@@ -86,14 +86,14 @@ class MusicsOverviewBloc
   }
 
   Future<void> _onCreatePlaylists(
-    MusicsOverviewCreatePlaylist event,
-    Emitter<MusicsOverviewState> emit,
+    MusicOverviewCreatePlaylist event,
+    Emitter<MusicOverviewState> emit,
   ) async {
     await _playlistRepository.createPlaylist(PlaylistWithMusicData(
       id: "",
       name: event.playlistName,
-      coverImage: state.musics.isNotEmpty ? state.musics[0].coverImage : null,
-      musics: state.musics
+      coverImage: state.music.isNotEmpty ? state.music[0].coverImage : null,
+      music: state.music
           .asMap()
           .entries
           .where((entry) => state.selected[entry.key])
@@ -102,7 +102,20 @@ class MusicsOverviewBloc
     ));
     emit(state.copyWith(
       isSelectionMode: () => false,
-      selected: () => List.generate(state.musics.length, (_) => false),
+      selected: () => List.generate(state.music.length, (_) => false),
+    ));
+  }
+
+  Future<void> _onDeleteSelected(
+    MusicOverviewDeleteSelected event,
+    Emitter<MusicOverviewState> emit,
+  ) async {
+    for (final musicData in event.selectedMusic) {
+      await _musicRepository.deleteMusicData(musicData.toData());
+    }
+    emit(state.copyWith(
+      isSelectionMode: () => false,
+      selected: () => List.generate(state.music.length, (_) => false),
     ));
   }
 }

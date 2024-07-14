@@ -1,34 +1,34 @@
-part of 'musics_overview_bloc.dart';
+part of 'music_overview_bloc.dart';
 
-enum MusicsOverviewStatus { initial, loading, success, failure }
+enum MusicOverviewStatus { initial, loading, success, failure }
 
-final class MusicsOverviewState extends Equatable {
-  const MusicsOverviewState({
-    this.status = MusicsOverviewStatus.initial,
-    this.musics = const [],
+final class MusicOverviewState extends Equatable {
+  const MusicOverviewState({
+    this.status = MusicOverviewStatus.initial,
+    this.music = const [],
     this.isSelectionMode = false,
     this.selected = const [],
     // this.filter = TodosViewFilter.all,
   });
 
-  final MusicsOverviewStatus status;
-  final List<MusicEntity> musics;
+  final MusicOverviewStatus status;
+  final List<MusicEntity> music;
   final bool isSelectionMode;
   final List<bool> selected;
   // final TodosViewFilter filter;
 
   // Iterable<MusicEntity> get filteredTodos => filter.applyAll(todos);
 
-  MusicsOverviewState copyWith({
-    MusicsOverviewStatus Function()? status,
-    List<MusicEntity> Function()? musics,
+  MusicOverviewState copyWith({
+    MusicOverviewStatus Function()? status,
+    List<MusicEntity> Function()? music,
     bool Function()? isSelectionMode,
     List<bool> Function()? selected,
     // TodosViewFilter Function()? filter,
   }) {
-    return MusicsOverviewState(
+    return MusicOverviewState(
       status: status != null ? status() : this.status,
-      musics: musics != null ? musics() : this.musics,
+      music: music != null ? music() : this.music,
       isSelectionMode:
           isSelectionMode != null ? isSelectionMode() : this.isSelectionMode,
       selected: selected != null ? selected() : this.selected,
@@ -39,7 +39,7 @@ final class MusicsOverviewState extends Equatable {
   @override
   List<Object?> get props => [
         status,
-        musics,
+        music,
         isSelectionMode,
         selected,
         // filter,

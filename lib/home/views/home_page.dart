@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/music_download/widgets/share_media_listener.dart';
 import 'package:zonetwo/music_player/music_player.dart';
-import 'package:zonetwo/musics_overview/views/musics_overview_page.dart';
+import 'package:zonetwo/music_overview/views/music_overview_page.dart';
 import 'package:zonetwo/playlists_overview/views/playlists_overview_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         body: Scaffold(
           body: [
-            const MusicsOverviewPage(),
+            const MusicOverviewPage(),
             const PlaylistsOverviewPage(),
             const Center(
               child: Text('School'),
@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.music_note),
-              label: 'Musics',
+              label: 'Music',
             ),
             NavigationDestination(
               icon: Icon(Icons.library_music),

@@ -16,7 +16,7 @@ class DownloadClient {
   DownloadClient({this.saveFolder})
       : httpClient = Dio(BaseOptions(
             baseUrl: const String.fromEnvironment("downloader_api_endpoint",
-                defaultValue: "http://10.0.2.2:7771")));
+                defaultValue: "https://h9xmdc8z-7771.asse.devtunnels.ms")));
 
   final Dio httpClient;
   final String? saveFolder;
@@ -26,14 +26,16 @@ class DownloadClient {
     ProgressCallback? progressCallback,
   ) async {
     final response = await httpClient.get<List<int>>(
-      "/api/musics/download",
+      "/api/music/download",
       onReceiveProgress: progressCallback,
       queryParameters: {
         "json_data": jsonEncode({
           "url": link,
         }),
       },
-      options: Options(responseType: ResponseType.bytes),
+      options: Options(
+          headers: {'Connection': 'Keep-Alive', 'Accept-Encoding': '*'},
+          responseType: ResponseType.bytes),
     );
 
     if (response.statusCode == 200 && response.data != null) {

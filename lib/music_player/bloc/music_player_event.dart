@@ -7,13 +7,13 @@ sealed class MusicPlayerEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class MusicPlayerQueueMusics extends MusicPlayerEvent {
-  const MusicPlayerQueueMusics(this.musics);
+final class MusicPlayerQueueMusic extends MusicPlayerEvent {
+  const MusicPlayerQueueMusic(this.music);
 
-  final List<MusicEntity> musics;
+  final List<MusicEntity> music;
 
   @override
-  List<Object> get props => [musics];
+  List<Object> get props => [music];
 }
 
 final class MusicPlayerInsertNext extends MusicPlayerEvent {
