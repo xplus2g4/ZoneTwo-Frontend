@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "Flutter",
+      "name": "Android 1",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
@@ -9,6 +9,23 @@
       "toolArgs": [
         "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771"
       ]
+    },
+    {
+      "name": "Android 2",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "Pixel_8_API_34",
+      "flutterMode": "debug",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "All Devices",
+      "configurations": ["Android 1", "Android 2"],
     }
   ]
 }

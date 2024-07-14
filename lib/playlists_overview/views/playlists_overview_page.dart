@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:playlist_repository/playlist_repository.dart';
-import 'package:zonetwo/playlist_detail/playlist_detail.dart';
 
 import '../bloc/playlists_overview_bloc.dart';
 import '../widgets/playlist_list_tile.dart';
@@ -65,11 +64,10 @@ class MusicOverviewView extends StatelessWidget {
               itemBuilder: (context, index) => PlaylistListTile(
                   playlist: state.playlists[index],
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushNamed(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              PlaylistDetailPage(state.playlists[index])),
+                      'playlist_detail',
+                      arguments: state.playlists[index],
                     );
                   }),
             );
