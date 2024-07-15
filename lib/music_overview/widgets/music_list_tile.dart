@@ -4,8 +4,8 @@ import 'package:zonetwo/music_overview/music_overview.dart';
 class MusicListTile extends StatelessWidget {
   const MusicListTile({
     required this.music,
-    required this.isSelectionMode,
-    required this.isSelected,
+    this.isSelectionMode = false,
+    this.isSelected = false,
     super.key,
     this.onTap,
     this.onLongPress,

@@ -23,7 +23,7 @@ class PlaylistRepository {
   Stream<List<PlaylistData>> getPlaylistsStream() =>
       _playlistStreamController.asBroadcastStream();
 
-  Stream<PlaylistWithMusicData> getPlaylistWithmusictream() =>
+  Stream<PlaylistWithMusicData> getPlaylistWithMusicStream() =>
       _playlistWithmusictreamController.asBroadcastStream();
 
   Future<void> addMusicToPlaylist(

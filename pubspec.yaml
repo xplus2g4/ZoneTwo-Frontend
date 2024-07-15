@@ -52,6 +52,7 @@ dependencies:
     path: packages/music_repository
   playlist_repository:
     path: packages/playlist_repository
+  go_router: ^14.2.1
 
 dev_dependencies:
   flutter_test:
