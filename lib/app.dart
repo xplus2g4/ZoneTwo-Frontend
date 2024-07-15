@@ -5,8 +5,8 @@ import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_download/bloc/music_download_bloc.dart';
 import 'package:zonetwo/music_player/music_player.dart';
+import 'package:zonetwo/routes.dart';
 
-import 'home/home.dart';
 import 'theme/theme.dart';
 
 class App extends StatelessWidget {
@@ -47,10 +47,10 @@ class AppView extends StatelessWidget {
           ),
         )
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: FlutterZoneTwoTheme.dark,
         darkTheme: FlutterZoneTwoTheme.dark,
-        home: const HomePage(),
+        routerConfig: router,
       ),
     );
   }
