@@ -38,3 +38,13 @@ final class MusicPlayerSetBpm extends MusicPlayerEvent {
 
   final num bpm;
 }
+
+final class MusicPlayerLoadMusic extends MusicPlayerEvent {
+  const MusicPlayerLoadMusic(this.music);
+
+  final MusicEntity music;
+}
+
+final class MusicPlayerEnterFullscreen extends MusicPlayerEvent {
+  const MusicPlayerEnterFullscreen();
+}

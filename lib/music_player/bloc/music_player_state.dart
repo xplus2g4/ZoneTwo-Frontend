@@ -1,38 +1,37 @@
 part of 'music_player_bloc.dart';
 
-enum MusicPlayerStatus { idle, playing, paused, insertNext }
 
 final class MusicPlayerState extends Equatable {
   const MusicPlayerState(
-      {this.status = MusicPlayerStatus.idle,
-      this.musicQueue = const [],
+      {this.musicQueue = const [],
       this.currentIndex = -1,
-      this.bpm = 150});
+      this.bpm = 200,
+      required this.audioPlayer});
 
-  final MusicPlayerStatus status;
   final int currentIndex;
   final List<MusicEntity> musicQueue;
   final num bpm;
+  final AudioPlayer audioPlayer;
 
   MusicPlayerState copyWith({
-    MusicPlayerStatus Function()? status,
     int Function()? currentIndex,
     List<MusicEntity> Function()? musicQueue,
     num Function()? bpm,
+    AudioPlayer Function()? audioPlayer,
   }) {
     return MusicPlayerState(
-      status: status != null ? status() : this.status,
-      currentIndex: currentIndex != null ? currentIndex() : this.currentIndex,
       musicQueue: musicQueue != null ? musicQueue() : this.musicQueue,
+      currentIndex: currentIndex != null ? currentIndex() : this.currentIndex,
       bpm: bpm != null ? bpm() : this.bpm,
+      audioPlayer: audioPlayer != null ? audioPlayer() : this.audioPlayer,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        currentIndex,
         musicQueue,
+        currentIndex,
         bpm,
+        audioPlayer,
       ];
 }

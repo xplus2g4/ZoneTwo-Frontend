@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -13,11 +14,13 @@ EventTransformer<Event> debounce<Event>(Duration duration) {
 }
 
 class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
-  MusicPlayerBloc() : super(const MusicPlayerState()) {
+
+  MusicPlayerBloc() : super(MusicPlayerState(audioPlayer: AudioPlayer())) {
     on<MusicPlayerInsertNext>(_onInsertNext);
     on<MusicPlayerPause>(_onPause);
     on<MusicPlayerResume>(_onResume);
     on<MusicPlayerSetBpm>(_onSetBpm, transformer: debounce(_duration));
+    on<MusicPlayerEnterFullscreen>(_onEnterFullscreen);
   }
 
   Future<void> _onInsertNext(
@@ -31,30 +34,56 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
       newQueue.insert(state.currentIndex + 1, event.music);
     }
     final newIndex = state.currentIndex + 1;
+        
+    if (newIndex != -1) {
+      final currMusic = newQueue[newIndex];
+      if (state.audioPlayer.state == PlayerState.playing) {
+        state.audioPlayer.stop();
+      }
+      state.audioPlayer
+          .setSourceDeviceFile(currMusic.savePath)
+          .then((_) => state.audioPlayer.resume());
+      state.audioPlayer.setPlaybackRate(state.bpm / currMusic.bpm);
+    }
+
     emit(state.copyWith(
-        status: () => MusicPlayerStatus.insertNext,
         musicQueue: () => newQueue,
         currentIndex: () => newIndex));
+        
   }
 
   Future<void> _onPause(
     MusicPlayerPause event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    emit(state.copyWith(status: () => MusicPlayerStatus.paused));
+    state.audioPlayer.pause();
+    emit(state.copyWith(audioPlayer: () => state.audioPlayer));
   }
 
   Future<void> _onResume(
     MusicPlayerResume event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    emit(state.copyWith(status: () => MusicPlayerStatus.playing));
+    state.audioPlayer.resume();
+    emit(state.copyWith(audioPlayer: () => state.audioPlayer));
   }
 
   Future<void> _onSetBpm(
     MusicPlayerSetBpm event,
     Emitter<MusicPlayerState> emit,
   ) async {
+    state.audioPlayer
+        .setPlaybackRate(event.bpm / state.musicQueue[state.currentIndex].bpm);
     emit(state.copyWith(bpm: () => event.bpm));
   }
+
+  Future<void> _onEnterFullscreen(
+    MusicPlayerEnterFullscreen event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    emit(state.copyWith(
+      audioPlayer: () => state.audioPlayer,
+    ));
+  }
+
 }
