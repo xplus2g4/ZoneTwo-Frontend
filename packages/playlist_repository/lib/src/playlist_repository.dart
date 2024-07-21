@@ -62,24 +62,11 @@ class PlaylistRepository {
         VALUES ${playlist.music.map((music) => "('$newId', '${music.id}')").join(", ")}
       ''');
     });
+    playlist = playlist.updateData(id: newId);
 
     // Publish to stream
-    final playlists = [..._playlistStreamController.value];
-    final playlistIndex = playlists.indexWhere((t) => t.id == playlist.id);
-    if (playlistIndex >= 0) {
-      playlists[playlistIndex] = playlist;
-    } else {
-      playlists.add(playlist);
-    }
+    final playlists = [..._playlistStreamController.value, playlist];
     _playlistStreamController.add(playlists);
-
-    _playlistWithmusictreamController.add(
-      PlaylistWithMusicData(
-        id: newId,
-        name: playlist.name,
-        music: playlist.music,
-      ),
-    );
   }
 
   Future<void> getAllPlaylists() async {

@@ -89,16 +89,17 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     MusicOverviewCreatePlaylist event,
     Emitter<MusicOverviewState> emit,
   ) async {
+    final selectedMusic = state.music
+        .asMap()
+        .entries
+        .where((entry) => state.selected[entry.key])
+        .map((entry) => entry.value.toData())
+        .toList();
     await _playlistRepository.createPlaylist(PlaylistWithMusicData(
       id: "",
       name: event.playlistName,
-      coverImage: state.music.isNotEmpty ? state.music[0].coverImage : null,
-      music: state.music
-          .asMap()
-          .entries
-          .where((entry) => state.selected[entry.key])
-          .map((entry) => entry.value.toData())
-          .toList(),
+      coverImage: state.music.isNotEmpty ? selectedMusic[0].coverImage : null,
+      music: selectedMusic,
     ));
     emit(state.copyWith(
       isSelectionMode: () => false,
