@@ -31,7 +31,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    
+
   audioplayers: ^6.0.0
   audio_video_progress_bar: ^2.0.3
   bloc: ^8.1.0
@@ -56,6 +56,8 @@ dependencies:
   playlist_repository:
     path: packages/playlist_repository
   go_router: ^14.2.1
+  shared_preferences: ^2.2.3
+  hydrated_bloc: ^9.1.5
 
 dev_dependencies:
   flutter_test:

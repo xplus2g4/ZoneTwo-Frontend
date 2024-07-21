@@ -5,6 +5,8 @@ import 'package:zonetwo/music_overview/music_overview.dart';
 import 'package:zonetwo/playlist_detail/playlist_detail.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 
+import 'settings/settings.dart';
+
 //tabs keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _musicOverviewNavigatorKey = GlobalKey<NavigatorState>();
@@ -15,14 +17,15 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>();
 const musicOverviewPath = '/music_overview';
 const playlistOverviewPath = '/playlist_overview';
 const playlistDetailPath = 'player_detail';
+
 const settingsPath = '/settings';
+const settingsEditFieldPath = 'edit_field';
 
 final router = GoRouter(
   initialLocation: musicOverviewPath,
   navigatorKey: _rootNavigatorKey,
   routes: [
     StatefulShellRoute.indexedStack(
-      parentNavigatorKey: _rootNavigatorKey,
       pageBuilder: (context, state, child) {
         return NoTransitionPage(
           child: HomePage(
@@ -72,10 +75,26 @@ final router = GoRouter(
               path: settingsPath,
               pageBuilder: (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const Center(
-                  child: Text('School'),
-                ),
+                child: const SettingsPage(),
               ),
+              routes: [
+                GoRoute(
+                  parentNavigatorKey: _rootNavigatorKey,
+                  name: settingsEditFieldPath,
+                  path: settingsEditFieldPath,
+                  pageBuilder: (context, state) {
+                    final args = state.extra as FieldEditPageArguments;
+                    return MaterialPage(
+                      key: state.pageKey,
+                      child: FieldEditPage(
+                        fieldName: args.fieldName,
+                        initialValue: args.initialValue,
+                        onConfirm: args.onConfirm,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
 
@@ -13,8 +14,7 @@ EventTransformer<Event> debounce<Event>(Duration duration) {
   return (events, mapper) => events.debounce(duration).switchMap(mapper);
 }
 
-class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
-
+class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
   MusicPlayerBloc() : super(MusicPlayerState(audioPlayer: AudioPlayer())) {
     on<MusicPlayerInsertNext>(_onInsertNext);
     on<MusicPlayerPositionChanged>(_onPositionChanged);
@@ -26,6 +26,19 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     on<MusicPlayerEnterFullscreen>(_onEnterFullscreen);
   }
 
+  @override
+  MusicPlayerState fromJson(Map<String, dynamic> json) {
+    return state.copyWith(
+      bpm: () => json['bpm'],
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson(MusicPlayerState state) {
+    return {
+      'bpm': state.bpm,
+    };
+  }
 
   Future<void> _onInsertNext(
     MusicPlayerInsertNext event,
@@ -38,7 +51,7 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
       newQueue.insert(state.currentIndex + 1, event.music);
     }
     final newIndex = state.currentIndex + 1;
-        
+
     if (newIndex != -1) {
       final currMusic = newQueue[newIndex];
       if (state.audioPlayer.state == PlayerState.playing) {
@@ -104,7 +117,7 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
       audioPlayer: () => state.audioPlayer,
     ));
   }
-  
+
   Future<void> _onSeek(
     MusicPlayerSeek event,
     Emitter<MusicPlayerState> emit,
@@ -112,5 +125,4 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(audioPlayerPosition: () => event.position));
     state.audioPlayer.seek(event.position);
   }
-
 }

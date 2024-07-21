@@ -1,6 +1,5 @@
 part of 'music_player_bloc.dart';
 
-
 final class MusicPlayerState extends Equatable {
   const MusicPlayerState(
       {this.musicQueue = const [],
@@ -8,7 +7,7 @@ final class MusicPlayerState extends Equatable {
       this.bpm = 160,
       this.audioPlayerState = PlayerState.stopped,
       this.audioPlayerPosition = Duration.zero,
-      this.audioPlayerDuration = Duration.zero, 
+      this.audioPlayerDuration = Duration.zero,
       required this.audioPlayer});
 
   final int currentIndex;
@@ -18,7 +17,6 @@ final class MusicPlayerState extends Equatable {
   final Duration audioPlayerPosition;
   final Duration audioPlayerDuration;
   final AudioPlayer audioPlayer;
-
 
   MusicPlayerState copyWith({
     int Function()? currentIndex,
