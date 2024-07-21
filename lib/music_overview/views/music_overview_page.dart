@@ -80,7 +80,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
               ? [
                   IconButton(
                     icon: Icon(Icons.delete,
-                        color: Theme.of(context).colorScheme.primary),
+                        color: Theme.of(context).colorScheme.error),
                     onPressed: () {
                       showDialog(
                         context: context,

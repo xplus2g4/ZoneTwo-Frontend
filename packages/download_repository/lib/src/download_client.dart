@@ -56,7 +56,7 @@ class DownloadClient {
         final filePath = await _writeToFile(filename, response.data!);
         final metadata = await _decodeMusicMetadata(filePath);
         return MusicDownloadInfo(
-            title: filename,
+            title: filename.replaceAll('.mp3', ''),
             savePath: filePath,
             bpm: metadata.bpm,
             coverImage: metadata.image);
