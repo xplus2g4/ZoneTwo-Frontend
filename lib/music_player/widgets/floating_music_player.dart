@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +15,16 @@ class FloatingMusicPlayer extends StatefulWidget {
 }
 
 class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
-  late final AudioPlayer _audioPlayer;
   late final MusicPlayerBloc _musicPlayerBloc;
-  late num _bpm;
+  late final AudioPlayer _audioPlayer;
+  PlayerState _audioPlayerState = PlayerState.stopped;
+  Duration _audioPlayerPosition = Duration.zero;
+  Duration _audioPlayerDuration = Duration.zero;
+  num _bpm = 160;
+
+  late final StreamSubscription<Duration> _positionSubscription;
+  late final StreamSubscription<Duration> _durationSubscription;
+  late final StreamSubscription<PlayerState> _playerStateSubscription;
 
   @override
   void initState() {
@@ -23,13 +32,26 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
     _bpm = _musicPlayerBloc.state.bpm;
     _audioPlayer = _musicPlayerBloc.state.audioPlayer;
-    _audioPlayer.onPositionChanged.listen((event) {
-      setState(() {});
+
+    _audioPlayerState = _musicPlayerBloc.state.audioPlayerState;
+    _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
+    _audioPlayerDuration = _musicPlayerBloc.state.audioPlayerDuration;
+
+    _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
+      setState(() {
+        _audioPlayerPosition = event;
+      });
+      _musicPlayerBloc.add(MusicPlayerPositionChanged(event));
     });
-    _audioPlayer.onDurationChanged.listen((event) {
-      setState(() {});
+    _durationSubscription = _audioPlayer.onDurationChanged.listen((event) {
+      setState(() {
+        _audioPlayerDuration = event;
+      });
+      _musicPlayerBloc.add(MusicPlayerDurationChanged(event));
     });
-    _audioPlayer.onPlayerStateChanged.listen((event) {
+    _playerStateSubscription =
+        _audioPlayer.onPlayerStateChanged.listen((event) {
+      _audioPlayerState = event;
       if (event == PlayerState.completed) {
         // TODO: Implement next music
       }
@@ -37,14 +59,28 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   }
 
   @override
+  void dispose() {
+    _positionSubscription.cancel();
+    _durationSubscription.cancel();
+    _playerStateSubscription.cancel();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
         listenWhen: (previous, current) =>
-            previous.audioPlayer.state != current.audioPlayer.state ||
-            current.bpm != previous.bpm,
+            previous.bpm != current.bpm ||
+            previous.audioPlayerState != current.audioPlayerState ||
+            previous.audioPlayerPosition != current.audioPlayerPosition ||
+            previous.audioPlayerDuration != current.audioPlayerDuration,
         listener: (context, state) {
           setState(() {
             _bpm = state.bpm;
+            _audioPlayerState = state.audioPlayerState;
+            _audioPlayerPosition = state.audioPlayerPosition;
+            _audioPlayerDuration = state.audioPlayerDuration;
           });
         },
         child: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
@@ -56,7 +92,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
               ? const SizedBox.shrink()
               : SizedBox(
                   width: double.infinity,
-                  height: 70,
+                  height: 75,
                   child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
@@ -127,7 +163,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                         .add(MusicPlayerSetBpm(_bpm));
                                   },
                                   icon: const Icon(Icons.add)),
-                                  if (state.audioPlayer.state ==
+                                    if (_audioPlayerState ==
                                       PlayerState.playing)
                                 IconButton(
                                     onPressed: () => _musicPlayerBloc
@@ -142,32 +178,20 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                     icon: const Icon(Icons.play_arrow)),
                             ],
                                 ),
-                                FutureBuilder(
-                                  future: Future.wait([
-                                    state.audioPlayer.getDuration(),
-                                    state.audioPlayer.getCurrentPosition()
-                                  ]),
-                                  builder: (context, snapshot) => snapshot
-                                              .hasData &&
-                                          snapshot.data![0] != null &&
-                                          snapshot.data![1] != null
-                                      ? SizedBox(
-                                          width: 360,
-                                          child: ProgressBar(
-                                            total: snapshot.data?[0] ??
-                                                Duration.zero,
-                                            progress: snapshot.data?[1] ??
-                                                Duration.zero,
-                                            thumbRadius: 0,
-                                            timeLabelTextStyle: const TextStyle(
-                                              fontSize: 0,
-                                            ),
-                                            barHeight: 1,
-                                            baseBarColor: Colors.grey[800]!,
-                                            progressBarColor: Colors.white54,
-                                          ))
-                                      : const SizedBox.shrink(),
-                                )
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                    width: double.infinity,
+                                    child: ProgressBar(
+                                      progress: _audioPlayerPosition,
+                                      total: _audioPlayerDuration,
+                                      thumbRadius: 0,
+                                      timeLabelTextStyle: const TextStyle(
+                                        fontSize: 0,
+                                      ),
+                                      barHeight: 2,
+                                      baseBarColor: Colors.grey[800]!,
+                                      progressBarColor: Colors.white30,
+                                    ))
                               ])))));
         }));
   }

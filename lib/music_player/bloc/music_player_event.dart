@@ -25,12 +25,36 @@ final class MusicPlayerInsertNext extends MusicPlayerEvent {
   List<Object> get props => [music];
 }
 
+final class MusicPlayerPositionChanged extends MusicPlayerEvent {
+  const MusicPlayerPositionChanged(this.position);
+
+  final Duration position;
+
+  @override
+  List<Object> get props => [position];
+}
+
+final class MusicPlayerDurationChanged extends MusicPlayerEvent {
+  const MusicPlayerDurationChanged(this.duration);
+
+  final Duration duration;
+
+  @override
+  List<Object> get props => [duration];
+}
+
 final class MusicPlayerPause extends MusicPlayerEvent {
   const MusicPlayerPause();
 }
 
 final class MusicPlayerResume extends MusicPlayerEvent {
   const MusicPlayerResume();
+}
+
+final class MusicPlayerSeek extends MusicPlayerEvent {
+  const MusicPlayerSeek(this.position);
+
+  final Duration position;
 }
 
 final class MusicPlayerSetBpm extends MusicPlayerEvent {

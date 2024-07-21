@@ -65,7 +65,7 @@ class __AddMusicDialogState extends State<_AddMusicDialog> {
       decoration: const InputDecoration(
         prefixIcon: Icon(Icons.search),
         border: InputBorder.none,
-        hintText: 'Enter a youtube link',
+        hintText: 'Enter a YouTube link',
       ),
     );
   }

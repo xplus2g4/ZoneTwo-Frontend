@@ -17,11 +17,15 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
 
   MusicPlayerBloc() : super(MusicPlayerState(audioPlayer: AudioPlayer())) {
     on<MusicPlayerInsertNext>(_onInsertNext);
+    on<MusicPlayerPositionChanged>(_onPositionChanged);
+    on<MusicPlayerDurationChanged>(_onDurationChanged);
     on<MusicPlayerPause>(_onPause);
     on<MusicPlayerResume>(_onResume);
+    on<MusicPlayerSeek>(_onSeek);
     on<MusicPlayerSetBpm>(_onSetBpm, transformer: debounce(_duration));
     on<MusicPlayerEnterFullscreen>(_onEnterFullscreen);
   }
+
 
   Future<void> _onInsertNext(
     MusicPlayerInsertNext event,
@@ -47,9 +51,24 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     }
 
     emit(state.copyWith(
-        musicQueue: () => newQueue,
-        currentIndex: () => newIndex));
-        
+      musicQueue: () => newQueue,
+      currentIndex: () => newIndex,
+      audioPlayerState: () => PlayerState.playing,
+    ));
+  }
+
+  Future<void> _onPositionChanged(
+    MusicPlayerPositionChanged event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    emit(state.copyWith(audioPlayerPosition: () => event.position));
+  }
+
+  Future<void> _onDurationChanged(
+    MusicPlayerDurationChanged event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    emit(state.copyWith(audioPlayerDuration: () => event.duration));
   }
 
   Future<void> _onPause(
@@ -57,7 +76,7 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     Emitter<MusicPlayerState> emit,
   ) async {
     state.audioPlayer.pause();
-    emit(state.copyWith(audioPlayer: () => state.audioPlayer));
+    emit(state.copyWith(audioPlayerState: () => PlayerState.paused));
   }
 
   Future<void> _onResume(
@@ -65,7 +84,7 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     Emitter<MusicPlayerState> emit,
   ) async {
     state.audioPlayer.resume();
-    emit(state.copyWith(audioPlayer: () => state.audioPlayer));
+    emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
   }
 
   Future<void> _onSetBpm(
@@ -84,6 +103,14 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(
       audioPlayer: () => state.audioPlayer,
     ));
+  }
+  
+  Future<void> _onSeek(
+    MusicPlayerSeek event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    emit(state.copyWith(audioPlayerPosition: () => event.position));
+    state.audioPlayer.seek(event.position);
   }
 
 }
