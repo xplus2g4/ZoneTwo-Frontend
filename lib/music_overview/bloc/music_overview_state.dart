@@ -15,6 +15,7 @@ final class MusicOverviewState extends Equatable {
   final List<MusicEntity> music;
   final bool isSelectionMode;
   final List<bool> selected;
+
   // final TodosViewFilter filter;
 
   // Iterable<MusicEntity> get filteredTodos => filter.applyAll(todos);
