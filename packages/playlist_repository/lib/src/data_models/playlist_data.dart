@@ -50,14 +50,6 @@ class PlaylistData {
   String toString() {
     return 'Playlist{id: $id, title: $name, songCount: $songCount}';
   }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  bool operator ==(Object other) {
-    return other is MusicData && other.id == id;
-  }
 }
 
 class PlaylistWithMusicData extends PlaylistData {

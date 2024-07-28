@@ -127,6 +127,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
     ));
+    _playlistRepository.getAllPlaylists();
   }
 
   Future<void> _onDeleteSelected(
@@ -134,10 +135,11 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     Emitter<MusicOverviewState> emit,
   ) async {
     await _musicRepository.deleteMusicData(
-        event.selectedMusic.map((music) => music.toData()).toSet());
+        event.selectedMusic.map((music) => music.toData()).toList());
     emit(state.copyWith(
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
     ));
+    _playlistRepository.getAllPlaylists();
   }
 }

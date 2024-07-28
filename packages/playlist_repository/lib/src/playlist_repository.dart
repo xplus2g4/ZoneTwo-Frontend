@@ -168,18 +168,19 @@ class PlaylistRepository {
     );
   }
 
-  Future<void> deletePlaylist(PlaylistData playlist) async {
+  Future<void> deletePlaylists(List<PlaylistData> playlist) async {
+    final playlistIds = playlist.map((music) => music.id).toList();
+    final queryPlaceholder = List.filled(playlistIds.length, '?').join(',');
+
     // Update database
-    await _db.delete(tableName, where: "id = ?", whereArgs: [playlist.id]);
+    await _db.delete(tableName,
+        where: "id IN ($queryPlaceholder)", whereArgs: playlistIds);
+    // Update database
 
     // Publish to stream
-    final playlists = [..._playlistStreamController.value];
-    final playlistIndex = playlists.indexWhere((t) => t.id == playlist.id);
-    if (playlistIndex == -1) {
-      // TODO: Handle Error
-    } else {
-      playlists.removeAt(playlistIndex);
-      _playlistStreamController.add(playlists);
-    }
+    final newPlaylists = _playlistStreamController.value
+        .where((playlist) => !playlistIds.contains(playlist.id))
+        .toList();
+    _playlistStreamController.add(newPlaylists);
   }
 }

@@ -33,22 +33,22 @@ class PlaylistDetail extends StatefulWidget {
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
   bool _isSelectionMode = false;
-  Set<MusicEntity> _selectedMusic = {};
+  Set<String> _selectedMusic = {};
 
   void _enterSelectionMode(MusicEntity music) {
     setState(() {
-      _selectedMusic.clear();
+      _selectedMusic = {};
       _isSelectionMode = true;
     });
-    _selectedMusic.add(music);
+    _selectedMusic.add(music.id);
   }
 
   void _toggleSelection(MusicEntity music) {
     setState(() {
-      if (_selectedMusic.contains(music)) {
-        _selectedMusic.remove(music);
+      if (_selectedMusic.contains(music.id)) {
+        _selectedMusic.remove(music.id);
       } else {
-        _selectedMusic.add(music);
+        _selectedMusic.add(music.id);
       }
     });
   }
@@ -68,8 +68,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
         context.read<PlaylistDetailBloc>().add(
               PlaylistMusicDeleted(_selectedMusic),
             );
+        _exitSelectionMode();
       }
-    }).whenComplete(_exitSelectionMode);
+    });
   }
 
   @override
@@ -219,7 +220,7 @@ class _PlaylistMetadataState extends State<PlaylistMetadata> {
           ? TextField(
               controller: _nameController,
               onEditingComplete: _submitName,
-              onTapOutside: (_) => _submitName,
+              onTapOutside: (_) => _submitName(),
               autofocus: true,
               maxLength: 20,
               decoration: const InputDecoration(
@@ -252,5 +253,6 @@ class _PlaylistMetadataState extends State<PlaylistMetadata> {
       _isEditing = false;
     });
     widget.onNameChanged(_nameController.text);
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 }

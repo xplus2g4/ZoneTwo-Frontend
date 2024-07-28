@@ -6,10 +6,16 @@ class PlaylistListTile extends StatelessWidget {
     required this.playlist,
     super.key,
     this.onTap,
+    this.onLongPress,
+    this.isSelectionMode = false,
+    this.isSelected = false,
   });
 
   final PlaylistEntity playlist;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final bool isSelectionMode;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +25,7 @@ class PlaylistListTile extends StatelessWidget {
         key: Key('todoListTile_${playlist.id}'),
         child: InkWell(
             onTap: onTap,
+            onLongPress: onLongPress,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -49,6 +56,14 @@ class PlaylistListTile extends StatelessWidget {
                     subtitle: Text("${playlist.songCount} songs"),
                   ),
                 ),
+                isSelectionMode
+                    ? Checkbox(
+                        value: isSelected,
+                        onChanged: (bool? x) {
+                          onTap!();
+                        },
+                      )
+                    : const SizedBox.shrink(),
               ],
             )));
   }

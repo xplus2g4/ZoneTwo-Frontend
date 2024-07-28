@@ -61,7 +61,7 @@ class MusicRepository {
     _musicStreamController.add(music);
   }
 
-  Future<void> deleteMusicData(Set<MusicData> musicData) async {
+  Future<void> deleteMusicData(List<MusicData> musicData) async {
     final musicIds = musicData.map((music) => music.id).toList();
     final queryPlaceholder = List.filled(musicIds.length, '?').join(',');
     await _db.delete(tableName,

@@ -62,6 +62,7 @@ class __AddMusicDialogState extends State<_AddMusicDialog> {
       controller: _textController,
       autocorrect: false,
       onEditingComplete: _onConfirm,
+      onTapOutside: (event) => _onConfirm(),
       decoration: const InputDecoration(
         prefixIcon: Icon(Icons.search),
         border: InputBorder.none,
@@ -73,6 +74,7 @@ class __AddMusicDialogState extends State<_AddMusicDialog> {
   void _onConfirm() {
     _musicDownloadBloc.add(DownloadClicked(link: _textController.text));
     _textController.text = '';
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 }
 

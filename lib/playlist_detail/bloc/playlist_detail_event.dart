@@ -26,10 +26,10 @@ final class PlaylistNameChanged extends PlaylistDetailEvent {
 }
 
 final class PlaylistMusicDeleted extends PlaylistDetailEvent {
-  const PlaylistMusicDeleted(this.music);
+  const PlaylistMusicDeleted(this.musicIds);
 
-  final Set<MusicEntity> music;
+  final Set<String> musicIds;
 
   @override
-  List<Object> get props => [music];
+  List<Object> get props => [musicIds];
 }

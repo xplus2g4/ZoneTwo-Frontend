@@ -58,7 +58,7 @@ class PlaylistDetailBloc
     Emitter<PlaylistDetailState> emit,
   ) async {
     final newMusic = state.music.where(
-      (music) => !event.music.contains(music),
+      (music) => !event.musicIds.contains(music.id),
     );
 
     final newPlaylist = PlaylistWithMusicData(
