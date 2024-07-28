@@ -127,7 +127,6 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
     ));
-    _playlistRepository.getAllPlaylists();
   }
 
   Future<void> _onDeleteSelected(
@@ -140,6 +139,9 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
     ));
+
+    // HACK: This is a workaround to refresh the playlists
     _playlistRepository.getAllPlaylists();
+    _playlistRepository.refreshCurrentPlaylistWithMusic();
   }
 }

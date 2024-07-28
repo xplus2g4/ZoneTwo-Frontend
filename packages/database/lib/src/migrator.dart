@@ -4,6 +4,10 @@ class DatabaseMigrator {
   const DatabaseMigrator(this._db_path);
   final String _db_path;
 
+  void _onConfigure(Database db) {
+    db.execute('PRAGMA foreign_keys = ON');
+  }
+
   void _schemaV1(Batch batch) {
     batch.execute('DROP TABLE IF EXISTS music');
     batch.execute('''
@@ -35,8 +39,8 @@ class DatabaseMigrator {
   }
 
   Future<Database> open() async {
-    final db =
-        await openDatabase(_db_path, version: 1, onCreate: (db, version) async {
+    final db = await openDatabase(_db_path,
+        version: 1, onConfigure: _onConfigure, onCreate: (db, version) async {
       var batch = db.batch();
       _schemaV1(batch);
       await batch.commit();

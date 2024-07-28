@@ -67,7 +67,7 @@ class MusicRepository {
     await _db.delete(tableName,
         where: "id IN ($queryPlaceholder)", whereArgs: musicIds);
     final music = _musicStreamController.value
-        .where((music) => !musicData.contains(music))
+        .where((music) => !musicIds.contains(music.id))
         .toList();
     _musicStreamController.add(music);
   }

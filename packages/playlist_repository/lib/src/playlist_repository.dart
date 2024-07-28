@@ -74,6 +74,24 @@ class PlaylistRepository {
     ));
   }
 
+  Future<void> refreshCurrentPlaylistWithMusic() async {
+    if (!_playlistWithMusictreamController.hasValue) {
+      return;
+    }
+    final playlist = _playlistWithMusictreamController.value;
+    final music = (await _db.rawQuery('''
+      SELECT * FROM $joinTableName
+      JOIN ${MusicRepository.tableName} ON $joinTableName.music_id = ${MusicRepository.tableName}.id
+      WHERE playlist_id = ?
+    ''', [playlist.id])).map(MusicData.fromRow).toList();
+    _playlistWithMusictreamController.add(PlaylistWithMusicData(
+      id: playlist.id,
+      name: playlist.name,
+      coverImage: playlist.coverImage,
+      music: music,
+    ));
+  }
+
   Future<void> updatePlaylistData(PlaylistData playlist) async {
     // Update database
     await _db.rawUpdate('''
@@ -160,7 +178,7 @@ class PlaylistRepository {
     _playlistStreamController.add(
       _playlistStreamController.value.map((t) {
         if (t.id == playlist.id) {
-          return t.update(songCount: music.length);
+          return t.update(songCount: t.songCount + music.length);
         } else {
           return t;
         }
