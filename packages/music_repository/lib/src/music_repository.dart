@@ -43,12 +43,13 @@ class MusicRepository {
   Future<void> updateMusicData(MusicData musicData) async {
     // Update database
     await _db.rawUpdate(
-        "UPDATE $tableName SET title = ?, save_path = ? bpm = ? WHERE id = ?", [
-      musicData.title,
-      musicData.savePath,
-      musicData.bpm,
-      musicData.id,
-    ]);
+        "UPDATE $tableName SET title = ?, save_path = ?, bpm = ? WHERE id = ?",
+        [
+          musicData.title,
+          musicData.savePath,
+          musicData.bpm,
+          musicData.id,
+        ]);
 
     // Publish to stream
     final music = [..._musicStreamController.value];
@@ -67,7 +68,7 @@ class MusicRepository {
     await _db.delete(tableName,
         where: "id IN ($queryPlaceholder)", whereArgs: musicIds);
     final music = _musicStreamController.value
-        .where((music) => !musicData.contains(music))
+        .where((music) => !musicIds.contains(music.id))
         .toList();
     _musicStreamController.add(music);
   }

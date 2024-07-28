@@ -30,21 +30,19 @@ final class MusicOverviewAddToPlaylist extends MusicOverviewEvent {
 }
 
 class MusicOverviewDeleteSelected extends MusicOverviewEvent {
-  const MusicOverviewDeleteSelected(this.selectedMusic);
-
-  final Iterable<MusicEntity> selectedMusic;
-
-  @override
-  List<Object> get props => [selectedMusic];
-}
-
-final class MusicOverviewEnterSelectionMode extends MusicOverviewEvent {
-  const MusicOverviewEnterSelectionMode(this.startIndex);
-
-  final int? startIndex;
+  const MusicOverviewDeleteSelected();
 
   @override
   List<Object> get props => [];
+}
+
+final class MusicOverviewEnterSelectionMode extends MusicOverviewEvent {
+  const MusicOverviewEnterSelectionMode(this.id);
+
+  final String id;
+
+  @override
+  List<Object> get props => [id];
 }
 
 final class MusicOverviewExitSelectionMode extends MusicOverviewEvent {
@@ -55,12 +53,21 @@ final class MusicOverviewExitSelectionMode extends MusicOverviewEvent {
 }
 
 final class MusicOverviewToggleSelectedMusic extends MusicOverviewEvent {
-  const MusicOverviewToggleSelectedMusic(this.index);
+  const MusicOverviewToggleSelectedMusic(this.id);
 
-  final int index;
+  final String id;
 
   @override
-  List<Object> get props => [index];
+  List<Object> get props => [id];
+}
+
+final class MusicOverviewEditMusic extends MusicOverviewEvent {
+  const MusicOverviewEditMusic({required this.music});
+
+  final MusicEntity music;
+
+  @override
+  List<Object> get props => [music];
 }
 
 

@@ -22,6 +22,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     on<MusicOverviewExitSelectionMode>(_onExitSelectionMode);
     on<MusicOverviewToggleSelectedMusic>(_onToggleSelectMusic);
     on<MusicOverviewDeleteSelected>(_onDeleteSelected);
+    on<MusicOverviewEditMusic>(_onEditMusicInfo);
   }
 
   final MusicRepository _musicRepository;
@@ -41,7 +42,6 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
       onData: (music) => state.copyWith(
         status: () => MusicOverviewStatus.success,
         music: () => music,
-        selected: () => List.generate(music.length, (_) => false),
       ),
       onError: (_, __) => state.copyWith(
         status: () => MusicOverviewStatus.failure,
@@ -54,37 +54,29 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     Emitter<MusicOverviewState> emit,
   ) async {
     emit(state.copyWith(
-        isSelectionMode: () => true,
-        selected: () {
-          final newSelected = List.generate(state.music.length, (_) => false);
-          if (event.startIndex != null) {
-            newSelected[event.startIndex!] = true;
-          }
-          return newSelected;
-        }));
+      isSelectionMode: () => true,
+      selected: () => {event.id},
+    ));
   }
 
   Future<void> _onExitSelectionMode(
     MusicOverviewExitSelectionMode event,
     Emitter<MusicOverviewState> emit,
   ) async {
-    emit(state.copyWith(
-        isSelectionMode: () => false,
-        selected: () {
-          final newSelected = List.generate(state.music.length, (_) => false);
-          return newSelected;
-        }));
+    emit(state.copyWith(isSelectionMode: () => false, selected: () => {}));
   }
 
   Future<void> _onToggleSelectMusic(
     MusicOverviewToggleSelectedMusic event,
     Emitter<MusicOverviewState> emit,
   ) async {
-    emit(state.copyWith(selected: () {
-      final newSelected = List<bool>.from(state.selected);
-      newSelected[event.index] = !newSelected[event.index];
-      return newSelected;
-    }));
+    emit(
+      state.copyWith(
+        selected: state.selected.contains(event.id)
+            ? () => Set.from(state.selected)..remove(event.id)
+            : () => Set.from(state.selected)..add(event.id),
+      ),
+    );
   }
 
   Future<void> _onCreatePlaylists(
@@ -92,10 +84,8 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     Emitter<MusicOverviewState> emit,
   ) async {
     final selectedMusic = state.music
-        .asMap()
-        .entries
-        .where((entry) => state.selected[entry.key])
-        .map((entry) => entry.value.toData())
+        .where((entry) => state.selected.contains(entry.id))
+        .map((entry) => entry.toData())
         .toList();
     await _playlistRepository.createPlaylist(PlaylistWithMusicData(
       id: "",
@@ -105,7 +95,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     ));
     emit(state.copyWith(
       isSelectionMode: () => false,
-      selected: () => List.generate(state.music.length, (_) => false),
+      selected: () => {},
     ));
   }
 
@@ -114,10 +104,8 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     Emitter<MusicOverviewState> emit,
   ) async {
     final selectedMusic = state.music
-        .asMap()
-        .entries
-        .where((entry) => state.selected[entry.key])
-        .map((entry) => entry.value.toData())
+        .where((entry) => state.selected.contains(entry.id))
+        .map((entry) => entry.toData())
         .toList();
     await _playlistRepository.addMusicToPlaylist(
       event.playlist.toData(),
@@ -125,21 +113,37 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     );
     emit(state.copyWith(
       isSelectionMode: () => false,
-      selected: () => List.generate(state.music.length, (_) => false),
+      selected: () => {},
     ));
-    _playlistRepository.getAllPlaylists();
   }
 
   Future<void> _onDeleteSelected(
     MusicOverviewDeleteSelected event,
     Emitter<MusicOverviewState> emit,
   ) async {
-    await _musicRepository.deleteMusicData(
-        event.selectedMusic.map((music) => music.toData()).toList());
+    final selectedMusic = state.music
+        .where((entry) => state.selected.contains(entry.id))
+        .map((entry) => entry.toData())
+        .toList();
+    await _musicRepository.deleteMusicData(selectedMusic);
     emit(state.copyWith(
       isSelectionMode: () => false,
-      selected: () => List.generate(state.music.length, (_) => false),
+      selected: () => {},
     ));
+
+    // HACK: This is a workaround to refresh the playlists
     _playlistRepository.getAllPlaylists();
+    _playlistRepository.refreshCurrentPlaylistWithMusic();
+  }
+
+  Future<void> _onEditMusicInfo(
+    MusicOverviewEditMusic event,
+    Emitter<MusicOverviewState> emit,
+  ) async {
+    await _musicRepository.updateMusicData(event.music.toData());
+    emit(state.copyWith(
+      isSelectionMode: () => false,
+      selected: () => {},
+    ));
   }
 }
