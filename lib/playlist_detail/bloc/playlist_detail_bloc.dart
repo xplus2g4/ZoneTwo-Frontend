@@ -29,6 +29,7 @@ class PlaylistDetailBloc
     await emit.forEach<PlaylistWithMusicData>(
       _playlistRepository.getPlaylistWithMusicStream(),
       onData: (playlist) => state.copyWith(
+        playlist: () => PlaylistEntity.fromData(playlist),
         music: () => playlist.music.map(MusicEntity.fromData).toList(),
       ),
     );

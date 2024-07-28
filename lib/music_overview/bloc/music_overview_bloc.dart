@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 
 part 'music_overview_event.dart';
 part 'music_overview_state.dart';
@@ -16,6 +17,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
         super(const MusicOverviewState()) {
     on<MusicOverviewSubscriptionRequested>(_onSubscriptionRequested);
     on<MusicOverviewCreatePlaylist>(_onCreatePlaylists);
+    on<MusicOverviewAddToPlaylist>(_onAddToPlaylist);
     on<MusicOverviewEnterSelectionMode>(_onEnterSelectionMode);
     on<MusicOverviewExitSelectionMode>(_onExitSelectionMode);
     on<MusicOverviewToggleSelectedMusic>(_onToggleSelectMusic);
@@ -101,6 +103,26 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
       coverImage: state.music.isNotEmpty ? selectedMusic[0].coverImage : null,
       music: selectedMusic,
     ));
+    emit(state.copyWith(
+      isSelectionMode: () => false,
+      selected: () => List.generate(state.music.length, (_) => false),
+    ));
+  }
+
+  Future<void> _onAddToPlaylist(
+    MusicOverviewAddToPlaylist event,
+    Emitter<MusicOverviewState> emit,
+  ) async {
+    final selectedMusic = state.music
+        .asMap()
+        .entries
+        .where((entry) => state.selected[entry.key])
+        .map((entry) => entry.value.toData())
+        .toList();
+    await _playlistRepository.addMusicToPlaylist(
+      event.playlist.toData(),
+      selectedMusic,
+    );
     emit(state.copyWith(
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),

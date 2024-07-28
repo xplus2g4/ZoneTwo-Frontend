@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/music_overview/widgets/new_playlist_dialog.dart';
+import 'package:zonetwo/playlists_overview/widgets/mini_playlist_listview.dart';
 
 class CreatePlaylistBottomSheet extends StatelessWidget {
   const CreatePlaylistBottomSheet(this.musicOverviewBloc, {super.key});
 
   final MusicOverviewBloc musicOverviewBloc;
+
+  void _createPlaylistDialog(BuildContext context) {
+    showDialog<String>(
+        context: context,
+        builder: (_) => const NewPlaylistDialog()).then((value) {
+      if (value != null) {
+        musicOverviewBloc.add(MusicOverviewCreatePlaylist(value));
+        Navigator.pop(context);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,62 +28,33 @@ class CreatePlaylistBottomSheet extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _NameField(
-              onCreatePlaylist: (String playlistName) => musicOverviewBloc
-                  .add(MusicOverviewCreatePlaylist(playlistName)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const Text(
+                  "Add to playlist",
+                  style: TextStyle(fontSize: 20),
+                ),
+                FilledButton.icon(
+                  label: const Text('New'),
+                  onPressed: () => _createPlaylistDialog(context),
+                  icon: const Icon(Icons.playlist_add),
+                ),
+              ],
             ),
           ),
-          const Text('Modal BottomSheet'),
-          ElevatedButton(
-            child: const Text('Close BottomSheet'),
-            onPressed: () => Navigator.pop(context),
+          Expanded(
+            child: MiniPlaylistListview(onPlaylistSelected: (playlist) {
+              musicOverviewBloc.add(MusicOverviewAddToPlaylist(playlist));
+              Navigator.pop(context);
+            }),
           ),
         ],
       ),
     );
-  }
-}
-
-class _NameField extends StatefulWidget {
-  const _NameField({required this.onCreatePlaylist});
-
-  final ValueChanged<String> onCreatePlaylist;
-
-  @override
-  State<_NameField> createState() => _NameFieldState();
-}
-
-class _NameFieldState extends State<_NameField> {
-  final _textController = TextEditingController(text: "New Playlist");
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _textController,
-      autocorrect: false,
-      textAlignVertical: TextAlignVertical.center,
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        hintText: 'Enter playlist name',
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.playlist_add_check_circle),
-          onPressed: () => _onConfirm(context),
-        ),
-      ),
-    );
-  }
-
-  void _onConfirm(context) {
-    widget.onCreatePlaylist(_textController.text);
-    _textController.text = '';
-    Navigator.pop(context);
   }
 }

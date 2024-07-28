@@ -17,14 +17,14 @@ class PlaylistRepository {
       BehaviorSubject<List<PlaylistData>>.seeded(
     const [],
   );
-  late final _playlistWithmusictreamController =
+  late final _playlistWithMusictreamController =
       BehaviorSubject<PlaylistWithMusicData>();
 
   Stream<List<PlaylistData>> getPlaylistsStream() =>
       _playlistStreamController.asBroadcastStream();
 
   Stream<PlaylistWithMusicData> getPlaylistWithMusicStream() =>
-      _playlistWithmusictreamController.asBroadcastStream();
+      _playlistWithMusictreamController.asBroadcastStream();
 
   Future<void> createPlaylist(PlaylistWithMusicData playlist) async {
     // Update database
@@ -35,9 +35,10 @@ class PlaylistRepository {
         VALUES (?, ?, ?)
       ''', [newId, playlist.name, playlist.coverImage]);
 
+      final joinId = const UuidV4().generate();
       await txn.rawInsert('''
-        INSERT INTO $joinTableName (playlist_id, music_id)
-        VALUES ${playlist.music.map((music) => "('$newId', '${music.id}')").join(", ")}
+        INSERT INTO $joinTableName (id, playlist_id, music_id)
+        VALUES ${playlist.music.map((music) => "('$joinId', '$newId', '${music.id}')").join(", ")}
       ''');
     });
     playlist = playlist.updateData(id: newId);
@@ -65,9 +66,10 @@ class PlaylistRepository {
       JOIN ${MusicRepository.tableName} ON $joinTableName.music_id = ${MusicRepository.tableName}.id
       WHERE playlist_id = ?
     ''', [playlist.id])).map(MusicData.fromRow).toList();
-    _playlistWithmusictreamController.add(PlaylistWithMusicData(
+    _playlistWithMusictreamController.add(PlaylistWithMusicData(
       id: playlist.id,
       name: playlist.name,
+      coverImage: playlist.coverImage,
       music: music,
     ));
   }
@@ -90,9 +92,9 @@ class PlaylistRepository {
     }
     _playlistStreamController.add(playlists);
 
-    if (_playlistWithmusictreamController.value.id == playlist.id) {
-      _playlistWithmusictreamController.add(
-        _playlistWithmusictreamController.value.updateData(
+    if (_playlistWithMusictreamController.value.id == playlist.id) {
+      _playlistWithMusictreamController.add(
+        _playlistWithMusictreamController.value.updateData(
           name: playlist.name,
         ),
       );
@@ -111,14 +113,59 @@ class PlaylistRepository {
         return;
       }
 
+      final joinId = const UuidV4().generate();
+
       await txn.rawInsert('''
-        INSERT INTO $joinTableName (playlist_id, music_id)
-        VALUES ${playlist.music.map((music) => "('${playlist.id}', '${music.id}')").join(", ")}
+        INSERT INTO $joinTableName (id, playlist_id, music_id)
+        VALUES ${playlist.music.map((music) => "('$joinId', '${playlist.id}', '${music.id}')").join(", ")}
       ''');
     });
 
     // Publish to stream
-    _playlistWithmusictreamController.add(playlist);
+    _playlistWithMusictreamController.add(playlist);
+    _playlistStreamController.add(
+      _playlistStreamController.value.map((t) {
+        if (t.id == playlist.id) {
+          return t.update(songCount: playlist.music.length);
+        } else {
+          return t;
+        }
+      }).toList(),
+    );
+  }
+
+  Future<void> addMusicToPlaylist(
+      PlaylistData playlist, List<MusicData> music) async {
+    // Update database
+    await _db.transaction((txn) async {
+      final joinId = const UuidV4().generate();
+      await txn.rawInsert('''
+        INSERT INTO $joinTableName (id, playlist_id, music_id)
+        VALUES ${music.map((music) => "('$joinId', '${playlist.id}', '${music.id}')").join(", ")}
+      ''');
+    });
+
+    // Publish to stream
+    if (_playlistWithMusictreamController.hasValue) {
+      final playlistWithMusic = _playlistWithMusictreamController.value;
+      if (playlistWithMusic.id == playlist.id) {
+        _playlistWithMusictreamController.add(
+          playlistWithMusic.updateData(
+            music: [...playlistWithMusic.music, ...music],
+          ),
+        );
+      }
+    }
+
+    _playlistStreamController.add(
+      _playlistStreamController.value.map((t) {
+        if (t.id == playlist.id) {
+          return t.update(songCount: music.length);
+        } else {
+          return t;
+        }
+      }).toList(),
+    );
   }
 
   Future<void> deletePlaylist(PlaylistData playlist) async {

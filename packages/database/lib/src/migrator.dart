@@ -25,11 +25,11 @@ class DatabaseMigrator {
     batch.execute('DROP TABLE IF EXISTS playlist_music');
     batch.execute('''
       CREATE TABLE playlist_music (
+        id TEXT PRIMARY KEY,
         playlist_id TEXT NOT NULL,
         music_id TEXT NOT NULL,
         FOREIGN KEY(playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
-        FOREIGN KEY(music_id) REFERENCES music(id) ON DELETE CASCADE,
-        PRIMARY KEY(playlist_id, music_id)
+        FOREIGN KEY(music_id) REFERENCES music(id) ON DELETE CASCADE
       )
     ''');
   }

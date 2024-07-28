@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class DeleteConfirmationDialog extends StatelessWidget {
-  const DeleteConfirmationDialog({super.key});
+class RemoveConfirmationDialog extends StatelessWidget {
+  const RemoveConfirmationDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Confirm Delete"),
+      title: const Text("Confirm Remove"),
       content: const Text(
-          "Selected music will be deleted. Song file won't be deleted."),
+          "Selected music will be removed from playlist. Song files won't be deleted."),
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -16,7 +16,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Delete'),
+          child: const Text('Remove'),
         ),
       ],
     );
