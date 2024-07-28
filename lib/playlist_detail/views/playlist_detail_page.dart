@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/playlist_detail/bloc/playlist_detail_bloc.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 
@@ -32,8 +33,15 @@ class PlaylistDetail extends StatefulWidget {
 }
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
+  late final MusicPlayerBloc _musicPlayerBloc;
   bool _isSelectionMode = false;
   Set<String> _selectedMusic = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _musicPlayerBloc = context.read<MusicPlayerBloc>();
+  }
 
   void _enterSelectionMode(MusicEntity music) {
     setState(() {
@@ -172,11 +180,16 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                   return MusicListTile(
                     music: currMusic,
                     isSelectionMode: _isSelectionMode,
-                    isSelected: _selectedMusic.contains(currMusic),
+                    isSelected: _selectedMusic.contains(currMusic.id),
                     onLongPress: () => _enterSelectionMode(currMusic),
                     onTap: () {
                       if (_isSelectionMode) {
                         _toggleSelection(currMusic);
+                      } else {
+                        _musicPlayerBloc
+                            .add(MusicPlayerQueueMusic(state.music));
+                        _musicPlayerBloc
+                            .add(MusicPlayerPlayThisMusic(state.music[index]));
                       }
                     },
                   );
