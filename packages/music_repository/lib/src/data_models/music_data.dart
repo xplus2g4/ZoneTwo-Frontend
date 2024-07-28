@@ -56,4 +56,12 @@ class MusicData {
   String toString() {
     return 'Music{id: $id, title: $title}';
   }
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is MusicData && other.id == id;
+  }
 }

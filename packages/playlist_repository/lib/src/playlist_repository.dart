@@ -26,36 +26,14 @@ class PlaylistRepository {
   Stream<PlaylistWithMusicData> getPlaylistWithMusicStream() =>
       _playlistWithmusictreamController.asBroadcastStream();
 
-  Future<void> addMusicToPlaylist(
-      List<MusicData> music, PlaylistData playlist) async {
-    // Update database
-    await _db.transaction((txn) async {
-      await txn.rawUpdate('''
-        UPDATE $tableName SET song_count = song_count + ?
-        WHERE id = ?
-      ''', [music.length, playlist.id]);
-      await txn.rawInsert('''
-        INSERT INTO $joinTableName (playlist_id, music_id)
-        VALUES ${music.map((music) => "(${playlist.id}, ${music.id})").join(", ")}
-      ''');
-    });
-    final playlistWithMusic = _playlistWithmusictreamController.value;
-    if (playlistWithMusic.id == playlist.id) {
-      _playlistWithmusictreamController.add(
-        playlistWithMusic
-            .updateData(music: [...playlistWithMusic.music, ...music]),
-      );
-    }
-  }
-
   Future<void> createPlaylist(PlaylistWithMusicData playlist) async {
     // Update database
     final newId = const UuidV4().generate();
     await _db.transaction((txn) async {
       await txn.rawInsert('''
-        INSERT INTO $tableName (id, name, song_count, cover_image)
-        VALUES (?, ?, ?, ?)
-      ''', [newId, playlist.name, playlist.music.length, playlist.coverImage]);
+        INSERT INTO $tableName (id, name, cover_image)
+        VALUES (?, ?, ?)
+      ''', [newId, playlist.name, playlist.coverImage]);
 
       await txn.rawInsert('''
         INSERT INTO $joinTableName (playlist_id, music_id)
@@ -70,8 +48,14 @@ class PlaylistRepository {
   }
 
   Future<void> getAllPlaylists() async {
-    final playlists =
-        (await _db.query(tableName)).map(PlaylistData.fromRow).toList();
+    final playlistFutures = (await _db.query(tableName)).map((row) async {
+      final songCount = (await _db.rawQuery('''
+          SELECT COUNT(*) AS song_count FROM $joinTableName
+          WHERE playlist_id = ?
+        ''', [row['id']]))[0]['song_count'] as int;
+      return PlaylistData.fromRow(row, songCount: songCount);
+    });
+    final playlists = await Future.wait(playlistFutures);
     _playlistStreamController.add(playlists);
   }
 
@@ -113,6 +97,28 @@ class PlaylistRepository {
         ),
       );
     }
+  }
+
+  Future<void> updatePlaylistMusic(PlaylistWithMusicData playlist) async {
+    // Update database
+    await _db.transaction((txn) async {
+      await txn.rawDelete('''
+        DELETE FROM $joinTableName
+        WHERE playlist_id = ?
+      ''', [playlist.id]);
+
+      if (playlist.music.isEmpty) {
+        return;
+      }
+
+      await txn.rawInsert('''
+        INSERT INTO $joinTableName (playlist_id, music_id)
+        VALUES ${playlist.music.map((music) => "('${playlist.id}', '${music.id}')").join(", ")}
+      ''');
+    });
+
+    // Publish to stream
+    _playlistWithmusictreamController.add(playlist);
   }
 
   Future<void> deletePlaylist(PlaylistData playlist) async {

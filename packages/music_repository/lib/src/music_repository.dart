@@ -7,6 +7,7 @@ import 'package:rxdart/subjects.dart';
 
 class MusicRepository {
   static const tableName = "music";
+  static const joinPlaylistTableName = "playlist_music";
   MusicRepository(this._db);
 
   final Database _db;
@@ -61,10 +62,17 @@ class MusicRepository {
     _musicStreamController.add(music);
   }
 
-  Future<void> deleteMusicData(MusicData musicData) async {
-    await _db.delete(tableName, where: "id = ?", whereArgs: [musicData.id]);
-    final music = [..._musicStreamController.value]
-        .where((music) => music.id != musicData.id)
+  Future<void> deleteMusicData(Set<MusicData> musicData) async {
+    final musicIds = musicData.map((music) => music.id).toList();
+    await _db.transaction((txn) async {
+      final queryPlaceholder = List.filled(musicIds.length, '?').join(',');
+      await txn.delete(tableName,
+          where: "id IN $queryPlaceholder", whereArgs: musicIds);
+      await txn.delete(joinPlaylistTableName,
+          where: "music_id IN $queryPlaceholder", whereArgs: musicIds);
+    });
+    final music = _musicStreamController.value
+        .where((music) => !musicData.contains(music))
         .toList();
     _musicStreamController.add(music);
   }

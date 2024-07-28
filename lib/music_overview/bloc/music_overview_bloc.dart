@@ -111,9 +111,8 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     MusicOverviewDeleteSelected event,
     Emitter<MusicOverviewState> emit,
   ) async {
-    for (final musicData in event.selectedMusic) {
-      await _musicRepository.deleteMusicData(musicData.toData());
-    }
+    await _musicRepository.deleteMusicData(
+        event.selectedMusic.map((music) => music.toData()).toSet());
     emit(state.copyWith(
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
