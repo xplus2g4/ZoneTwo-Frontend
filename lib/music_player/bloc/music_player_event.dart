@@ -16,13 +16,42 @@ final class MusicPlayerQueueMusic extends MusicPlayerEvent {
   List<Object> get props => [music];
 }
 
-final class MusicPlayerInsertNext extends MusicPlayerEvent {
-  const MusicPlayerInsertNext(this.music);
+final class MusicPlayerPlayThisMusic extends MusicPlayerEvent {
+  const MusicPlayerPlayThisMusic(this.music);
 
   final MusicEntity music;
 
   @override
   List<Object> get props => [music];
+}
+
+final class MusicPlayerPlayAtIndex extends MusicPlayerEvent {
+  const MusicPlayerPlayAtIndex(this.index);
+
+  final int index;
+
+  @override
+  List<Object> get props => [index];
+}
+
+final class MusicPlayerPlayNext extends MusicPlayerEvent {
+  const MusicPlayerPlayNext();
+}
+
+final class MusicPlayerPlayPrevious extends MusicPlayerEvent {
+  const MusicPlayerPlayPrevious();
+}
+
+final class MusicPlayerToggleShuffle extends MusicPlayerEvent {
+  const MusicPlayerToggleShuffle();
+}
+
+final class MusicPlayerToggleLoop extends MusicPlayerEvent {
+  const MusicPlayerToggleLoop();
+}
+
+final class MusicPlayerLoop extends MusicPlayerEvent {
+  const MusicPlayerLoop();
 }
 
 final class MusicPlayerPositionChanged extends MusicPlayerEvent {
@@ -71,4 +100,8 @@ final class MusicPlayerLoadMusic extends MusicPlayerEvent {
 
 final class MusicPlayerEnterFullscreen extends MusicPlayerEvent {
   const MusicPlayerEnterFullscreen();
+}
+
+final class MusicPlayerStop extends MusicPlayerEvent {
+  const MusicPlayerStop();
 }

@@ -4,6 +4,7 @@ import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_player/widgets/scrolling_text.dart';
 
@@ -20,7 +21,11 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   PlayerState _audioPlayerState = PlayerState.stopped;
   Duration _audioPlayerPosition = Duration.zero;
   Duration _audioPlayerDuration = Duration.zero;
-  num _bpm = 160;
+  late num _bpm;
+  late int _playlistIndex;
+  late int _shuffledIndex;
+  late bool _isShuffle;
+  late bool _isLoop;
 
   late final StreamSubscription<Duration> _positionSubscription;
   late final StreamSubscription<Duration> _durationSubscription;
@@ -30,8 +35,12 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   void initState() {
     super.initState();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
-    _bpm = _musicPlayerBloc.state.bpm;
     _audioPlayer = _musicPlayerBloc.state.audioPlayer;
+    _bpm = _musicPlayerBloc.state.bpm;
+    _playlistIndex = _musicPlayerBloc.state.playlistIndex;
+    _shuffledIndex = _musicPlayerBloc.state.shuffledIndex;
+    _isShuffle = _musicPlayerBloc.state.isShuffle;
+    _isLoop = _musicPlayerBloc.state.isLoop;
 
     _audioPlayerState = _musicPlayerBloc.state.audioPlayerState;
     _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
@@ -53,9 +62,23 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
         _audioPlayer.onPlayerStateChanged.listen((event) {
       _audioPlayerState = event;
       if (event == PlayerState.completed) {
-        // TODO: Implement next music
+        if (_isLoop) {
+          _musicPlayerBloc.add(const MusicPlayerLoop());
+        } else {
+          _musicPlayerBloc.add(const MusicPlayerPlayNext());
+        }
       }
     });
+  }
+
+  MusicEntity? getCurrentMusic() {
+    return !_isShuffle
+        ? _playlistIndex != -1
+            ? _musicPlayerBloc.state.playlistQueue[_playlistIndex]
+            : null
+        : _shuffledIndex != -1
+            ? _musicPlayerBloc.state.shuffledQueue[_shuffledIndex]
+            : null;
   }
 
   @override
@@ -71,13 +94,19 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   Widget build(BuildContext context) {
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
         listenWhen: (previous, current) =>
-            previous.bpm != current.bpm ||
+            previous.playlistIndex != current.playlistIndex ||
+            previous.shuffledIndex != current.shuffledIndex ||
+            previous.isShuffle != current.isShuffle ||
+            previous.isLoop != current.isLoop ||
             previous.audioPlayerState != current.audioPlayerState ||
             previous.audioPlayerPosition != current.audioPlayerPosition ||
             previous.audioPlayerDuration != current.audioPlayerDuration,
         listener: (context, state) {
           setState(() {
-            _bpm = state.bpm;
+            _playlistIndex = state.playlistIndex;
+            _shuffledIndex = state.shuffledIndex;
+            _isShuffle = state.isShuffle;
+            _isLoop = state.isLoop;
             _audioPlayerState = state.audioPlayerState;
             _audioPlayerPosition = state.audioPlayerPosition;
             _audioPlayerDuration = state.audioPlayerDuration;
@@ -85,14 +114,16 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
         },
         child: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
             builder: (context, state) {
-          final currMusic = state.currentIndex == -1
-              ? null
-              : state.musicQueue[state.currentIndex];
-          return currMusic == null
+          final currentMusic = getCurrentMusic();
+          return currentMusic == null
               ? const SizedBox.shrink()
-              : SizedBox(
+              : Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18.0),
+                  ),
                   width: double.infinity,
-                  height: 75,
+                  height: 63,
                   child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
@@ -102,83 +133,114 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                         _musicPlayerBloc
                             .add(const MusicPlayerEnterFullscreen());
                       },
+                      onHorizontalDragEnd: (details) {
+                        if (details.primaryVelocity! < 0) {
+                          _musicPlayerBloc.add(const MusicPlayerPlayNext());
+                        } else if (details.primaryVelocity! > 0) {
+                          _musicPlayerBloc.add(const MusicPlayerPlayPrevious());
+                        }
+                      },
+                      onVerticalDragEnd: (details) {
+                        if (details.primaryVelocity! > 5) {
+                          _musicPlayerBloc.add(const MusicPlayerStop());
+                        }
+                      },
                   child: Padding(
                       padding:
-                          const EdgeInsets.only(left: 8, right: 8, bottom: 8),
-                      child: Container(
-                          decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.0),
-                          ),
+                              const EdgeInsets.only(left: 8, right: 8),
                               child: Column(children: [
                                 Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8.0),
                                 child: Image.memory(
-                                  currMusic.coverImage,
+                                      currentMusic.coverImage,
                                       width: 60,
-                                      height: 60,
+                                      height: 45,
                                   fit: BoxFit.cover,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                                    Container(
-                                        height: 60,
-                                        width: 100,
-                                        child: ScrollingText(
-                                          text: currMusic.title,
-                                          textStyle:
-                                              const TextStyle(fontSize: 16),
-                                        )
                                   ),
-                              IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _bpm -= 1;
-                                    });
-                                    _musicPlayerBloc
-                                        .add(MusicPlayerSetBpm(_bpm));
-                                  },
-                                      icon: const Icon(Icons.remove)),
+                                  Container(
+                                      height: 60,
+                                      width: 150,
+                                      child: ScrollingText(
+                                        text: currentMusic.title,
+                                        textStyle:
+                                            const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      )),
+                                  SizedBox(
+                                      width: 25,
+                                      height: 25,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () {
+                                          setState(() {
+                                            _bpm -= 1;
+                                          });
+                                          _musicPlayerBloc
+                                              .add(MusicPlayerSetBpm(_bpm));
+                                        },
+                                        icon: const Icon(Icons.remove),
+                                      )),
                                   Row(
-                                    textBaseline: TextBaseline.alphabetic,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    children: [
-                                      Text(
-                                        _bpm.round().toString(),
-                                      ),
-                                      const Text(
-                                        " BPM",
-                                        style: TextStyle(fontSize: 8),
-                                      ),
-                                    ],
-                                  ),
-                              IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _bpm += 1;
-                                    });
-                                    _musicPlayerBloc
-                                        .add(MusicPlayerSetBpm(_bpm));
-                                  },
-                                  icon: const Icon(Icons.add)),
-                                    if (_audioPlayerState ==
-                                      PlayerState.playing)
-                                IconButton(
+                                      textBaseline: TextBaseline.alphabetic,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      children: [
+                                        BlocListener<MusicPlayerBloc,
+                                                MusicPlayerState>(
+                                            listenWhen: (previous, current) =>
+                                                previous.bpm != current.bpm,
+                                            listener: (context, state) {
+                                              setState(() {
+                                                _bpm = state.bpm;
+                                              });
+                                            },
+                                            child: Column(children: [
+                                        Text(
+                                          _bpm.round().toString(),
+                                        ),
+                                        const Text(
+                                          " BPM",
+                                          style: TextStyle(fontSize: 8),
+                                              )
+                                            ])),
+                                      ]),
+                                  SizedBox(
+                                      width: 25,
+                                      height: 25,
+                                      child: IconButton(
+                                          padding: EdgeInsets.zero,
+                                          onPressed: () {
+                                            setState(() {
+                                              _bpm += 1;
+                                            });
+                                            _musicPlayerBloc
+                                                .add(MusicPlayerSetBpm(_bpm));
+                                          },
+                                          icon: const Icon(Icons.add))),
+                                  SizedBox(
+                                      width: 35,
+                                      height: 35,
+                                      child: _audioPlayerState ==
+                                              PlayerState.playing
+                                          ? IconButton(
+                                              padding: EdgeInsets.zero,
                                     onPressed: () => _musicPlayerBloc
                                         .add(const MusicPlayerPause()),
                                     icon: const Icon(Icons.pause))
-                              else
-                                IconButton(
+                                          : IconButton(
+                                              padding: EdgeInsets.zero,
                                     onPressed: () {
                                       _musicPlayerBloc
                                           .add(const MusicPlayerResume());
                                     },
-                                    icon: const Icon(Icons.play_arrow)),
-                            ],
-                                ),
-                                const SizedBox(height: 4),
+                                              icon: const Icon(
+                                                  Icons.play_arrow))),
+                                ]),
                                 SizedBox(
                                     width: double.infinity,
                                     child: ProgressBar(
@@ -192,7 +254,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                       baseBarColor: Colors.grey[800]!,
                                       progressBarColor: Colors.white30,
                                     ))
-                              ])))));
+                          ]))));
         }));
   }
 }

@@ -45,122 +45,157 @@ class MusicOverviewView extends StatefulWidget {
 class MusicOverviewViewState extends State<MusicOverviewView> {
   late MusicOverviewBloc _musicOverviewBloc;
   late MusicPlayerBloc _musicPlayerBloc;
+  late bool _isShuffle;
+  late bool _isLoop;
 
   @override
   void initState() {
     super.initState();
     _musicOverviewBloc = context.read<MusicOverviewBloc>();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
+    _isShuffle = _musicPlayerBloc.state.isShuffle;
+    _isLoop = _musicPlayerBloc.state.isLoop;
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MusicOverviewBloc, MusicOverviewState>(
+    return BlocListener<MusicPlayerBloc, MusicPlayerState>(
+      listenWhen: (previous, current) =>
+          previous.isShuffle != current.isShuffle ||
+          previous.isLoop != current.isLoop,
+      listener: (context, state) {
+        setState(() {
+          _isShuffle = state.isShuffle;
+          _isLoop = state.isLoop;
+        });
+      },
+      child: BlocBuilder<MusicOverviewBloc, MusicOverviewState>(
         builder: (context, state) {
-      return Scaffold(
+          return Scaffold(
         floatingActionButton: state.isSelectionMode
             ? CreatePlaylistFAB(_musicOverviewBloc)
             : const MusicOverviewDownloadButton(),
         appBar: AppBar(
           title: state.isSelectionMode
-              ? Text(
-                  "${state.selected.where((selected) => selected).length} selected")
-              : const Text("All Music"),
+                  ? Text(
+                      "${state.selected.where((selected) => selected).length} selected")
+                  : const Text("All Music"),
           leading: state.isSelectionMode
-              ? IconButton(
-                  icon: Icon(Icons.close,
-                      color: Theme.of(context).colorScheme.primary),
-                  onPressed: () {
-                    _musicOverviewBloc
-                        .add(const MusicOverviewExitSelectionMode());
-                  },
-                )
-              : null,
+                  ? IconButton(
+                      icon: Icon(Icons.close,
+                          color: Theme.of(context).colorScheme.primary),
+                      onPressed: () {
+                        _musicOverviewBloc
+                            .add(const MusicOverviewExitSelectionMode());
+                      },
+                    )
+                  : null,
           actions: state.isSelectionMode
-              ? [
-                  IconButton(
-                    icon: Icon(Icons.delete,
-                        color: Theme.of(context).colorScheme.error),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Confirm Delete"),
-                            content: const Text(
-                                "Are you sure you want to delete the selected music?"),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pop(); // Close the dialog
-                                },
-                              ),
-                              TextButton(
-                                child: const Text("Delete"),
-                                onPressed: () {
-                                  // Perform the delete operation
-                                  _musicOverviewBloc.add(
-                                      MusicOverviewDeleteSelected(state.music
-                                          .asMap()
-                                          .entries
-                                          .where((music) =>
-                                              state.selected[music.key])
-                                          .map((music) => music.value)));
-                                  Navigator.of(context)
-                                      .pop(); // Close the dialog
-                                },
-                              ),
-                            ],
+                  ? [
+                      IconButton(
+                        icon: Icon(Icons.delete,
+                            color: Theme.of(context).colorScheme.error),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text("Confirm Delete"),
+                                content: const Text(
+                                    "Are you sure you want to delete the selected music?"),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text("Cancel"),
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // Close the dialog
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: const Text("Delete"),
+                                    onPressed: () {
+                                      // Perform the delete operation
+                                      _musicOverviewBloc.add(
+                                          MusicOverviewDeleteSelected(state
+                                              .music
+                                              .asMap()
+                                              .entries
+                                              .where((music) =>
+                                                  state.selected[music.key])
+                                              .map((music) => music.value)));
+                                      Navigator.of(context)
+                                          .pop(); // Close the dialog
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ]
-              : null,
+                      ),
+                    ]
+                  : [
+                      IconButton(
+                        icon: Icon(Icons.loop,
+                            color: _isLoop
+                                ? const Color.fromARGB(255, 0, 174, 255)
+                                : Colors.white24),
+                        onPressed: () =>
+                            _musicPlayerBloc.add(const MusicPlayerToggleLoop()),
+                      ),
+                      IconButton(
+                          icon: Icon(Icons.shuffle,
+                              color: _isShuffle
+                                  ? const Color.fromARGB(255, 0, 174, 255)
+                                  : Colors.white24),
+                          onPressed: () => _musicPlayerBloc
+                              .add(const MusicPlayerToggleShuffle())),
+                    ],
         ),
         body: Builder(
           builder: (context) {
             if (state.music.isEmpty) {
-              if (state.status == MusicOverviewStatus.loading) {
-                return const Center(child: CupertinoActivityIndicator());
-              } else if (state.status != MusicOverviewStatus.success) {
-                return const SizedBox();
-              } else {
-                return Center(
-                    child: Text(
-                  "Add your music now!",
-                  style: Theme.of(context).textTheme.bodySmall,
-                ));
-              }
+                  if (state.status == MusicOverviewStatus.loading) {
+                    return const Center(child: CupertinoActivityIndicator());
+                  } else if (state.status != MusicOverviewStatus.success) {
+                    return const SizedBox();
+                  } else {
+                    return Center(
+                        child: Text(
+                      "Add your music now!",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ));
+                  }
             }
             return ListView.builder(
-              itemCount: state.music.length,
-              itemBuilder: (context, index) => MusicListTile(
-                music: state.music[index],
-                isSelectionMode: state.isSelectionMode,
-                isSelected: state.selected[index],
-                onTap: () {
-                  if (state.isSelectionMode) {
-                    _musicOverviewBloc
-                        .add(MusicOverviewToggleSelectedMusic(index));
-                  } else {
-                    _musicPlayerBloc
-                        .add(MusicPlayerInsertNext(state.music[index]));
-                  }
-                },
-                onLongPress: () {
-                  _musicOverviewBloc
-                      .add(MusicOverviewEnterSelectionMode(index));
-                },
-              ),
+                  itemCount: state.music.length,
+                  itemBuilder: (context, index) => MusicListTile(
+                    music: state.music[index],
+                    isSelectionMode: state.isSelectionMode,
+                    isSelected: state.selected[index],
+                    onTap: () {
+                      if (state.isSelectionMode) {
+                        _musicOverviewBloc
+                            .add(MusicOverviewToggleSelectedMusic(index));
+                      } else {
+                        _musicPlayerBloc
+                            .add(MusicPlayerQueueMusic(state.music));
+                        _musicPlayerBloc
+                            .add(MusicPlayerPlayThisMusic(state.music[index]));
+                      }
+                    },
+                    onLongPress: () {
+                      _musicOverviewBloc
+                          .add(MusicOverviewEnterSelectionMode(index));
+                    },
+                  ),
             );
           },
         ),
-      );
-    });
+          );
+        },
+      ),
+    );
   }
 }
 
