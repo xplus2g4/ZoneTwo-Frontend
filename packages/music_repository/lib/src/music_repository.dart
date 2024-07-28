@@ -43,12 +43,13 @@ class MusicRepository {
   Future<void> updateMusicData(MusicData musicData) async {
     // Update database
     await _db.rawUpdate(
-        "UPDATE $tableName SET title = ?, save_path = ? bpm = ? WHERE id = ?", [
-      musicData.title,
-      musicData.savePath,
-      musicData.bpm,
-      musicData.id,
-    ]);
+        "UPDATE $tableName SET title = ?, save_path = ?, bpm = ? WHERE id = ?",
+        [
+          musicData.title,
+          musicData.savePath,
+          musicData.bpm,
+          musicData.id,
+        ]);
 
     // Publish to stream
     final music = [..._musicStreamController.value];

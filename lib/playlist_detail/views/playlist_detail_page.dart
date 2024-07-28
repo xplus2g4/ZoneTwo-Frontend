@@ -5,8 +5,7 @@ import 'package:zonetwo/music_overview/music_overview.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/playlist_detail/bloc/playlist_detail_bloc.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
-
-import '../widgets/remove_confirmation_dialog.dart';
+import 'package:zonetwo/utils/utils.dart';
 
 class PlaylistDetailPage extends StatelessWidget {
   const PlaylistDetailPage(this.playlist, {super.key});
@@ -70,7 +69,12 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   void _removeSelectedMusic(BuildContext context) {
     showDialog<bool>(
       context: context,
-      builder: (context) => const RemoveConfirmationDialog(),
+      builder: (context) => const ConfirmationDialog(
+        title: "Confirm Remove",
+        content:
+            "Selected music will be removed from playlist. Song files won't be deleted.",
+        confirmText: "Remove",
+      ),
     ).then((confirmDelete) {
       if (confirmDelete == true) {
         context.read<PlaylistDetailBloc>().add(

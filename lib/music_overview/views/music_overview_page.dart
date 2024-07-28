@@ -5,6 +5,9 @@ import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/utils/utils.dart';
+
+import '../widgets/edit_music_dialog.dart';
 
 class MusicOverviewPage extends StatelessWidget {
   const MusicOverviewPage({super.key});
@@ -57,6 +60,45 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
     _isLoop = _musicPlayerBloc.state.isLoop;
   }
 
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ConfirmationDialog(
+          title: "Confirm Delete",
+          content: "Are you sure you want to delete the selected music?",
+          confirmText: "Delete",
+          onCancel: () => Navigator.pop(context),
+          onConfirm: () {
+            _musicOverviewBloc.add(const MusicOverviewDeleteSelected());
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(MusicEntity music) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return EditMusicDialog(music);
+      },
+    ).then((bpm) {
+      if (bpm != null) {
+        _musicOverviewBloc.add(MusicOverviewEditMusic(
+          music: MusicEntity(
+            id: music.id,
+            title: music.title,
+            bpm: int.parse(bpm),
+            savePath: music.savePath,
+            coverImage: music.coverImage,
+          ),
+        ));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
@@ -72,15 +114,14 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
       child: BlocBuilder<MusicOverviewBloc, MusicOverviewState>(
         builder: (context, state) {
           return Scaffold(
-        floatingActionButton: state.isSelectionMode
-            ? CreatePlaylistFAB(_musicOverviewBloc)
-            : const MusicOverviewDownloadButton(),
-        appBar: AppBar(
-          title: state.isSelectionMode
-                  ? Text(
-                      "${state.selected.where((selected) => selected).length} selected")
+            floatingActionButton: state.isSelectionMode
+                ? CreatePlaylistFAB(_musicOverviewBloc)
+                : const MusicOverviewDownloadButton(),
+            appBar: AppBar(
+              title: state.isSelectionMode
+                  ? Text("${state.selected.length} selected")
                   : const Text("All Music"),
-          leading: state.isSelectionMode
+              leading: state.isSelectionMode
                   ? IconButton(
                       icon: Icon(Icons.close,
                           color: Theme.of(context).colorScheme.primary),
@@ -90,48 +131,26 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                       },
                     )
                   : null,
-          actions: state.isSelectionMode
+              actions: state.isSelectionMode
                   ? [
                       IconButton(
-                        icon: Icon(Icons.delete,
-                            color: Theme.of(context).colorScheme.error),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text("Confirm Delete"),
-                                content: const Text(
-                                    "Are you sure you want to delete the selected music?"),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text("Cancel"),
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(); // Close the dialog
-                                    },
+                        icon: const Icon(Icons.edit),
+                        color: Theme.of(context).colorScheme.primary,
+                        onPressed: state.selected.length != 1
+                            ? null
+                            : () => _showEditDialog(
+                                  state.music.firstWhere(
+                                    (element) =>
+                                        element.id == state.selected.first,
                                   ),
-                                  TextButton(
-                                    child: const Text("Delete"),
-                                    onPressed: () {
-                                      // Perform the delete operation
-                                      _musicOverviewBloc.add(
-                                          MusicOverviewDeleteSelected(state
-                                              .music
-                                              .asMap()
-                                              .entries
-                                              .where((music) =>
-                                                  state.selected[music.key])
-                                              .map((music) => music.value)));
-                                      Navigator.of(context)
-                                          .pop(); // Close the dialog
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
+                                ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        color: Theme.of(context).colorScheme.error,
+                        onPressed: state.selected.isEmpty
+                            ? null
+                            : () => _showDeleteDialog(context),
                       ),
                     ]
                   : [
@@ -151,10 +170,10 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                           onPressed: () => _musicPlayerBloc
                               .add(const MusicPlayerToggleShuffle())),
                     ],
-        ),
-        body: Builder(
-          builder: (context) {
-            if (state.music.isEmpty) {
+            ),
+            body: Builder(
+              builder: (context) {
+                if (state.music.isEmpty) {
                   if (state.status == MusicOverviewStatus.loading) {
                     return const Center(child: CupertinoActivityIndicator());
                   } else if (state.status != MusicOverviewStatus.success) {
@@ -166,36 +185,38 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ));
                   }
-            }
-            return ListView.builder(
-                  itemCount: state.music.length,
-                  itemBuilder: (context, index) => MusicListTile(
-                    music: state.music[index],
-                    isSelectionMode: state.isSelectionMode,
-                    isSelected: state.selected[index],
-                    onTap: () {
-                      if (state.isSelectionMode) {
-                        _musicOverviewBloc
-                            .add(MusicOverviewToggleSelectedMusic(index));
-                      } else {
-                        _musicPlayerBloc
-                            .add(MusicPlayerQueueMusic(state.music));
-                        _musicPlayerBloc
-                            .add(MusicPlayerPlayThisMusic(state.music[index]));
-                      }
-                    },
-                    onLongPress: () {
-                      _musicOverviewBloc
-                          .add(MusicOverviewEnterSelectionMode(index));
-                    },
-                  ),
-            );
-          },
-        ),
+                }
+                return ListView.builder(
+                    itemCount: state.music.length,
+                    itemBuilder: (context, index) {
+                      final currentMusic = state.music[index];
+                      return MusicListTile(
+                        music: currentMusic,
+                        isSelectionMode: state.isSelectionMode,
+                        isSelected: state.selected.contains(currentMusic.id),
+                        onTap: () {
+                          if (state.isSelectionMode) {
+                            _musicOverviewBloc.add(
+                                MusicOverviewToggleSelectedMusic(
+                                    currentMusic.id));
+                          } else {
+                            _musicPlayerBloc
+                                .add(MusicPlayerQueueMusic(state.music));
+                            _musicPlayerBloc
+                                .add(MusicPlayerPlayThisMusic(currentMusic));
+                          }
+                        },
+                        onLongPress: () {
+                          _musicOverviewBloc.add(
+                              MusicOverviewEnterSelectionMode(currentMusic.id));
+                        },
+                      );
+                    });
+              },
+            ),
           );
         },
       ),
     );
   }
 }
-

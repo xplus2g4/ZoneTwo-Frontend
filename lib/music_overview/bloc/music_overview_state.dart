@@ -7,14 +7,14 @@ final class MusicOverviewState extends Equatable {
     this.status = MusicOverviewStatus.initial,
     this.music = const [],
     this.isSelectionMode = false,
-    this.selected = const [],
+    this.selected = const {},
     // this.filter = TodosViewFilter.all,
   });
 
   final MusicOverviewStatus status;
   final List<MusicEntity> music;
   final bool isSelectionMode;
-  final List<bool> selected;
+  final Set<String> selected;
 
   // final TodosViewFilter filter;
 
@@ -24,7 +24,7 @@ final class MusicOverviewState extends Equatable {
     MusicOverviewStatus Function()? status,
     List<MusicEntity> Function()? music,
     bool Function()? isSelectionMode,
-    List<bool> Function()? selected,
+    Set<String> Function()? selected,
     // TodosViewFilter Function()? filter,
   }) {
     return MusicOverviewState(
