@@ -61,10 +61,13 @@ class MusicRepository {
     _musicStreamController.add(music);
   }
 
-  Future<void> deleteMusicData(MusicData musicData) async {
-    await _db.delete(tableName, where: "id = ?", whereArgs: [musicData.id]);
-    final music = [..._musicStreamController.value]
-        .where((music) => music.id != musicData.id)
+  Future<void> deleteMusicData(List<MusicData> musicData) async {
+    final musicIds = musicData.map((music) => music.id).toList();
+    final queryPlaceholder = List.filled(musicIds.length, '?').join(',');
+    await _db.delete(tableName,
+        where: "id IN ($queryPlaceholder)", whereArgs: musicIds);
+    final music = _musicStreamController.value
+        .where((music) => !musicData.contains(music))
         .toList();
     _musicStreamController.add(music);
   }

@@ -19,11 +19,11 @@ class PlaylistData {
       {required this.name, required this.songCount, this.coverImage})
       : id = "";
 
-  factory PlaylistData.fromRow(Map<String, Object?> row) {
+  factory PlaylistData.fromRow(Map<String, Object?> row, {int songCount = 0}) {
     return PlaylistData(
       id: row['id'] as String,
       name: row['name'] as String,
-      songCount: row['song_count'] as int,
+      songCount: songCount,
       coverImage: row['cover_image'] as Uint8List?,
     );
   }
@@ -42,7 +42,6 @@ class PlaylistData {
     return {
       'id': id,
       'name': name,
-      'song_count': songCount,
       'cover_image': coverImage,
     };
   }

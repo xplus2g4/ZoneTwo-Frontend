@@ -13,6 +13,7 @@ class PlaylistsOverviewBloc
   })  : _playlistRepository = playlistRepository,
         super(const PlaylistsOverviewState()) {
     on<PlaylistsOverviewSubscriptionRequested>(_onSubscriptionRequested);
+    on<PlaylistsOverviewPlaylistsDeleted>(_onPlaylistsDeleted);
   }
 
   final PlaylistRepository _playlistRepository;
@@ -24,6 +25,29 @@ class PlaylistsOverviewBloc
     emit(state.copyWith(status: () => PlaylistsOverviewStatus.loading));
 
     await _playlistRepository.getAllPlaylists();
+    await emit.forEach<List<PlaylistEntity>>(
+      _playlistRepository.getPlaylistsStream().map(
+          (playlistList) => playlistList.map(PlaylistEntity.fromData).toList()),
+      onData: (playlists) => state.copyWith(
+        status: () => PlaylistsOverviewStatus.success,
+        playlists: () => playlists,
+      ),
+      onError: (_, __) => state.copyWith(
+        status: () => PlaylistsOverviewStatus.failure,
+      ),
+    );
+  }
+
+  Future<void> _onPlaylistsDeleted(
+    PlaylistsOverviewPlaylistsDeleted event,
+    Emitter<PlaylistsOverviewState> emit,
+  ) async {
+    emit(state.copyWith(status: () => PlaylistsOverviewStatus.loading));
+
+    await _playlistRepository.deletePlaylists(state.playlists
+        .where((playlist) => event.playlistIds.contains(playlist.id))
+        .map((playlist) => playlist.toData())
+        .toList());
     await emit.forEach<List<PlaylistEntity>>(
       _playlistRepository.getPlaylistsStream().map(
           (playlistList) => playlistList.map(PlaylistEntity.fromData).toList()),

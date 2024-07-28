@@ -20,6 +20,15 @@ final class MusicOverviewCreatePlaylist extends MusicOverviewEvent {
   List<Object> get props => [playlistName];
 }
 
+final class MusicOverviewAddToPlaylist extends MusicOverviewEvent {
+  const MusicOverviewAddToPlaylist(this.playlist);
+
+  final PlaylistEntity playlist;
+
+  @override
+  List<Object> get props => [playlist];
+}
+
 class MusicOverviewDeleteSelected extends MusicOverviewEvent {
   const MusicOverviewDeleteSelected(this.selectedMusic);
 

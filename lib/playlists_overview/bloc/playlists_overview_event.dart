@@ -11,3 +11,12 @@ final class PlaylistsOverviewSubscriptionRequested
     extends PlaylistsOverviewEvent {
   const PlaylistsOverviewSubscriptionRequested();
 }
+
+final class PlaylistsOverviewPlaylistsDeleted extends PlaylistsOverviewEvent {
+  const PlaylistsOverviewPlaylistsDeleted(this.playlistIds);
+
+  final Set<String> playlistIds;
+
+  @override
+  List<Object> get props => [playlistIds];
+}

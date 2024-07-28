@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 
 part 'music_overview_event.dart';
 part 'music_overview_state.dart';
@@ -16,6 +17,7 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
         super(const MusicOverviewState()) {
     on<MusicOverviewSubscriptionRequested>(_onSubscriptionRequested);
     on<MusicOverviewCreatePlaylist>(_onCreatePlaylists);
+    on<MusicOverviewAddToPlaylist>(_onAddToPlaylist);
     on<MusicOverviewEnterSelectionMode>(_onEnterSelectionMode);
     on<MusicOverviewExitSelectionMode>(_onExitSelectionMode);
     on<MusicOverviewToggleSelectedMusic>(_onToggleSelectMusic);
@@ -107,16 +109,37 @@ class MusicOverviewBloc extends Bloc<MusicOverviewEvent, MusicOverviewState> {
     ));
   }
 
-  Future<void> _onDeleteSelected(
-    MusicOverviewDeleteSelected event,
+  Future<void> _onAddToPlaylist(
+    MusicOverviewAddToPlaylist event,
     Emitter<MusicOverviewState> emit,
   ) async {
-    for (final musicData in event.selectedMusic) {
-      await _musicRepository.deleteMusicData(musicData.toData());
-    }
+    final selectedMusic = state.music
+        .asMap()
+        .entries
+        .where((entry) => state.selected[entry.key])
+        .map((entry) => entry.value.toData())
+        .toList();
+    await _playlistRepository.addMusicToPlaylist(
+      event.playlist.toData(),
+      selectedMusic,
+    );
     emit(state.copyWith(
       isSelectionMode: () => false,
       selected: () => List.generate(state.music.length, (_) => false),
     ));
+    _playlistRepository.getAllPlaylists();
+  }
+
+  Future<void> _onDeleteSelected(
+    MusicOverviewDeleteSelected event,
+    Emitter<MusicOverviewState> emit,
+  ) async {
+    await _musicRepository.deleteMusicData(
+        event.selectedMusic.map((music) => music.toData()).toList());
+    emit(state.copyWith(
+      isSelectionMode: () => false,
+      selected: () => List.generate(state.music.length, (_) => false),
+    ));
+    _playlistRepository.getAllPlaylists();
   }
 }

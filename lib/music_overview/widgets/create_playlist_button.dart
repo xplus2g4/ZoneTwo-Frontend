@@ -13,7 +13,7 @@ class CreatePlaylistFAB extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       onPressed: () => _showCreatePlaylistBottomSheet(context),
-      label: const Text('Create Playlist'),
+      label: const Text('Add to playlist'),
       icon: const Icon(Icons.playlist_add),
     );
   }
