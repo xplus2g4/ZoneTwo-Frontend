@@ -193,7 +193,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                         _musicPlayerBloc
                             .add(MusicPlayerQueueMusic(state.music));
                         _musicPlayerBloc
-                            .add(MusicPlayerPlayThisMusic(state.music[index]));
+                            .add(MusicPlayerPlayThisMusic(currMusic));
                       }
                     },
                   );

@@ -34,7 +34,8 @@ class _MiniPlaylistListview extends StatelessWidget {
                 itemCount: state.playlists.length,
                 itemBuilder: (context, index) {
                   final playlist = state.playlists[index];
-                  return ListTile(
+                  return Material(
+                      child: ListTile(
                     leading: Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8.0),
@@ -49,12 +50,14 @@ class _MiniPlaylistListview extends StatelessWidget {
                                 width: 50,
                                 height: 50,
                               )
-                            : const Icon(Icons.image, size: 50),
+                            : const Icon(Icons.music_note, size: 50),
                       ),
                     ),
                     title: Text(playlist.name),
-                    onTap: () => onPlaylistSelected(playlist),
-                  );
+                    onTap: () {
+                      onPlaylistSelected(playlist);
+                    },
+                  ));
                 });
       },
     );

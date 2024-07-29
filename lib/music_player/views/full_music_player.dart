@@ -45,17 +45,21 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
   Future<List<Color>> getDominantColors(Uint8List bytes) {
     return PaletteGenerator.fromImageProvider(
       Image.memory(bytes).image,
-    ).then(
-        (value) =>
+    ).then((value) =>
         value.paletteColors!.map((e) => e.color).toList(growable: false));
   }
 
   MusicEntity? getCurrentMusic() {
+    if (_musicPlayerBloc.state.playlistQueue.isEmpty) {
+      return null;
+    }
     return !_isShuffle
-        ? _playlistIndex != -1
+        ? (_playlistIndex >= 0 &&
+                _playlistIndex < _musicPlayerBloc.state.playlistQueue.length)
             ? _musicPlayerBloc.state.playlistQueue[_playlistIndex]
             : null
-        : _shuffledIndex != -1
+        : (_shuffledIndex >= 0 &&
+                _shuffledIndex < _musicPlayerBloc.state.shuffledQueue.length)
             ? _musicPlayerBloc.state.shuffledQueue[_shuffledIndex]
             : null;
   }
@@ -104,7 +108,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                     child: Scaffold(
                       appBar: AppBar(
                         leading: IconButton(
-                          icon: Icon(Icons.arrow_back,
+                          icon: const Icon(Icons.arrow_back,
                               shadows: const <Shadow>[
                                 Shadow(
                                   offset: Offset(1.0, 1.0),
@@ -112,7 +116,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                   blurRadius: 3.0,
                                 )
                               ],
-                              color: Theme.of(context).colorScheme.secondary),
+                              color: Colors.white70),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -153,102 +157,95 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                       backgroundColor: Colors.transparent,
                       body: Builder(builder: (context) {
                         return Column(
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Center children vertically
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SizedBox(width: 64),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  child: Image.memory(
-                                    currentMusic.coverImage,
-                                    width: 200,
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                  ),
+                            mainAxisAlignment: MainAxisAlignment
+                                .center, // Center children vertically
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: Image.memory(
+                                  currentMusic.coverImage,
+                                  width: 250,
+                                  height: 250,
+                                  fit: BoxFit.cover,
                                 ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "Original\n BPM",
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    Text(
-                                      currentMusic.bpm.round().toString(),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    // Add more text widgets here as needed
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                                width: 300,
-                                child: Text(
-                                  currentMusic.title,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 3,
-                                  style: const TextStyle(
-                                      shadows: <Shadow>[
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      blurRadius: 3.0,
-                                              color: Colors.black
-                                    ),
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      blurRadius: 8.0,
-                                              color: Colors.black
-                                    ),
-                                  ],
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                )),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                                width: 360,
-                                child: ProgressBar(
-                                  progress: _audioPlayerPosition,
-                                  total: _audioPlayerDuration,
-                                  thumbRadius: 0,
-                                  timeLabelPadding: 4,
-                                  timeLabelLocation: TimeLabelLocation.below,
-                                  timeLabelType: TimeLabelType.totalTime,
-                                  timeLabelTextStyle: const TextStyle(
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                          offset: Offset(1.0, 1.0),
-                                          blurRadius: 3.0,
-                                              color: Colors.black
-                                        ),
-                                      ],
-                                      color: Colors.white54,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                  onSeek: (position) {
-                                    _musicPlayerBloc
-                                        .add(MusicPlayerSeek(position));
-                                  },
-                                  barHeight: 8,
-                                  baseBarColor:
-                                      colorSnapshot.data?[0] ?? Colors.white12,
-                                  progressBarColor: Colors.white54,
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                  width: 300,
+                                  child: Text(
+                                    currentMusic.title,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 3,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        shadows: <Shadow>[
+                                          Shadow(
+                                              offset: Offset(1.0, 1.0),
+                                              blurRadius: 3.0,
+                                              color: Colors.black),
+                                          Shadow(
+                                              offset: Offset(1.0, 1.0),
+                                              blurRadius: 8.0,
+                                              color: Colors.black),
+                                        ],
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
                                   )),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
+                              const SizedBox(height: 16),
+                              BlocListener<MusicPlayerBloc, MusicPlayerState>(
+                                  listenWhen: (previous, current) =>
+                                      previous.audioPlayerPosition !=
+                                          current.audioPlayerPosition ||
+                                      previous.audioPlayerDuration !=
+                                          current.audioPlayerDuration,
+                                  listener: (context, state) {
+                                    setState(() {
+                                      _audioPlayerPosition =
+                                          state.audioPlayerPosition;
+                                      _audioPlayerDuration =
+                                          state.audioPlayerDuration;
+                                    });
+                                  },
+                                  child: SizedBox(
+                                      width: 360,
+                                      child: ProgressBar(
+                                        progress: _audioPlayerPosition,
+                                        total: _audioPlayerDuration,
+                                        thumbRadius: 0,
+                                        timeLabelPadding: 4,
+                                        timeLabelLocation:
+                                            TimeLabelLocation.below,
+                                        timeLabelType: TimeLabelType.totalTime,
+                                        timeLabelTextStyle: const TextStyle(
+                                            shadows: <Shadow>[
+                                              Shadow(
+                                                  offset: Offset(1.0, 1.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black),
+                                            ],
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold),
+                                        onSeek: (position) {
+                                          setState(() {
+                                            _audioPlayerPosition = position;
+                                          });
+                                          _musicPlayerBloc
+                                              .add(MusicPlayerSeek(position));
+                                        },
+                                        barHeight: 8,
+                                        baseBarColor: colorSnapshot.data?[0] ??
+                                            Colors.white12,
+                                        progressBarColor: Colors.white54,
+                                      ))),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
                                   ElevatedButton(
-                                  onPressed: () => _musicPlayerBloc
-                                      .add(const MusicPlayerPlayPrevious()),
+                                    onPressed: () => _musicPlayerBloc
+                                        .add(const MusicPlayerPlayPrevious()),
                                     style: ElevatedButton.styleFrom(
                                       shape: const CircleBorder(),
                                       backgroundColor: Colors.black87,
@@ -256,11 +253,11 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                     ),
                                     child: const Icon(Icons.skip_previous,
                                         color: Colors.white70),
-                                ),
-                                if (_audioPlayerState == PlayerState.playing)
+                                  ),
+                                  if (_audioPlayerState == PlayerState.playing)
                                     ElevatedButton(
-                                    onPressed: () => _musicPlayerBloc
-                                        .add(const MusicPlayerPause()),
+                                      onPressed: () => _musicPlayerBloc
+                                          .add(const MusicPlayerPause()),
                                       style: ElevatedButton.styleFrom(
                                         shape: const CircleBorder(),
                                         backgroundColor: Colors.black,
@@ -271,11 +268,11 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                         size: 36,
                                         color: Colors.white,
                                       ),
-                                  )
-                                else
+                                    )
+                                  else
                                     ElevatedButton(
-                                    onPressed: () => _musicPlayerBloc
-                                        .add(const MusicPlayerResume()),
+                                      onPressed: () => _musicPlayerBloc
+                                          .add(const MusicPlayerResume()),
                                       style: ElevatedButton.styleFrom(
                                         shape: const CircleBorder(),
                                         backgroundColor: Colors.black87,
@@ -288,8 +285,8 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                       ),
                                     ),
                                   ElevatedButton(
-                                  onPressed: () => _musicPlayerBloc
-                                      .add(const MusicPlayerPlayNext()),
+                                    onPressed: () => _musicPlayerBloc
+                                        .add(const MusicPlayerPlayNext()),
                                     style: ElevatedButton.styleFrom(
                                       shape: const CircleBorder(),
                                       backgroundColor: Colors.black,
@@ -299,10 +296,10 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                       Icons.skip_next,
                                       color: Colors.white70,
                                     ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 36),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 36),
                               Container(
                                 width: 250,
                                 padding: const EdgeInsets.all(16),
@@ -311,30 +308,34 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                     color: Colors.black12),
                                 child: Column(children: [
                                   const Text("Adjusted to",
-                                style: TextStyle(shadows: <Shadow>[
-                                  Shadow(
-                                    offset: Offset(1.0, 1.0),
-                                    blurRadius: 3.0,
-                                            color: Colors.black
-                                  ),
-                                ], fontWeight: FontWeight.bold)),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .center, // Center children vertically
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  IconButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _bpm -= 1;
-                                        });
-                                        _musicPlayerBloc
-                                            .add(MusicPlayerSetBpm(_bpm));
-                                      },
-                                      icon: const Icon(Icons.remove),
-                                      iconSize: 36),
-                                  const SizedBox(width: 16),
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          shadows: <Shadow>[
+                                            Shadow(
+                                                offset: Offset(1.0, 1.0),
+                                                blurRadius: 3.0,
+                                                color: Colors.black),
+                                          ],
+                                          fontWeight: FontWeight.bold)),
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .center, // Center children vertically
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _bpm -= 1;
+                                              });
+                                              _musicPlayerBloc
+                                                  .add(MusicPlayerSetBpm(_bpm));
+                                            },
+                                            icon: const Icon(Icons.remove,
+                                                color: Colors.white),
+                                            iconSize: 36),
+                                        const SizedBox(width: 16),
                                         BlocListener<MusicPlayerBloc,
                                                 MusicPlayerState>(
                                             listenWhen: (previous, current) =>
@@ -345,43 +346,58 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                               });
                                             },
                                             child: Text(
-                                    _bpm.round().toString(),
-                                    style: const TextStyle(shadows: <Shadow>[
-                                      Shadow(
-                                        offset: Offset(1.0, 1.0),
-                                        blurRadius: 3.0,
+                                              _bpm.round().toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  shadows: <Shadow>[
+                                                    Shadow(
+                                                      offset: Offset(1.0, 1.0),
+                                                      blurRadius: 3.0,
                                                       color: Colors.black,
-                                      ),
-                                    ], fontSize: 40),
+                                                    ),
+                                                  ],
+                                                  fontSize: 40),
                                             )),
-                                  const SizedBox(width: 16),
-                                  IconButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _bpm += 1;
-                                        });
-                                        _musicPlayerBloc
-                                            .add(MusicPlayerSetBpm(_bpm));
-                                      },
+                                        const SizedBox(width: 16),
+                                        IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _bpm += 1;
+                                            });
+                                            _musicPlayerBloc
+                                                .add(MusicPlayerSetBpm(_bpm));
+                                          },
                                           icon: const Icon(Icons.add),
                                           iconSize: 36,
                                         )
                                       ]),
                                   const Text(
-                                "BPM",
-                                style: TextStyle(
-                                  shadows: <Shadow>[
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      blurRadius: 3.0,
-                                            color: Colors.black
-                                    ),
-                                  ],
+                                    "BPM",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            blurRadius: 3.0,
+                                            color: Colors.black),
+                                      ],
                                       fontWeight: FontWeight.bold,
                                     ),
-                                  )
-                                ]
-                            ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    "Originally ${currentMusic.bpm.round().toString()}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            blurRadius: 3.0,
+                                            color: Colors.black),
+                                      ],
+                                    ),
+                                  ),
+                                ]),
                               ),
                             ]);
                       }),
@@ -392,4 +408,3 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
     );
   }
 }
-

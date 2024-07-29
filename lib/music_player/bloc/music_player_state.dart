@@ -76,14 +76,5 @@ final class MusicPlayerState extends Equatable {
         audioPlayerPosition,
         audioPlayerDuration,
         audioPlayer,
-        currentMusic
       ];
-
-  MusicEntity? get currentMusic => isShuffle
-      ? playlistIndex != -1
-          ? playlistQueue[playlistIndex]
-          : null
-      : shuffledIndex != -1
-          ? shuffledQueue[shuffledIndex]
-          : null;
 }

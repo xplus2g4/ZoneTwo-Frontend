@@ -72,11 +72,16 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   }
 
   MusicEntity? getCurrentMusic() {
+    if (_musicPlayerBloc.state.playlistQueue.isEmpty) {
+      return null;
+    }
     return !_isShuffle
-        ? _playlistIndex != -1
+        ? (_playlistIndex >= 0 &&
+                _playlistIndex < _musicPlayerBloc.state.playlistQueue.length)
             ? _musicPlayerBloc.state.playlistQueue[_playlistIndex]
             : null
-        : _shuffledIndex != -1
+        : (_shuffledIndex >= 0 &&
+                _shuffledIndex < _musicPlayerBloc.state.shuffledQueue.length)
             ? _musicPlayerBloc.state.shuffledQueue[_shuffledIndex]
             : null;
   }
@@ -98,9 +103,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
             previous.shuffledIndex != current.shuffledIndex ||
             previous.isShuffle != current.isShuffle ||
             previous.isLoop != current.isLoop ||
-            previous.audioPlayerState != current.audioPlayerState ||
-            previous.audioPlayerPosition != current.audioPlayerPosition ||
-            previous.audioPlayerDuration != current.audioPlayerDuration,
+            previous.audioPlayerState != current.audioPlayerState,
         listener: (context, state) {
           setState(() {
             _playlistIndex = state.playlistIndex;
@@ -108,8 +111,6 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
             _isShuffle = state.isShuffle;
             _isLoop = state.isLoop;
             _audioPlayerState = state.audioPlayerState;
-            _audioPlayerPosition = state.audioPlayerPosition;
-            _audioPlayerDuration = state.audioPlayerDuration;
           });
         },
         child: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
@@ -121,9 +122,11 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18.0),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.primaryFixedDim),
                   ),
                   width: double.infinity,
-                  height: 63,
+                  height: 65,
                   child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
@@ -141,7 +144,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                         }
                       },
                       onVerticalDragEnd: (details) {
-                        if (details.primaryVelocity! > 5) {
+                        if (details.primaryVelocity! > 0) {
                           _musicPlayerBloc.add(const MusicPlayerStop());
                         }
                       },
@@ -241,7 +244,21 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                               icon: const Icon(
                                                   Icons.play_arrow))),
                                 ]),
-                                SizedBox(
+                            BlocListener<MusicPlayerBloc, MusicPlayerState>(
+                              listenWhen: (previous, current) =>
+                                  previous.audioPlayerPosition !=
+                                      current.audioPlayerPosition ||
+                                  previous.audioPlayerDuration !=
+                                      current.audioPlayerDuration,
+                              listener: (context, state) {
+                                setState(() {
+                                  _audioPlayerPosition =
+                                      state.audioPlayerPosition;
+                                  _audioPlayerDuration =
+                                      state.audioPlayerDuration;
+                                });
+                              },
+                              child: SizedBox(
                                     width: double.infinity,
                                     child: ProgressBar(
                                       progress: _audioPlayerPosition,
@@ -253,7 +270,9 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                       barHeight: 2,
                                       baseBarColor: Colors.grey[800]!,
                                       progressBarColor: Colors.white30,
-                                    ))
+                                ),
+                              ),
+                            ),
                           ]))));
         }));
   }

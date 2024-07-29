@@ -7,6 +7,13 @@ class PlaylistEntity {
   final String name;
   final int songCount;
   final Uint8List? coverImage;
+  
+  // ignore: constant_identifier_names
+  static const ALL_MUSIC = PlaylistEntity(
+    id: "All Music",
+    name: "All Music",
+    songCount: -1,
+  );
 
   const PlaylistEntity({
     required this.id,

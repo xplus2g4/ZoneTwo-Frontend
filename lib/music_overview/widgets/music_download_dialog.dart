@@ -19,15 +19,10 @@ class MusicDownloadDialog extends StatelessWidget {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
         child: Container(
-          constraints: const BoxConstraints(maxHeight: 300),
+          constraints: const BoxConstraints(maxHeight: 200),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                _AddMusicDialog(),
-                _DownloadList(),
-              ],
-            ),
+            padding: const EdgeInsets.only(top: 12, left: 12, right: 12),
+            child: _AddMusicDialog(),
           ),
         ),
       ),
@@ -58,17 +53,51 @@ class __AddMusicDialogState extends State<_AddMusicDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _textController,
-      autocorrect: false,
-      onEditingComplete: _onConfirm,
-      onTapOutside: (event) => _onConfirm(),
-      decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.search),
-        border: InputBorder.none,
-        hintText: 'Enter a YouTube link',
-      ),
-    );
+    return Container(
+        constraints: const BoxConstraints(maxHeight: 200),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextField(
+                  controller: _textController,
+                  autocorrect: false,
+                  onEditingComplete: _onConfirm,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    border: InputBorder.none,
+                    hintText: 'Enter a YouTube link',
+                  )),
+              _DownloadList(),
+              BlocBuilder<MusicDownloadBloc, MusicDownloadState>(
+                builder: (context, state) {
+                  switch (state) {
+                    case MusicDownloadStateLoading():
+                      return const SizedBox();
+                    default:
+                      return Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // Close the dialog
+                                    },
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: _onConfirm,
+                                    child: const Text("Submit"),
+                                  ),
+                                ])
+                          ]);
+                  }
+                },
+              ),
+            ]));
   }
 
   void _onConfirm() {
@@ -84,8 +113,7 @@ class _DownloadList extends StatelessWidget {
     return BlocBuilder<MusicDownloadBloc, MusicDownloadState>(
       builder: (context, state) {
         return switch (state) {
-          MusicDownloadStateIdle() =>
-            const Text('Please enter a term to begin'),
+          MusicDownloadStateIdle() => const SizedBox(),
           MusicDownloadStateLoading() => _DownloadLoading(
               percentage: state.percentage,
             ),
@@ -106,15 +134,15 @@ class _DownloadLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     String percentageToString =
         percentage == '0.00' ? 'Initializing...' : 'Progress: $percentage%';
-    return Row(children: [
-      const SizedBox(width: 20),
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       const SizedBox(
         height: 20.0,
         width: 20.0,
         child: Center(child: CircularProgressIndicator()),
       ),
       const SizedBox(width: 20),
-      Text(percentageToString)
+      Text(percentageToString),
+      const SizedBox(width: 10),
     ]);
   }
 }
@@ -128,8 +156,8 @@ class _DownloadSuccess extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text("The BPM of the music is ${music.bpm}"),
-        Text("Saved at ${music.savePath}"),
+        Text("Success! BPM: ${music.bpm}",
+            style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       ],
     );
   }

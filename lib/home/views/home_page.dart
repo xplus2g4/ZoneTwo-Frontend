@@ -18,7 +18,8 @@ class _HomePageState extends State<HomePage> {
   Map<int, String> tabKeys = {
     0: musicOverviewPath,
     1: playlistOverviewPath,
-    2: settingsPath,
+    2: workoutOverviewPath,
+    3: settingsPath,
   };
 
   @override
@@ -46,6 +47,10 @@ class _HomePageState extends State<HomePage> {
             NavigationDestination(
               icon: Icon(Icons.library_music),
               label: 'Playlists',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.directions_run),
+              label: 'Workouts',
             ),
             NavigationDestination(
               icon: Icon(Icons.settings),

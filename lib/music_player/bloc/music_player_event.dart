@@ -16,6 +16,19 @@ final class MusicPlayerQueueMusic extends MusicPlayerEvent {
   List<Object> get props => [music];
 }
 
+final class MusicPlayerQueueAllMusic extends MusicPlayerEvent {
+  const MusicPlayerQueueAllMusic();
+}
+
+final class MusicPlayerQueuePlaylistMusic extends MusicPlayerEvent {
+  const MusicPlayerQueuePlaylistMusic(this.playlist);
+
+  final PlaylistEntity playlist;
+
+  @override
+  List<Object> get props => [playlist];
+}
+
 final class MusicPlayerPlayThisMusic extends MusicPlayerEvent {
   const MusicPlayerPlayThisMusic(this.music);
 
