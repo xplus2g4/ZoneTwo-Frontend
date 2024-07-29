@@ -1,4 +1,6 @@
-# Zone Two
+<!-- # <img src="https://github.com/xplus2g4/ZoneTwo-Frontend/blob/staging/assets/logo.png?raw=true" width=50 height=50> Zone Two -->
+
+# ![logo](/assets/logo_md.png)
 
 A new Flutter project.
 

@@ -35,10 +35,9 @@ class PlaylistRepository {
         VALUES (?, ?, ?)
       ''', [newId, playlist.name, playlist.coverImage]);
 
-      final joinId = const UuidV4().generate();
       await txn.rawInsert('''
         INSERT INTO $joinTableName (id, playlist_id, music_id)
-        VALUES ${playlist.music.map((music) => "('$joinId', '$newId', '${music.id}')").join(", ")}
+        VALUES ${playlist.music.map((music) => "('${const UuidV4().generate()}', '$newId', '${music.id}')").join(", ")}
       ''');
     });
     playlist = playlist.updateData(id: newId);
@@ -131,11 +130,9 @@ class PlaylistRepository {
         return;
       }
 
-      final joinId = const UuidV4().generate();
-
       await txn.rawInsert('''
         INSERT INTO $joinTableName (id, playlist_id, music_id)
-        VALUES ${playlist.music.map((music) => "('$joinId', '${playlist.id}', '${music.id}')").join(", ")}
+        VALUES ${playlist.music.map((music) => "('${const UuidV4().generate()}', '${playlist.id}', '${music.id}')").join(", ")}
       ''');
     });
 
@@ -156,10 +153,9 @@ class PlaylistRepository {
       PlaylistData playlist, List<MusicData> music) async {
     // Update database
     await _db.transaction((txn) async {
-      final joinId = const UuidV4().generate();
       await txn.rawInsert('''
         INSERT INTO $joinTableName (id, playlist_id, music_id)
-        VALUES ${music.map((music) => "('$joinId', '${playlist.id}', '${music.id}')").join(", ")}
+        VALUES ${music.map((music) => "('${const UuidV4().generate()}', '${playlist.id}', '${music.id}')").join(", ")}
       ''');
     });
 
