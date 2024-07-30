@@ -50,16 +50,7 @@ class StartWorkoutBottomSheetState extends State<StartWorkoutBottomSheet> {
                       style: TextStyle(fontSize: 20),
                     ),
                     ElevatedButton(
-                        onPressed: () {
-                          _musicPlayerBloc.add(const MusicPlayerStop());
-                          if (_selectedPlaylist == PlaylistEntity.ALL_MUSIC) {
-                            _musicPlayerBloc
-                                .add(const MusicPlayerQueueAllMusic());
-                          } else {
-                            _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(
-                                _selectedPlaylist));
-                          }
-                          
+                        onPressed: () async {
                           context.pop();
                           context.pushNamed(
                             workoutPage,
@@ -67,6 +58,17 @@ class StartWorkoutBottomSheetState extends State<StartWorkoutBottomSheet> {
                               startDatetime: DateTime.now(),
                             ),
                           );
+                          //TODO: find a better solution
+                          await Future.delayed(const Duration(milliseconds: 5));
+                          _musicPlayerBloc.add(const MusicPlayerStop());
+                          if (_selectedPlaylist.id ==
+                              PlaylistEntity.ALL_MUSIC.id) {
+                            _musicPlayerBloc
+                                .add(const MusicPlayerQueueAllMusic());
+                          } else {
+                            _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(
+                                _selectedPlaylist));
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[600],

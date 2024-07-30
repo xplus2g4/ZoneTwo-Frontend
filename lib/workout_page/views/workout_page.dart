@@ -104,10 +104,10 @@ class _WorkoutPageState extends State<WorkoutPage> {
   @override
   void dispose() {
     super.dispose();
-    _workoutPageBloc.add(const WorkoutPageStop());
     if (_isCountdownOver) {
       _workoutPageBloc.add(WorkoutPageSave(widget.startDatetime));
     }
+    _workoutPageBloc.add(const WorkoutPageStop());
     _countdownTimer.cancel();
     _workoutTimer.cancel();
   }
@@ -150,18 +150,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
               TextButton(
                 child: const Text('Quit', style: TextStyle(color: Colors.red)),
                 onPressed: () {
-                  if (_isCountdownOver) {
-                    _workoutPageBloc.add(WorkoutPageSave(widget.startDatetime));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                          'Workout saved!',
-                        ),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                    );
-                  }
-                  _workoutPageBloc.add(const WorkoutPageStop());
                   context.pop();
                   context.go(workoutOverviewPath);
                   // dispose();
@@ -236,8 +224,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
-                              SizedBox(
-                                  width: 100,
+                              Expanded(
+                                  flex: 1,
                                   child: Text(
                                     'Distance\nWIP',
                                     textAlign: TextAlign.center,
@@ -246,13 +234,12 @@ class _WorkoutPageState extends State<WorkoutPage> {
                               VerticalDivider(
                                 color: Colors.white60,
                               ),
-                              SizedBox(
-                                  width: 100,
+                              Expanded(
                                   child: Text(
-                                    'Pace\nWIP',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 24),
-                                  )),
+                                'Pace\nWIP',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 24),
+                              )),
                             ])),
                       ],
                     ),
@@ -368,7 +355,10 @@ class _WorkoutPageState extends State<WorkoutPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        BlocListener<MusicPlayerBloc, MusicPlayerState>(
+                        Expanded(
+                          flex: 1,
+                          child:
+                              BlocListener<MusicPlayerBloc, MusicPlayerState>(
                           listenWhen: (previous, current) =>
                               previous.audioPlayerState !=
                                   current.audioPlayerState ||
@@ -380,9 +370,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                               _isLoop = state.isLoop;
                               _isShuffle = state.isShuffle;
                             });
-                          },
-                          child: Expanded(
-                            flex: 1,
+                            },
                             child: Column(
                               children: [
                                 const Text(
@@ -436,7 +424,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                         _audioPlayerState == PlayerState.playing
                                             ? Icons.pause
                                             : Icons.play_arrow,
-                                        size: 36,
+                                        size: 32,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -452,7 +440,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                       ),
                                       child: const Icon(
                                         Icons.skip_next,
-                                        size: 24,
+                                        size: 18,
                                         color: Colors.white,
                                       ),
                                     ),

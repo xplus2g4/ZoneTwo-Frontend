@@ -72,9 +72,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           previous.shuffledIndex != current.shuffledIndex ||
           previous.isShuffle != current.isShuffle ||
           previous.isLoop != current.isLoop ||
-          previous.audioPlayerState != current.audioPlayerState ||
-          previous.audioPlayerPosition != current.audioPlayerPosition ||
-          previous.audioPlayerDuration != current.audioPlayerDuration,
+          previous.audioPlayerState != current.audioPlayerState,
       listener: (context, state) {
         setState(() {
           _playlistIndex = state.playlistIndex;
@@ -82,8 +80,6 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           _isShuffle = state.isShuffle;
           _isLoop = state.isLoop;
           _audioPlayerState = state.audioPlayerState;
-          _audioPlayerPosition = state.audioPlayerPosition;
-          _audioPlayerDuration = state.audioPlayerDuration;
         });
       },
       child: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
@@ -367,7 +363,8 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                             _musicPlayerBloc
                                                 .add(MusicPlayerSetBpm(_bpm));
                                           },
-                                          icon: const Icon(Icons.add),
+                                          icon: const Icon(Icons.add,
+                                              color: Colors.white),
                                           iconSize: 36,
                                         )
                                       ]),

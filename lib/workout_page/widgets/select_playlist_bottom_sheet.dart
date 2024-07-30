@@ -26,7 +26,6 @@ class SelectPlaylistBottomSheet extends StatelessWidget {
           ),
           Expanded(
             child: MiniPlaylistListview(onPlaylistSelected: (playlist) {
-              _musicPlayerBloc.add(const MusicPlayerStop());
               _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(playlist));
               Navigator.pop(context);
             }),

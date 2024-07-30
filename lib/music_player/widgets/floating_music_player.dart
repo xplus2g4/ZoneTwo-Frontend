@@ -258,7 +258,9 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                       state.audioPlayerDuration;
                                 });
                               },
-                              child: SizedBox(
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.only(left: 8, right: 8),
                                     width: double.infinity,
                                     child: ProgressBar(
                                       progress: _audioPlayerPosition,
