@@ -5,6 +5,7 @@ import 'package:download_repository/download_repository.dart';
 import 'package:flutter/widgets.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
+import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/app.dart';
 
 void bootstrap(
@@ -12,10 +13,12 @@ void bootstrap(
   final musicRepository = MusicRepository(database);
   final playlistRepository = PlaylistRepository(database);
   final downloadRepository = DownloadRepository();
+  final workoutRepository = WorkoutRepository(database);
 
   runApp(App(
     musicRepository: musicRepository,
     playlistRepository: playlistRepository,
     downloadRepository: downloadRepository,
+    workoutRepository: workoutRepository,
   ));
 }

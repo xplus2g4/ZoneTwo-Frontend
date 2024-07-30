@@ -1,9 +1,12 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:music_repository/music_repository.dart';
+import 'package:playlist_repository/playlist_repository.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
+import 'package:zonetwo/music_overview/widgets/new_playlist_dialog.dart';
+import 'package:zonetwo/playlists_overview/entities/playlist_entity.dart';
 
 part 'music_player_event.dart';
 part 'music_player_state.dart';
@@ -15,14 +18,22 @@ EventTransformer<Event> debounce<Event>(Duration duration) {
 }
 
 class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
-  MusicPlayerBloc() : super(MusicPlayerState(audioPlayer: AudioPlayer())) {
+  MusicPlayerBloc({
+    required MusicRepository musicRepository,
+    required PlaylistRepository playlistRepository,
+  })  : _musicRepository = musicRepository,
+        _playlistRepository = playlistRepository,
+        super(MusicPlayerState(audioPlayer: AudioPlayer())) {
     on<MusicPlayerQueueMusic>(_onQueueMusic);
+    on<MusicPlayerQueueAllMusic>(_onQueueAllMusic);
+    on<MusicPlayerQueuePlaylistMusic>(_onQueuePlaylistMusic);
     on<MusicPlayerToggleShuffle>(_onToggleShuffle);
     on<MusicPlayerToggleLoop>(_onToggleLoop);
     on<MusicPlayerLoop>(_onLoop);
     on<MusicPlayerPlayNext>(_onPlayNext);
     on<MusicPlayerPlayPrevious>(_onPlayPrevious);
     on<MusicPlayerPlayThisMusic>(_onPlayThisMusic);
+    on<MusicPlayerPlayAtIndex>(_onPlayAtIndex);
     on<MusicPlayerPositionChanged>(_onPositionChanged);
     on<MusicPlayerDurationChanged>(_onDurationChanged);
     on<MusicPlayerPause>(_onPause);
@@ -30,7 +41,11 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     on<MusicPlayerSeek>(_onSeek);
     on<MusicPlayerSetBpm>(_onSetBpm, transformer: debounce(_duration));
     on<MusicPlayerEnterFullscreen>(_onEnterFullscreen);
+    on<MusicPlayerStop>(_onStop);
   }
+
+  final MusicRepository _musicRepository;
+  final PlaylistRepository _playlistRepository;
 
   @override
   MusicPlayerState fromJson(Map<String, dynamic> json) {
@@ -46,8 +61,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     };
   }
 
-  //Populate playlist queue. In general, all Music Player Events cascade from
-  //this event, thus it is synchronous
   void _onQueueMusic(
     MusicPlayerQueueMusic event,
     Emitter<MusicPlayerState> emit,
@@ -61,12 +74,49 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     ));
   }
 
-  //Toggle shuffle mode. Shuffle the playlist on every toggle. Same logic as
-  //above.
-  void _onToggleShuffle(
+  Future<void> _onQueueAllMusic(
+    MusicPlayerQueueAllMusic event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    await _musicRepository.getAllMusicData();
+    await emit.forEach<List<MusicEntity>>(
+        _musicRepository
+            .getMusic()
+            .map((musicList) => musicList.map(MusicEntity.fromData).toList()),
+        onData: (music) {
+      final newPlaylistQueue = List<MusicEntity>.from(music);
+      final newShuffledQueue = List<MusicEntity>.from(music);
+      newShuffledQueue.shuffle();
+      return state.copyWith(
+        playlistQueue: () => newPlaylistQueue,
+        shuffledQueue: () => newShuffledQueue,
+      );
+    });
+  }
+
+  Future<void> _onQueuePlaylistMusic(
+    MusicPlayerQueuePlaylistMusic event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    await _playlistRepository.getPlaylistWithMusic(event.playlist.toData());
+    await emit.forEach<PlaylistWithMusicData>(
+        _playlistRepository.getPlaylistWithMusicStream(), onData: (playlist) {
+      final newPlaylistQueue =
+          List<MusicEntity>.from(playlist.music.map(MusicEntity.fromData));
+      final newShuffledQueue =
+          List<MusicEntity>.from(playlist.music.map(MusicEntity.fromData));
+      newShuffledQueue.shuffle();
+      return state.copyWith(
+        playlistQueue: () => newPlaylistQueue,
+        shuffledQueue: () => newShuffledQueue,
+      );
+    });
+  }
+
+  Future<void> _onToggleShuffle(
     MusicPlayerToggleShuffle event,
     Emitter<MusicPlayerState> emit,
-  ) {
+  ) async {
     if (_currentMusic != null) {
       final currentMusic = _currentMusic!;
       state.audioPlayer.setPlaybackRate(state.bpm / _currentMusic!.bpm);
@@ -74,8 +124,10 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       newShuffledQueue.shuffle();
       emit(state.copyWith(
         shuffledQueue: () => newShuffledQueue,
-        shuffledIndex: () => newShuffledQueue.indexOf(currentMusic),
-        playlistIndex: () => state.playlistQueue.indexOf(currentMusic),
+        shuffledIndex: () =>
+            newShuffledQueue.indexWhere((music) => music.id == currentMusic.id),
+        playlistIndex: () => state.playlistQueue
+            .indexWhere((music) => music.id == currentMusic.id),
         isShuffle: () => !state.isShuffle,
       ));
     } else {
@@ -241,13 +293,8 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     Emitter<MusicPlayerState> emit,
   ) async {
     if (!state.isShuffle) {
-      if (event.index == state.playlistIndex) {
-        state.audioPlayer.resume();
-        emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
-        return;
-      }
       final index = event.index >= state.playlistQueue.length ? 0 : event.index;
-      final currentMusic = _currentMusic!;
+      final currentMusic = state.playlistQueue[index];
       if (state.audioPlayerState == PlayerState.playing) {
         state.audioPlayer.stop();
       }
@@ -257,16 +304,13 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       state.audioPlayer.setPlaybackRate(state.bpm / currentMusic.bpm);
       emit(state.copyWith(
         playlistIndex: () => index,
+        shuffledIndex: () => state.shuffledQueue
+            .indexWhere((music) => music.id == currentMusic.id),
         audioPlayerState: () => PlayerState.playing,
       ));
     } else {
-      if (event.index == state.shuffledIndex) {
-        state.audioPlayer.resume();
-        emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
-        return;
-      }
       final index = event.index >= state.shuffledQueue.length ? 0 : event.index;
-      final currentMusic = _currentMusic!;
+      final currentMusic = state.shuffledQueue[index];
       if (state.audioPlayerState == PlayerState.playing) {
         state.audioPlayer.stop();
       }
@@ -275,6 +319,8 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
           .then((_) => state.audioPlayer.resume());
       state.audioPlayer.setPlaybackRate(state.bpm / currentMusic.bpm);
       emit(state.copyWith(
+        playlistIndex: () => state.playlistQueue
+            .indexWhere((music) => music.id == currentMusic.id),
         shuffledIndex: () => index,
         audioPlayerState: () => PlayerState.playing,
       ));
@@ -354,10 +400,10 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(audioPlayerPosition: () => event.position));
   }
 
-  Future<void> _onStop(
+  void _onStop(
     MusicPlayerStop event,
     Emitter<MusicPlayerState> emit,
-  ) async {
+  ) {
     state.audioPlayer.stop();
     emit(state.copyWith(
       playlistQueue: () => [],
@@ -372,10 +418,12 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
 
   //Helpers
   MusicEntity? get _currentMusic => !state.isShuffle
-      ? state.playlistIndex != -1
+      ? state.playlistIndex >= 0 &&
+              state.playlistIndex < state.playlistQueue.length
           ? state.playlistQueue[state.playlistIndex]
           : null
-      : state.shuffledIndex != -1
+      : state.shuffledIndex >= 0 &&
+              state.shuffledIndex < state.shuffledQueue.length
           ? state.shuffledQueue[state.shuffledIndex]
           : null;
 }

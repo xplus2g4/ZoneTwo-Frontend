@@ -31,7 +31,6 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
         _musicDownloadBloc.add(LinkSharedEvent(media));
       }
     }, onError: (err) {
-      print("getIntentDataStream error: $err");
     });
 
     // For sharing images coming from outside the app while the app is closed

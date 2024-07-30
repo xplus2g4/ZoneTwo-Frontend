@@ -36,6 +36,27 @@ class DatabaseMigrator {
         FOREIGN KEY(music_id) REFERENCES music(id) ON DELETE CASCADE
       )
     ''');
+    batch.execute('DROP TABLE IF EXISTS workouts');
+    batch.execute('''
+      CREATE TABLE workouts (
+        id TEXT PRIMARY KEY,
+        datetime TEXT NOT NULL,
+        duration INTEGER NOT NULL,
+        distance REAL NOT NULL
+      )
+    ''');
+    batch.execute('DROP TABLE IF EXISTS workout_points');
+    //for next time...
+    batch.execute('''
+      CREATE TABLE workout_points (
+        id TEXT PRIMARY KEY,
+        workout_id TEXT NOT NULL,
+        order_priority INTEGER NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        FOREIGN KEY(workout_id) REFERENCES workouts(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<Database> open() async {

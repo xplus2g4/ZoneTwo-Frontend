@@ -4,6 +4,8 @@ import 'package:zonetwo/home/home.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
 import 'package:zonetwo/playlist_detail/playlist_detail.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
+import 'package:zonetwo/workout_overview/views/workout_overview_page.dart';
+import 'package:zonetwo/workout_page/views/workout_page.dart';
 
 import 'settings/settings.dart';
 
@@ -11,12 +13,15 @@ import 'settings/settings.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _musicOverviewNavigatorKey = GlobalKey<NavigatorState>();
 final _playlistOverviewNavigatorKey = GlobalKey<NavigatorState>();
+final _workoutOverviewNavigatorKey = GlobalKey<NavigatorState>();
 final _settingsNavigatorKey = GlobalKey<NavigatorState>();
 
 //pages paths
 const musicOverviewPath = '/music_overview';
 const playlistOverviewPath = '/playlist_overview';
 const playlistDetailPath = 'player_detail';
+const workoutOverviewPath = '/workout_overview'; 
+const workoutPage = 'workout_page';
 
 const settingsPath = '/settings';
 const settingsEditFieldPath = 'edit_field';
@@ -69,6 +74,33 @@ final router = GoRouter(
           ],
         ),
         StatefulShellBranch(
+            navigatorKey: _workoutOverviewNavigatorKey,
+            routes: [
+              GoRoute(
+                path: workoutOverviewPath,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: const WorkoutOverviewPage(),
+                ),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    name: workoutPage,
+                    path: workoutPage,
+                    pageBuilder: (context, state) {
+                      final args = state.extra as WorkoutPageArguments;
+                      return MaterialPage(
+                        key: state.pageKey,
+                        child: WorkoutPage(
+                          startDatetime: args.startDatetime,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              )
+            ]),
+        StatefulShellBranch(
           navigatorKey: _settingsNavigatorKey,
           routes: [
             GoRoute(
@@ -102,3 +134,4 @@ final router = GoRouter(
     )
   ],
 );
+
