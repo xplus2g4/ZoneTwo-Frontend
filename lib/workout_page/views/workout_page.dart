@@ -176,7 +176,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   Widget build(BuildContext context) {
     return PopScope(
         canPop: false,
-        onPopInvokedWithResult: (bool didPop, dynamic result) {
+        onPopInvoked: (bool didPop) {
           if (didPop) {
             if (_isCountdownOver) {
               _workoutPageBloc.add(WorkoutPageSave(widget.startDatetime));
@@ -289,8 +289,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.0),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
                               child: getCurrentMusic() == null
                                   ? const Icon(Icons.music_note)
                                   : Image.memory(
@@ -299,7 +299,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                       height: 200,
                                       fit: BoxFit.cover,
                                     ),
-                              ),
+                            ),
                             const SizedBox(height: 8),
                             Container(
                               width: 300,
@@ -600,8 +600,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                     color: Colors.black12),
                                 child: Column(children: [
                                   Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceEvenly, 
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.max,
