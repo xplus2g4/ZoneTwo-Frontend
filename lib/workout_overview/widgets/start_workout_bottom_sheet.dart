@@ -55,11 +55,12 @@ class StartWorkoutBottomSheetState extends State<StartWorkoutBottomSheet> {
                           context.pushNamed(
                             workoutPage,
                             extra: WorkoutPageArguments(
-                              startDatetime: DateTime.now(),
+                              datetime: DateTime.now(),
                             ),
                           );
                           //TODO: find a better solution
-                          await Future.delayed(const Duration(milliseconds: 5));
+                          await Future.delayed(
+                              const Duration(milliseconds: 500));
                           _musicPlayerBloc.add(const MusicPlayerStop());
                           if (_selectedPlaylist.id ==
                               PlaylistEntity.ALL_MUSIC.id) {

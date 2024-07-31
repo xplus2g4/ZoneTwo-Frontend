@@ -42,7 +42,7 @@ class WorkoutListTile extends StatelessWidget {
                       trailing: const Icon(Icons.run_circle_outlined),
                       textColor: theme.textTheme.bodySmall?.color,
                       subtitle: Text(
-                        "${formatDuration(workout.duration)}\t\t${workout.distance}km",
+                        "${formatDuration(workout.duration)}\t\t${workout.distance.toStringAsFixed(2)}km",
                       )),
                 ),
               ],
