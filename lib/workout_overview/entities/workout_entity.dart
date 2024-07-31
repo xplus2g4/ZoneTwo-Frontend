@@ -5,7 +5,7 @@ class WorkoutEntity {
   final String id;
   final DateTime datetime;
   final Duration duration;
-  final num distance;
+  final double distance;
 
   WorkoutEntity({
     required this.id,

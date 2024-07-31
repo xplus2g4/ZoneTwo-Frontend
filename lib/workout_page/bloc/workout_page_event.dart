@@ -8,22 +8,22 @@ sealed class WorkoutPageEvent extends Equatable {
 }
 
 final class WorkoutPageDurationChanged extends WorkoutPageEvent {
-  const WorkoutPageDurationChanged(this.currentDuration);
+  const WorkoutPageDurationChanged(this.duration);
 
-  final Duration currentDuration;
-
-  @override
-  List<Object> get props => [currentDuration];
-}
-
-final class WorkoutPageDistanceChanged extends WorkoutPageEvent {
-  const WorkoutPageDistanceChanged(this.distance);
-
-  final double distance;
+  final Duration duration;
 
   @override
-  List<Object> get props => [distance];
+  List<Object> get props => [duration];
 }
+
+final class WorkoutPagePositionAdded extends WorkoutPageEvent {
+  const WorkoutPagePositionAdded(this.position);
+
+  final WorkoutPoint position;
+
+  @override
+  List<Object> get props => [position];
+} 
 
 final class WorkoutPageStart extends WorkoutPageEvent {
   const WorkoutPageStart();
@@ -42,10 +42,12 @@ final class WorkoutPageStop extends WorkoutPageEvent {
 }
 
 final class WorkoutPageSave extends WorkoutPageEvent {
-  const WorkoutPageSave(this.startDatetime);
+  const WorkoutPageSave(this.datetime, this.duration, this.distance);
 
-  final DateTime startDatetime;
+  final DateTime datetime;
+  final Duration duration;
+  final double distance;
 
   @override
-  List<Object> get props => [startDatetime];
+  List<Object> get props => [datetime, duration, distance];
 }

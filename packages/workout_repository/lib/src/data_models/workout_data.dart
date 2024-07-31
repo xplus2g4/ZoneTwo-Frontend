@@ -4,7 +4,7 @@ class WorkoutData {
   final String id;
   final String datetime;
   final int duration; //in seconds
-  final num distance;
+  final double distance;
 
   const WorkoutData({
     required this.id,
@@ -22,11 +22,11 @@ class WorkoutData {
         id: row['id'] as String,
         datetime: row['datetime'] as String,
         duration: row['duration'] as int,
-        distance: row['distance'] as num);
+        distance: row['distance'] as double);
   }
 
   WorkoutData update(
-      {String? id, String? datetime, int? duration, num? distance}) {
+      {String? id, String? datetime, int? duration, double? distance}) {
     return WorkoutData(
       id: id ?? this.id,
       datetime: datetime ?? this.datetime,

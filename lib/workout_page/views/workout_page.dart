@@ -1,28 +1,32 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:location/location.dart';
 import 'package:vibration/vibration.dart';
 import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_player/widgets/scrolling_text.dart';
 import 'package:zonetwo/routes.dart';
+import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 import 'package:zonetwo/workout_page/bloc/workout_page_bloc.dart';
 import 'package:zonetwo/workout_page/widgets/select_playlist_bottom_sheet.dart';
 
 class WorkoutPageArguments {
-  WorkoutPageArguments({required this.startDatetime});
+  WorkoutPageArguments({required this.datetime});
 
-  final DateTime startDatetime;
+  final DateTime datetime;
 }
 
 class WorkoutPage extends StatefulWidget {
-  const WorkoutPage({required this.startDatetime, super.key});
+  const WorkoutPage({required this.datetime, super.key});
 
-  final DateTime startDatetime;
+  final DateTime datetime;
 
   @override
   State<WorkoutPage> createState() => _WorkoutPageState();
@@ -33,11 +37,19 @@ class _WorkoutPageState extends State<WorkoutPage> {
   bool _isCountdownOver = false;
   late final Timer _countdownTimer;
 
+  bool _serviceEnabled = false;
+  bool _isCheckingLocation = false;
+  LocationPermission _permission = LocationPermission.denied;
+  late final StreamSubscription<Position> _locationStreamSubscription;
+  late Position _location;
+  late Position _checkpointLocation;
+
   late final WorkoutPageBloc _workoutPageBloc;
   late final Stopwatch _stopwatch;
   bool _isRunning = false;
-  Duration _currentDuration = Duration.zero;
-  num _distance = 0;
+  Duration _duration = Duration.zero;
+  double _distance = 0;
+  String _pace = '-';
   late final Timer _workoutTimer;
 
   late final MusicPlayerBloc _musicPlayerBloc;
@@ -50,17 +62,47 @@ class _WorkoutPageState extends State<WorkoutPage> {
   late bool _isShuffle;
   late bool _isLoop;
 
+  Future<void> _checkLocationService() async {
+    setState(() {
+      _isCheckingLocation = true;
+    });
+
+    bool newServiceEnabled;
+    LocationPermission newPermission;
+
+    newServiceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!newServiceEnabled) {
+      await Location().requestService();
+    }
+
+    newPermission = await Geolocator.checkPermission();
+    if (!(newPermission == LocationPermission.always ||
+        newPermission == LocationPermission.whileInUse)) {
+      newPermission = await Geolocator.requestPermission();
+    }
+    setState(() {
+      _isCheckingLocation = false;
+      _serviceEnabled = newServiceEnabled;
+      _permission = newPermission;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-
     _workoutPageBloc = context.read<WorkoutPageBloc>();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
 
     _stopwatch = _workoutPageBloc.state.stopwatch;
     _isRunning = _workoutPageBloc.state.isRunning;
-    _currentDuration = _workoutPageBloc.state.currentDuration;
-    _distance = _workoutPageBloc.state.distance;
+    _duration = _workoutPageBloc.state.duration;
+
+    _checkLocationService();
+
+    Geolocator.getCurrentPosition().then((value) {
+      _location = value;
+      _checkpointLocation = value;
+    });
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_countdown == 0) {
@@ -75,18 +117,38 @@ class _WorkoutPageState extends State<WorkoutPage> {
         timer.cancel();
         _workoutPageBloc.add(const WorkoutPageStart());
       } else {
-        setState(() {
-          _countdown -= 1;
-        });
+        if (!_isCheckingLocation) {
+          setState(() {
+            _countdown -= 1;
+          });
+        }
       }
     });
 
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isCountdownOver && _isRunning) {
+        final delta = Geolocator.distanceBetween(
+                _checkpointLocation.latitude,
+                _checkpointLocation.longitude,
+                _location.latitude,
+                _location.longitude) /
+            1000;
         setState(() {
-          _currentDuration = _stopwatch.elapsed;
+          _duration = _stopwatch.elapsed;
+          _distance += delta;
+          _pace = paceBetween(delta, _duration);
+          _checkpointLocation = _location;
         });
-        _workoutPageBloc.add(WorkoutPageDurationChanged(_currentDuration));
+        _workoutPageBloc.add(WorkoutPageDurationChanged(_duration));
+      }
+    });
+   
+    _locationStreamSubscription =
+        Geolocator.getPositionStream().listen((position) {
+      if (_isCountdownOver && _isRunning) {
+        setState(() {
+          _location = position;
+        });
       }
     });
 
@@ -105,11 +167,16 @@ class _WorkoutPageState extends State<WorkoutPage> {
   void dispose() {
     super.dispose();
     if (_isCountdownOver) {
-      _workoutPageBloc.add(WorkoutPageSave(widget.startDatetime));
+      _workoutPageBloc.add(WorkoutPageSave(
+        widget.datetime,
+        _duration,
+        _distance,
+      ));
     }
     _workoutPageBloc.add(const WorkoutPageStop());
     _countdownTimer.cancel();
     _workoutTimer.cancel();
+    _locationStreamSubscription.cancel();
   }
 
   MusicEntity? getCurrentMusic() {
@@ -134,6 +201,15 @@ class _WorkoutPageState extends State<WorkoutPage> {
     return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
   }
 
+  String paceBetween(double delta, Duration duration) {
+    double pace = duration.inMilliseconds / 1000.0 / delta;
+    if (pace.isNaN || pace.isInfinite) return "-";
+    int minutes = pace ~/ 60;
+    int seconds = (pace % 60).round();
+    if (minutes > 20) return "-";
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}/km';
+  }
+
   void launchConfirmationDialog() => showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -152,7 +228,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 onPressed: () {
                   context.pop();
                   context.go(workoutOverviewPath);
-                  // dispose();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Workout saved!')));
                 },
               ),
             ],
@@ -167,7 +244,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
         onPopInvoked: (bool didPop) {
           if (didPop) {
             if (_isCountdownOver) {
-              _workoutPageBloc.add(WorkoutPageSave(widget.startDatetime));
+              _workoutPageBloc
+                  .add(WorkoutPageSave(widget.datetime, _duration, _distance));
             }
             _workoutPageBloc.add(const WorkoutPageStop());
             return;
@@ -192,26 +270,25 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   padding: const EdgeInsets.all(12),
                   child: BlocListener<WorkoutPageBloc, WorkoutPageState>(
                     listenWhen: (previous, current) =>
-                        previous.currentDuration != current.currentDuration ||
-                        previous.isRunning != current.isRunning ||
-                        previous.distance != current.distance,
+                        previous.duration != current.duration ||
+                        previous.isRunning != current.isRunning,
                     listener: (context, state) {
                       setState(() {
-                        _currentDuration = state.currentDuration;
+                        _duration = state.duration;
                         _isRunning = state.isRunning;
-                        _distance = state.distance;
                       });
                     },
                     child: Column(
                       children: [
                         if (!_isCountdownOver)
                           Text(
-                            '$_countdown',
-                            style: const TextStyle(fontSize: 48),
+                            'Starting in $_countdown',
+                            style: const TextStyle(
+                                fontSize: 36, fontWeight: FontWeight.bold),
                           )
                         else
                           Text(
-                            formatDuration(_currentDuration),
+                            formatDuration(_duration),
                             style: TextStyle(
                                 color:
                                     _isRunning ? Colors.white : Colors.white24,
@@ -219,26 +296,86 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                 fontWeight: FontWeight.bold),
                           ),
                         const SizedBox(height: 12),
-                        const IntrinsicHeight(
+                        IntrinsicHeight(
                             child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
                               Expanded(
                                   flex: 1,
-                                  child: Text(
-                                    'Distance\nWIP',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 24),
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        'Distance',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            shadows: <Shadow>[
+                                              Shadow(
+                                                offset: Offset(1.0, 1.0),
+                                                color: Colors.black45,
+                                                blurRadius: 3.0,
+                                              ),
+                                            ],
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '${_distance.toStringAsFixed(2)}km',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: _isRunning
+                                                ? Colors.white
+                                                : Colors.white24,
+                                            fontSize: 32,
+                                            shadows: const <Shadow>[
+                                              Shadow(
+                                                offset: Offset(1.0, 1.0),
+                                                color: Colors.black45,
+                                                blurRadius: 3.0,
+                                              ),
+                                            ],
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
                                   )),
-                              VerticalDivider(
+                              const VerticalDivider(
                                 color: Colors.white60,
                               ),
                               Expanded(
-                                  child: Text(
-                                'Pace\nWIP',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 24),
+                                  child: Column(
+                                children: [
+                                  const Text(
+                                    'Pace',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        shadows: <Shadow>[
+                                          Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            color: Colors.black45,
+                                            blurRadius: 3.0,
+                                          ),
+                                        ],
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    _pace,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: _isRunning
+                                            ? Colors.white
+                                            : Colors.white24,
+                                        fontSize: 32,
+                                        shadows: const <Shadow>[
+                                          Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            color: Colors.black45,
+                                            blurRadius: 3.0,
+                                          ),
+                                        ],
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
                               )),
                             ])),
                       ],
