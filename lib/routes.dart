@@ -92,7 +92,7 @@ final router = GoRouter(
                       return MaterialPage(
                         key: state.pageKey,
                         child: WorkoutPage(
-                          startDatetime: args.startDatetime,
+                          datetime: args.datetime,
                         ),
                       );
                     },

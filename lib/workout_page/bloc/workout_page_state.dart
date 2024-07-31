@@ -3,31 +3,31 @@ part of 'workout_page_bloc.dart';
 final class WorkoutPageState extends Equatable {
   final Stopwatch stopwatch;
   final bool isRunning;
-  final Duration currentDuration;
-  final num distance;
+  final Duration duration;
+  final List<WorkoutPoint> points;
 
   const WorkoutPageState({
     required this.stopwatch,
     this.isRunning = false,
-    this.currentDuration = Duration.zero,
-    this.distance = 0,
+    this.duration = Duration.zero,
+    this.points = const [],
   });
 
   WorkoutPageState copyWith({
     Stopwatch Function()? stopwatch,
     bool Function()? isRunning,
-    Duration Function()? currentDuration,
+    Duration Function()? duration,
     num Function()? distance,
+    List<WorkoutPoint> Function()? points,  
   }) {
     return WorkoutPageState(
       stopwatch: stopwatch != null ? stopwatch() : this.stopwatch,
       isRunning: isRunning != null ? isRunning() : this.isRunning,
-      currentDuration:
-          currentDuration != null ? currentDuration() : this.currentDuration,
-      distance: distance != null ? distance() : this.distance,
+      duration: duration != null ? duration() : this.duration,
+      points: points != null ? points() : this.points,
     );
   }
 
   @override
-  List<Object?> get props => [stopwatch, isRunning, currentDuration, distance];
+  List<Object?> get props => [stopwatch, isRunning, duration, points];
 }
