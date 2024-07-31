@@ -99,6 +99,19 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
     _checkLocationService();
 
+    _checkpointLocation = _location = Position(
+        latitude: 0,
+        longitude: 0,
+        accuracy: 0,
+        altitude: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        heading: 0,
+        timestamp: DateTime.now(),
+        altitudeAccuracy: 0,
+        headingAccuracy: 0);
+    
+
     Geolocator.getCurrentPosition().then((value) {
       _location = value;
       _checkpointLocation = value;
@@ -127,16 +140,21 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isCountdownOver && _isRunning) {
+        setState(() {
+          _duration = _stopwatch.elapsed;
+        });
         final delta = Geolocator.distanceBetween(
                 _checkpointLocation.latitude,
                 _checkpointLocation.longitude,
                 _location.latitude,
                 _location.longitude) /
             1000;
+        final timeDifference =
+            _location.timestamp.difference(_checkpointLocation.timestamp);
+        if (timeDifference.inMilliseconds == 0) return;
         setState(() {
-          _duration = _stopwatch.elapsed;
           _distance += delta;
-          _pace = paceBetween(delta, _duration);
+          _pace = paceBetween(delta, timeDifference);
           _checkpointLocation = _location;
         });
         _workoutPageBloc.add(WorkoutPageDurationChanged(_duration));
