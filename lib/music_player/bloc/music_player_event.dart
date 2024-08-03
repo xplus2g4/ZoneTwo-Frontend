@@ -7,23 +7,37 @@ sealed class MusicPlayerEvent extends Equatable {
   List<Object> get props => [];
 }
 
+
 final class MusicPlayerQueueMusic extends MusicPlayerEvent {
-  const MusicPlayerQueueMusic(this.music);
+  const MusicPlayerQueueMusic(this.music, this.playlistName,
+      {this.playIndex, this.playMusicEntity})
+      : assert(playIndex == null || playMusicEntity == null);
 
   final List<MusicEntity> music;
+  final String playlistName;
+  final int? playIndex;
+  final MusicEntity? playMusicEntity;
 
   @override
   List<Object> get props => [music];
 }
 
 final class MusicPlayerQueueAllMusic extends MusicPlayerEvent {
-  const MusicPlayerQueueAllMusic();
+  const MusicPlayerQueueAllMusic({this.playIndex, this.playMusicEntity})
+      : assert(playIndex == null || playMusicEntity == null);
+
+  final int? playIndex;
+  final MusicEntity? playMusicEntity;
 }
 
 final class MusicPlayerQueuePlaylistMusic extends MusicPlayerEvent {
-  const MusicPlayerQueuePlaylistMusic(this.playlist);
+  const MusicPlayerQueuePlaylistMusic(this.playlist,
+      {this.playIndex, this.playMusicEntity})
+      : assert(playIndex == null || playMusicEntity == null);
 
   final PlaylistEntity playlist;
+  final int? playIndex;
+  final MusicEntity? playMusicEntity;
 
   @override
   List<Object> get props => [playlist];
@@ -36,6 +50,7 @@ final class MusicPlayerPlayThisMusic extends MusicPlayerEvent {
 
   @override
   List<Object> get props => [music];
+
 }
 
 final class MusicPlayerPlayAtIndex extends MusicPlayerEvent {
@@ -61,6 +76,10 @@ final class MusicPlayerToggleShuffle extends MusicPlayerEvent {
 
 final class MusicPlayerToggleLoop extends MusicPlayerEvent {
   const MusicPlayerToggleLoop();
+}
+
+final class MusicPlayerToggleBPMSync extends MusicPlayerEvent {
+  const MusicPlayerToggleBPMSync();
 }
 
 final class MusicPlayerLoop extends MusicPlayerEvent {

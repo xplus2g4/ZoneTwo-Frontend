@@ -7,7 +7,6 @@ import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_download/bloc/music_download_bloc.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/routes.dart';
-import 'package:zonetwo/workout_page/bloc/workout_page_bloc.dart';
 
 import 'theme/theme.dart';
 
@@ -31,12 +30,13 @@ class App extends StatelessWidget {
       RepositoryProvider.value(value: playlistRepository),
       RepositoryProvider.value(value: downloadRepository),
       RepositoryProvider.value(value: workoutRepository),
-    ], child: AppView());
+    ], child: const AppView());
   }
 }
 
 class AppView extends StatelessWidget {
-  AppView({super.key});
+  const AppView({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,10 +54,6 @@ class AppView extends StatelessWidget {
             musicRepository: context.read<MusicRepository>(),
           ),
         ),
-        BlocProvider(
-            create: (BuildContext context) => WorkoutPageBloc(
-                workoutRepository: context.read<WorkoutRepository>(),
-                )),
       ],
       child: MaterialApp.router(
         theme: FlutterZoneTwoTheme.dark,

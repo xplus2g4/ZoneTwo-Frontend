@@ -58,17 +58,20 @@ class StartWorkoutBottomSheetState extends State<StartWorkoutBottomSheet> {
                               datetime: DateTime.now(),
                             ),
                           );
-                          //TODO: find a better solution
-                          await Future.delayed(
-                              const Duration(milliseconds: 500));
                           _musicPlayerBloc.add(const MusicPlayerStop());
+                          if (!_musicPlayerBloc.state.isBPMSync) {
+                            _musicPlayerBloc
+                                .add(const MusicPlayerToggleBPMSync());
+                          }
                           if (_selectedPlaylist.id ==
                               PlaylistEntity.ALL_MUSIC.id) {
                             _musicPlayerBloc
-                                .add(const MusicPlayerQueueAllMusic());
+                                .add(
+                                const MusicPlayerQueueAllMusic(playIndex: 0));
                           } else {
                             _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(
-                                _selectedPlaylist));
+                                _selectedPlaylist,
+                                playIndex: 0));
                           }
                         },
                         style: ElevatedButton.styleFrom(

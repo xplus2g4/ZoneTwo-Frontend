@@ -50,6 +50,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
   late MusicPlayerBloc _musicPlayerBloc;
   late bool _isShuffle;
   late bool _isLoop;
+  late bool _isBPMSync;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
     _isShuffle = _musicPlayerBloc.state.isShuffle;
     _isLoop = _musicPlayerBloc.state.isLoop;
+    _isBPMSync = _musicPlayerBloc.state.isBPMSync;
   }
 
   void _showDeleteDialog(BuildContext context) {
@@ -104,11 +106,13 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
       listenWhen: (previous, current) =>
           previous.isShuffle != current.isShuffle ||
-          previous.isLoop != current.isLoop,
+          previous.isLoop != current.isLoop ||
+          previous.isBPMSync != current.isBPMSync,
       listener: (context, state) {
         setState(() {
           _isShuffle = state.isShuffle;
           _isLoop = state.isLoop;
+          _isBPMSync = state.isBPMSync;
         });
       },
       child: BlocBuilder<MusicOverviewBloc, MusicOverviewState>(
@@ -154,6 +158,21 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                       ),
                     ]
                   : [
+                      IconButton(
+                        icon: Icon(Icons.graphic_eq,
+                            shadows: const <Shadow>[
+                              Shadow(
+                                offset: Offset(1.0, 1.0),
+                                color: Colors.black45,
+                                blurRadius: 3.0,
+                              )
+                            ],
+                            color: _isBPMSync
+                                ? const Color.fromARGB(255, 0, 174, 255)
+                                : Colors.white70),
+                        onPressed: () => _musicPlayerBloc
+                            .add(const MusicPlayerToggleBPMSync()),
+                      ),
                       IconButton(
                         icon: Icon(Icons.loop,
                             color: _isLoop
@@ -201,9 +220,9 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                                     currentMusic.id));
                           } else {
                             _musicPlayerBloc
-                                .add(MusicPlayerQueueMusic(state.music));
-                            _musicPlayerBloc
-                                .add(MusicPlayerPlayThisMusic(currentMusic));
+                                .add(MusicPlayerQueueMusic(
+                                state.music, 'All Music',
+                                playMusicEntity: currentMusic));
                           }
                         },
                         onLongPress: () {

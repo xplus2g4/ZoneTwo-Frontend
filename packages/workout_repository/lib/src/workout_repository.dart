@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:sqflite/sqflite.dart';
-import 'package:workout_repository/workout_repository.dart';
 import 'package:uuid/v4.dart';
+import 'package:workout_repository/workout_repository.dart';
 import 'package:rxdart/subjects.dart';
 
 class WorkoutRepository {

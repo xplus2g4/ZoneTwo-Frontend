@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 class WorkoutData {
   final String id;
   final String datetime;

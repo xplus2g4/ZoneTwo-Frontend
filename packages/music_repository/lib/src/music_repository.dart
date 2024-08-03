@@ -31,17 +31,20 @@ class MusicRepository {
         ]);
     final music = [..._musicStreamController.value];
     final newMusic = musicData.update(id: newId);
-    music.add(newMusic);
+    music.insert(0, newMusic);
     _musicStreamController.add(music);
   }
 
   Future<void> getAllMusicData() async {
-    final music = (await _db.query(tableName)).map(MusicData.fromRow).toList();
+    final music = (await _db.query(tableName))
+        .map(MusicData.fromRow)
+        .toList()
+        .reversed
+        .toList();
     _musicStreamController.add(music);
   }
 
   Future<void> updateMusicData(MusicData musicData) async {
-    // Update database
     await _db.rawUpdate(
         "UPDATE $tableName SET title = ?, save_path = ?, bpm = ? WHERE id = ?",
         [
@@ -51,7 +54,6 @@ class MusicRepository {
           musicData.id,
         ]);
 
-    // Publish to stream
     final music = [..._musicStreamController.value];
     final musicIndex = music.indexWhere((t) => t.id == musicData.id);
     if (musicIndex >= 0) {

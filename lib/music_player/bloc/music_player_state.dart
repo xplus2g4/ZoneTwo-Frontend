@@ -6,9 +6,11 @@ final class MusicPlayerState extends Equatable {
       this.shuffledQueue = const [],
       this.playlistIndex = -1,
       this.shuffledIndex = -1,
-      this.bpm = 200,
+      this.playlistName = "All Music",
+      this.bpm = 150,
       this.isShuffle = false,
       this.isLoop = false,
+      this.isBPMSync = true,
       this.audioPlayerState = PlayerState.stopped,
       this.audioPlayerPosition = Duration.zero,
       this.audioPlayerDuration = Duration.zero,
@@ -19,8 +21,10 @@ final class MusicPlayerState extends Equatable {
   final int playlistIndex;
   final int shuffledIndex;
   final num bpm;
+  final String playlistName;
   final bool isShuffle;
   final bool isLoop;
+  final bool isBPMSync;
   final PlayerState audioPlayerState;
   final Duration audioPlayerPosition;
   final Duration audioPlayerDuration;
@@ -31,9 +35,11 @@ final class MusicPlayerState extends Equatable {
     List<MusicEntity> Function()? shuffledQueue,
     int Function()? playlistIndex,
     int Function()? shuffledIndex,
+    String Function()? playlistName,
     num Function()? bpm,
     bool Function()? isShuffle,
     bool Function()? isLoop,
+    bool Function()? isBPMSync,
     PlayerState Function()? audioPlayerState,
     Duration Function()? audioPlayerPosition,
     Duration Function()? audioPlayerDuration,
@@ -48,9 +54,11 @@ final class MusicPlayerState extends Equatable {
           playlistIndex != null ? playlistIndex() : this.playlistIndex,
       shuffledIndex:
           shuffledIndex != null ? shuffledIndex() : this.shuffledIndex,
+      playlistName: playlistName != null ? playlistName() : this.playlistName,
       bpm: bpm != null ? bpm() : this.bpm,
       isShuffle: isShuffle != null ? isShuffle() : this.isShuffle,
       isLoop: isLoop != null ? isLoop() : this.isLoop,
+      isBPMSync: isBPMSync != null ? isBPMSync() : this.isBPMSync,
       audioPlayerState:
           audioPlayerState != null ? audioPlayerState() : this.audioPlayerState,
       audioPlayerPosition: audioPlayerPosition != null
@@ -69,9 +77,11 @@ final class MusicPlayerState extends Equatable {
         shuffledQueue,
         playlistIndex,
         shuffledIndex,
+        playlistName,
         bpm,
         isShuffle,
         isLoop,
+        isBPMSync,
         audioPlayerState,
         audioPlayerPosition,
         audioPlayerDuration,

@@ -21,21 +21,33 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
   PlayerState _audioPlayerState = PlayerState.stopped;
   Duration _audioPlayerPosition = Duration.zero;
   Duration _audioPlayerDuration = Duration.zero;
+  late String _playlistName;
   late num _bpm;
   late int _playlistIndex;
   late int _shuffledIndex;
   late bool _isShuffle;
   late bool _isLoop;
+  late bool _isBPMSync;
+  late List<Color> _colors;
 
   @override
   void initState() {
     super.initState();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
-    _bpm = _musicPlayerBloc.state.bpm;
     _playlistIndex = _musicPlayerBloc.state.playlistIndex;
     _shuffledIndex = _musicPlayerBloc.state.shuffledIndex;
+    _playlistName = _musicPlayerBloc.state.playlistName;
+    _bpm = _musicPlayerBloc.state.bpm;
     _isShuffle = _musicPlayerBloc.state.isShuffle;
     _isLoop = _musicPlayerBloc.state.isLoop;
+    _isBPMSync = _musicPlayerBloc.state.isBPMSync;
+    _colors = [];
+
+    getDominantColors(getCurrentMusic()!.coverImage).then((value) {
+      setState(() {
+        _colors = value;
+      });
+    });
 
     _audioPlayerState = _musicPlayerBloc.state.audioPlayerState;
     _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
@@ -46,7 +58,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
     return PaletteGenerator.fromImageProvider(
       Image.memory(bytes).image,
     ).then((value) =>
-        value.paletteColors!.map((e) => e.color).toList(growable: false));
+        value.paletteColors.map((e) => e.color).toList(growable: false));
   }
 
   MusicEntity? getCurrentMusic() {
@@ -72,6 +84,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           previous.shuffledIndex != current.shuffledIndex ||
           previous.isShuffle != current.isShuffle ||
           previous.isLoop != current.isLoop ||
+          previous.isBPMSync != current.isBPMSync ||
           previous.audioPlayerState != current.audioPlayerState,
       listener: (context, state) {
         setState(() {
@@ -79,33 +92,33 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           _shuffledIndex = state.shuffledIndex;
           _isShuffle = state.isShuffle;
           _isLoop = state.isLoop;
+          _isBPMSync = state.isBPMSync;
           _audioPlayerState = state.audioPlayerState;
         });
+        getDominantColors(getCurrentMusic()!.coverImage).then((value) {
+          setState(() {
+            _colors = value;
+          });
+        }); 
       },
       child: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
           builder: (context, state) {
         final currentMusic = getCurrentMusic();
         return currentMusic == null
             ? const SizedBox.shrink()
-            : FutureBuilder(
-                future: getDominantColors(currentMusic.coverImage),
-                builder: (context, colorSnapshot) {
-                  return Container(
+            : Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [
-                          colorSnapshot.data?[0] ?? Colors.grey[700]!,
-                          colorSnapshot.data?[1] ?? Colors.grey[700]!,
-                        ],
-                      ),
+                  gradient: LinearGradient(
+                    colors: [
+                    _colors.isEmpty ? Colors.grey[700]! : _colors[0],
+                    _colors.isEmpty ? Colors.grey[300]! : _colors[1]
+                  ], begin: Alignment.topRight, end: Alignment.bottomLeft),
                     ),
                     child: Scaffold(
                       appBar: AppBar(
                         leading: IconButton(
                           icon: const Icon(Icons.arrow_back,
-                              shadows: const <Shadow>[
+                          shadows: <Shadow>[
                                 Shadow(
                                   offset: Offset(1.0, 1.0),
                                   color: Colors.black,
@@ -120,21 +133,36 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                         backgroundColor: Colors.transparent,
                         actions: [
                           IconButton(
-                            icon: Icon(Icons.loop,
-                                shadows: const <Shadow>[
-                                  Shadow(
-                                    offset: Offset(1.0, 1.0),
-                                    color: Colors.black45,
-                                    blurRadius: 3.0,
-                                  )
-                                ],
-                                color: _isLoop
-                                    ? const Color.fromARGB(255, 0, 174, 255)
-                                    : Colors.white70),
-                            onPressed: () => _musicPlayerBloc
-                                .add(const MusicPlayerToggleLoop()),
-                          ),
-                          IconButton(
+                        icon: Icon(Icons.graphic_eq,
+                            shadows: const <Shadow>[
+                              Shadow(
+                                offset: Offset(1.0, 1.0),
+                                color: Colors.black45,
+                                blurRadius: 3.0,
+                              )
+                            ],
+                            color: _isBPMSync
+                                ? const Color.fromARGB(255, 0, 174, 255)
+                                : Colors.white70),
+                        onPressed: () => _musicPlayerBloc
+                            .add(const MusicPlayerToggleBPMSync()),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.loop,
+                            shadows: const <Shadow>[
+                              Shadow(
+                                offset: Offset(1.0, 1.0),
+                                color: Colors.black45,
+                                blurRadius: 3.0,
+                              )
+                            ],
+                            color: _isLoop
+                                ? const Color.fromARGB(255, 0, 174, 255)
+                                : Colors.white70),
+                        onPressed: () =>
+                            _musicPlayerBloc.add(const MusicPlayerToggleLoop()),
+                      ),
+                      IconButton(
                               icon: Icon(Icons.shuffle,
                                   shadows: const <Shadow>[
                                     Shadow(
@@ -154,9 +182,38 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                       body: Builder(builder: (context) {
                         return Column(
                             mainAxisAlignment: MainAxisAlignment
-                                .center, // Center children vertically
+                                .center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Currently playing from ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    shadows: <Shadow>[
+                                      Shadow(
+                                          offset: Offset(1.0, 1.0),
+                                          blurRadius: 1.0,
+                                          color: Colors.black),
+                                    ],
+                                    fontSize: 9,
+                                  )),
+                              Text(_playlistName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    shadows: <Shadow>[
+                                      Shadow(
+                                          offset: Offset(1.0, 1.0),
+                                          blurRadius: 1.0,
+                                          color: Colors.black),
+                                    ],
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  )),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8.0),
                                 child: Image.memory(
@@ -173,6 +230,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                     currentMusic.title,
                                     textAlign: TextAlign.center,
                                     maxLines: 3,
+                                overflow: TextOverflow.fade,
                                     style: const TextStyle(
                                         color: Colors.white,
                                         shadows: <Shadow>[
@@ -231,9 +289,10 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                               .add(MusicPlayerSeek(position));
                                         },
                                         barHeight: 8,
-                                        baseBarColor: colorSnapshot.data?[0] ??
-                                            Colors.white12,
-                                        progressBarColor: Colors.white54,
+                                    baseBarColor: _colors.isEmpty
+                                        ? Colors.grey[300]!
+                                        : _colors[0],
+                                    progressBarColor: Colors.white54,
                                       ))),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -295,10 +354,17 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 36),
+                          const SizedBox(height: 24),
+                          Stack(
+                            children: [
                               Container(
                                 width: 250,
                                 padding: const EdgeInsets.all(16),
+                                foregroundDecoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: _isBPMSync
+                                        ? Colors.transparent
+                                        : Colors.black54),
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     color: Colors.black12),
@@ -321,13 +387,15 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                       mainAxisSize: MainAxisSize.max,
                                       children: [
                                         IconButton(
-                                            onPressed: () {
+                                            onPressed: _isBPMSync
+                                                ? () {
                                               setState(() {
                                                 _bpm -= 1;
                                               });
                                               _musicPlayerBloc
                                                   .add(MusicPlayerSetBpm(_bpm));
-                                            },
+                                                  }
+                                                : null,
                                             icon: const Icon(Icons.remove,
                                                 color: Colors.white),
                                             iconSize: 36),
@@ -352,17 +420,20 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                                       color: Colors.black,
                                                     ),
                                                   ],
+                                                  fontWeight: FontWeight.bold,
                                                   fontSize: 40),
                                             )),
                                         const SizedBox(width: 16),
                                         IconButton(
-                                          onPressed: () {
+                                          onPressed: _isBPMSync
+                                              ? () {
                                             setState(() {
                                               _bpm += 1;
                                             });
                                             _musicPlayerBloc
                                                 .add(MusicPlayerSetBpm(_bpm));
-                                          },
+                                                }
+                                              : null,
                                           icon: const Icon(Icons.add,
                                               color: Colors.white),
                                           iconSize: 36,
@@ -396,11 +467,12 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                   ),
                                 ]),
                               ),
+                            ],
+                          ),
                             ]);
                       }),
                     ),
-                  );
-                });
+              );
       }),
     );
   }
