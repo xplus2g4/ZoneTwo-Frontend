@@ -329,29 +329,24 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     MusicPlayerPause event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    state.audioPlayer.pause();
     emit(state.copyWith(audioPlayerState: () => PlayerState.paused));
+    state.audioPlayer.pause();
   }
 
   Future<void> _onResume(
     MusicPlayerResume event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    state.audioPlayer.resume();
     emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
+    state.audioPlayer.resume();
   }
 
   Future<void> _onSetBpm(
     MusicPlayerSetBpm event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    if (!state.isShuffle) {
-      state.audioPlayer.setPlaybackRate(
-          _playbackRate);
-    } else {
-      state.audioPlayer.setPlaybackRate(_playbackRate);
-    }
     emit(state.copyWith(bpm: () => event.bpm));
+    state.audioPlayer.setPlaybackRate(_playbackRate);
   }
 
   Future<void> _onEnterFullscreen(
@@ -367,15 +362,14 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     MusicPlayerSeek event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    await state.audioPlayer.seek(event.position);
     emit(state.copyWith(audioPlayerPosition: () => event.position));
+    await state.audioPlayer.seek(event.position);
   }
 
   void _onStop(
     MusicPlayerStop event,
     Emitter<MusicPlayerState> emit,
   ) {
-    state.audioPlayer.stop();
     emit(state.copyWith(
       playlistQueue: () => [],
       shuffledQueue: () => [],
@@ -386,6 +380,7 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       audioPlayerPosition: () => Duration.zero,
       audioPlayerDuration: () => Duration.zero,
     ));
+    state.audioPlayer.stop();
   }
 
   //Helpers
@@ -400,7 +395,9 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
           : null;
   
   double get _playbackRate =>
-      state.isBPMSync ? state.bpm / (_currentMusic?.bpm ?? state.bpm) : 1;
+      state.isBPMSync
+      ? state.bpm / (_currentMusic == null ? state.bpm : _currentMusic!.bpm)
+      : 1;
 
   //ALWAYS UPDATE STATE FIRST BEFORE DOING THIS
   void _play() async {
