@@ -58,16 +58,12 @@ class WorkoutOverviewView extends StatefulWidget {
 }
 
 class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
-  late PlaylistsOverviewBloc _playlistsOverviewBloc;
-  late WorkoutOverviewBloc _workoutOverviewBloc;
 
   @override
   void initState() {
     super.initState();
-    _playlistsOverviewBloc = context.read<PlaylistsOverviewBloc>();
-    _workoutOverviewBloc = context.read<WorkoutOverviewBloc>();
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutOverviewBloc, WorkoutOverviewState>(

@@ -5,7 +5,6 @@ import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
-import 'package:zonetwo/music_overview/widgets/new_playlist_dialog.dart';
 import 'package:zonetwo/playlists_overview/entities/playlist_entity.dart';
 
 part 'music_player_event.dart';
@@ -29,6 +28,7 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     on<MusicPlayerQueuePlaylistMusic>(_onQueuePlaylistMusic);
     on<MusicPlayerToggleShuffle>(_onToggleShuffle);
     on<MusicPlayerToggleLoop>(_onToggleLoop);
+    on<MusicPlayerToggleBPMSync>(_onToggleBPMSync);
     on<MusicPlayerLoop>(_onLoop);
     on<MusicPlayerPlayNext>(_onPlayNext);
     on<MusicPlayerPlayPrevious>(_onPlayPrevious);
@@ -71,7 +71,14 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(
       playlistQueue: () => newPlaylistQueue,
       shuffledQueue: () => newShuffledQueue,
+      playlistName: () => event.playlistName,
     ));
+    if (event.playIndex != null) {
+      add(MusicPlayerPlayAtIndex(event.playIndex!));
+    }
+    if (event.playMusicEntity != null) {
+      add(MusicPlayerPlayThisMusic(event.playMusicEntity!));
+    }
   }
 
   Future<void> _onQueueAllMusic(
@@ -87,10 +94,18 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       final newPlaylistQueue = List<MusicEntity>.from(music);
       final newShuffledQueue = List<MusicEntity>.from(music);
       newShuffledQueue.shuffle();
-      return state.copyWith(
+      final newState = state.copyWith(
         playlistQueue: () => newPlaylistQueue,
         shuffledQueue: () => newShuffledQueue,
+        playlistName: () => 'All Music',
       );
+      if (event.playIndex != null) {
+        add(MusicPlayerPlayAtIndex(event.playIndex!));
+      }
+      if (event.playMusicEntity != null) {
+        add(MusicPlayerPlayThisMusic(event.playMusicEntity!));
+      }
+      return newState;
     });
   }
 
@@ -106,10 +121,17 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       final newShuffledQueue =
           List<MusicEntity>.from(playlist.music.map(MusicEntity.fromData));
       newShuffledQueue.shuffle();
-      return state.copyWith(
+      final newState = state.copyWith(
         playlistQueue: () => newPlaylistQueue,
         shuffledQueue: () => newShuffledQueue,
       );
+      if (event.playIndex != null) {
+        add(MusicPlayerPlayAtIndex(event.playIndex!));
+      }
+      if (event.playMusicEntity != null) {
+        add(MusicPlayerPlayThisMusic(event.playMusicEntity!));
+      }
+      return newState;
     });
   }
 
@@ -119,7 +141,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
   ) async {
     if (_currentMusic != null) {
       final currentMusic = _currentMusic!;
-      state.audioPlayer.setPlaybackRate(state.bpm / _currentMusic!.bpm);
       final newShuffledQueue = List<MusicEntity>.from(state.playlistQueue);
       newShuffledQueue.shuffle();
       emit(state.copyWith(
@@ -135,7 +156,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       newShuffledQueue.shuffle();
       emit(state.copyWith(
         shuffledQueue: () => newShuffledQueue,
-        shuffledIndex: () => -1,
         isShuffle: () => !state.isShuffle,
       ));
     }
@@ -148,26 +168,29 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     emit(state.copyWith(isLoop: () => !state.isLoop));
   }
 
+  Future<void> _onToggleBPMSync(
+    MusicPlayerToggleBPMSync event,
+    Emitter<MusicPlayerState> emit,
+  ) async {
+    emit(state.copyWith(isBPMSync: () => !state.isBPMSync));
+    state.audioPlayer.setPlaybackRate(_playbackRate);
+  }
+
   //Play the next song. This event ignores loop. For loop behaviour, use
   //_onLoop. This avoids deep nested conditionals.
   Future<void> _onPlayNext(
     MusicPlayerPlayNext event,
     Emitter<MusicPlayerState> emit,
   ) async {
+    if (state.playlistQueue.isEmpty) return;
     if (!state.isShuffle) {
       final index = state.playlistIndex >= state.playlistQueue.length - 1
           ? 0
           : state.playlistIndex + 1;
-      final nextMusic = state.playlistQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(nextMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / nextMusic.bpm);
       emit(state.copyWith(
         playlistIndex: () => index,
+        shuffledIndex: () => state.shuffledQueue
+            .indexWhere((music) => music.id == state.playlistQueue[index].id),
         audioPlayerState: () => PlayerState.playing,
       ));
     } else {
@@ -178,7 +201,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       //that the first song is not the same as the last song
       if (state.shuffledIndex >= state.shuffledQueue.length - 1) {
         index = 0;
-        newShuffledQueue = List<MusicEntity>.from(state.shuffledQueue);
         newShuffledQueue.shuffle();
         while (newShuffledQueue[0].id ==
             state.shuffledQueue[state.shuffledQueue.length - 1].id) {
@@ -186,62 +208,46 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
         }
       } else {
         index = state.shuffledIndex + 1;
-        newShuffledQueue = List<MusicEntity>.from(state.shuffledQueue);
       }
-      final nextMusic = newShuffledQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(nextMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / nextMusic.bpm);
       emit(state.copyWith(
+        playlistIndex: () => state.playlistQueue
+            .indexWhere((music) => music.id == newShuffledQueue[index].id),
         shuffledIndex: () => index,
         shuffledQueue: () => newShuffledQueue,
         audioPlayerState: () => PlayerState.playing,
       ));
     }
+    _play();
   }
 
   Future<void> _onPlayPrevious(
     MusicPlayerPlayPrevious event,
     Emitter<MusicPlayerState> emit,
   ) async {
+    if (state.playlistQueue.isEmpty) return;
     final int index;
     if (!state.isShuffle) {
       final index = state.playlistIndex <= 0
           ? state.playlistQueue.length - 1
           : state.playlistIndex - 1;
-      final previousMusic = state.playlistQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(previousMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / previousMusic.bpm);
       emit(state.copyWith(
         playlistIndex: () => index,
+        shuffledIndex: () => state.shuffledQueue
+            .indexWhere((music) => music.id == state.playlistQueue[index].id),
         audioPlayerState: () => PlayerState.playing,
       ));
     } else {
       index = state.shuffledIndex <= 0
           ? state.shuffledQueue.length - 1
           : state.shuffledIndex - 1;
-      final previousMusic = state.shuffledQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(previousMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / previousMusic.bpm);
       emit(state.copyWith(
+        playlistIndex: () => state.playlistQueue
+            .indexWhere((music) => music.id == state.shuffledQueue[index].id),
         shuffledIndex: () => index,
         audioPlayerState: () => PlayerState.playing,
       ));
     }
+    _play();
   }
 
   //Play the song in the event param
@@ -249,99 +255,60 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     MusicPlayerPlayThisMusic event,
     Emitter<MusicPlayerState> emit,
   ) async {
+    if (state.playlistQueue.isEmpty) return;
     if (!state.isShuffle) {
-      if (_currentMusic != null && _currentMusic!.id == event.music.id) {
-        state.audioPlayer.resume();
-        emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
-        return;
-      }
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(event.music.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / event.music.bpm);
       final index = state.playlistQueue.indexOf(event.music);
       emit(state.copyWith(
         playlistIndex: () => index,
+        shuffledIndex: () => state.shuffledQueue
+            .indexWhere((music) => music.id == event.music.id),
         audioPlayerState: () => PlayerState.playing,
       ));
     } else {
-      if (_currentMusic != null && _currentMusic!.id == event.music.id) {
-        state.audioPlayer.resume();
-        emit(state.copyWith(audioPlayerState: () => PlayerState.playing));
-        return;
-      }
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(event.music.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / event.music.bpm);
       final index = state.shuffledQueue.indexOf(event.music);
       emit(state.copyWith(
+        playlistIndex: () => state.playlistQueue
+            .indexWhere((music) => music.id == event.music.id),
         shuffledIndex: () => index,
         audioPlayerState: () => PlayerState.playing,
       ));
     }
+    _play();
   }
 
   Future<void> _onPlayAtIndex(
     MusicPlayerPlayAtIndex event,
     Emitter<MusicPlayerState> emit,
   ) async {
+    if (state.playlistQueue.isEmpty) return;
     if (!state.isShuffle) {
       final index = event.index >= state.playlistQueue.length ? 0 : event.index;
-      final currentMusic = state.playlistQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(currentMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / currentMusic.bpm);
       emit(state.copyWith(
         playlistIndex: () => index,
         shuffledIndex: () => state.shuffledQueue
-            .indexWhere((music) => music.id == currentMusic.id),
+            .indexWhere((music) => music.id == state.playlistQueue[index].id),
         audioPlayerState: () => PlayerState.playing,
       ));
     } else {
       final index = event.index >= state.shuffledQueue.length ? 0 : event.index;
-      final currentMusic = state.shuffledQueue[index];
-      if (state.audioPlayerState == PlayerState.playing) {
-        state.audioPlayer.stop();
-      }
-      state.audioPlayer
-          .setSourceDeviceFile(currentMusic.savePath)
-          .then((_) => state.audioPlayer.resume());
-      state.audioPlayer.setPlaybackRate(state.bpm / currentMusic.bpm);
       emit(state.copyWith(
         playlistIndex: () => state.playlistQueue
-            .indexWhere((music) => music.id == currentMusic.id),
+            .indexWhere((music) => music.id == state.shuffledQueue[index].id),
         shuffledIndex: () => index,
         audioPlayerState: () => PlayerState.playing,
       ));
     }
+    _play();
   }
 
   Future<void> _onLoop(
     MusicPlayerLoop event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    final currentMusic = _currentMusic!;
-    if (state.audioPlayerState == PlayerState.playing) {
-      state.audioPlayer.stop();
-    }
-    state.audioPlayer
-        .setSourceDeviceFile(currentMusic.savePath)
-        .then((_) => state.audioPlayer.resume());
-    state.audioPlayer.setPlaybackRate(state.bpm / currentMusic.bpm);
     emit(state.copyWith(
       audioPlayerState: () => PlayerState.playing,
     ));
+    _play();
   }
 
   Future<void> _onPositionChanged(
@@ -378,8 +345,12 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     MusicPlayerSetBpm event,
     Emitter<MusicPlayerState> emit,
   ) async {
-    state.audioPlayer.setPlaybackRate(
-        event.bpm / state.playlistQueue[state.playlistIndex].bpm);
+    if (!state.isShuffle) {
+      state.audioPlayer.setPlaybackRate(
+          _playbackRate);
+    } else {
+      state.audioPlayer.setPlaybackRate(_playbackRate);
+    }
     emit(state.copyWith(bpm: () => event.bpm));
   }
 
@@ -410,6 +381,7 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
       shuffledQueue: () => [],
       playlistIndex: () => -1,
       shuffledIndex: () => -1,
+      playlistName: () => '',
       audioPlayerState: () => PlayerState.stopped,
       audioPlayerPosition: () => Duration.zero,
       audioPlayerDuration: () => Duration.zero,
@@ -426,4 +398,21 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
               state.shuffledIndex < state.shuffledQueue.length
           ? state.shuffledQueue[state.shuffledIndex]
           : null;
+  
+  double get _playbackRate =>
+      state.isBPMSync ? state.bpm / (_currentMusic?.bpm ?? state.bpm) : 1;
+
+  //ALWAYS UPDATE STATE FIRST BEFORE DOING THIS
+  void _play() async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (_currentMusic == null) return;
+    final currentMusic = _currentMusic!;
+    if (state.audioPlayerState == PlayerState.playing) {
+      state.audioPlayer.stop();
+    }
+    state.audioPlayer
+        .setSourceDeviceFile(currentMusic.savePath)
+        .then((_) => state.audioPlayer.resume());
+    state.audioPlayer.setPlaybackRate(_playbackRate);
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zonetwo/playlists_overview/bloc/playlists_overview_bloc.dart';
 import 'package:zonetwo/workout_overview/widgets/start_workout_bottom_sheet.dart';
 
 class StartWorkoutButton extends StatelessWidget {

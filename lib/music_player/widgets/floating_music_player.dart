@@ -26,7 +26,9 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   late int _shuffledIndex;
   late bool _isShuffle;
   late bool _isLoop;
+  late bool _isBPMSync;
 
+  //TODO put these in the BLoC one day...
   late final StreamSubscription<Duration> _positionSubscription;
   late final StreamSubscription<Duration> _durationSubscription;
   late final StreamSubscription<PlayerState> _playerStateSubscription;
@@ -41,6 +43,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
     _shuffledIndex = _musicPlayerBloc.state.shuffledIndex;
     _isShuffle = _musicPlayerBloc.state.isShuffle;
     _isLoop = _musicPlayerBloc.state.isLoop;
+    _isBPMSync = _musicPlayerBloc.state.isBPMSync;
 
     _audioPlayerState = _musicPlayerBloc.state.audioPlayerState;
     _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
@@ -103,6 +106,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
             previous.shuffledIndex != current.shuffledIndex ||
             previous.isShuffle != current.isShuffle ||
             previous.isLoop != current.isLoop ||
+            previous.isBPMSync != current.isBPMSync ||
             previous.audioPlayerState != current.audioPlayerState,
         listener: (context, state) {
           setState(() {
@@ -110,6 +114,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
             _shuffledIndex = state.shuffledIndex;
             _isShuffle = state.isShuffle;
             _isLoop = state.isLoop;
+            _isBPMSync = state.isBPMSync;
             _audioPlayerState = state.audioPlayerState;
           });
         },
@@ -179,13 +184,15 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                       height: 25,
                                       child: IconButton(
                                         padding: EdgeInsets.zero,
-                                        onPressed: () {
-                                          setState(() {
-                                            _bpm -= 1;
-                                          });
-                                          _musicPlayerBloc
-                                              .add(MusicPlayerSetBpm(_bpm));
-                                        },
+                                        onPressed: _isBPMSync
+                                            ? () {
+                                                setState(() {
+                                                  _bpm -= 1;
+                                                });
+                                                _musicPlayerBloc.add(
+                                                    MusicPlayerSetBpm(_bpm));
+                                              }
+                                            : null,
                                         icon: const Icon(Icons.remove),
                                       )),
                                   Row(
@@ -203,28 +210,42 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                               });
                                             },
                                             child: Column(children: [
-                                        Text(
-                                          _bpm.round().toString(),
-                                        ),
-                                        const Text(
-                                          " BPM",
-                                          style: TextStyle(fontSize: 8),
+                                              Text(
+                                                _bpm.round().toString(),
+                                                style: TextStyle(
+                                                    color: _isBPMSync
+                                                        ? Colors.white
+                                                        : Colors.grey[600]!),
+                                              ),
+                                              Text(
+                                                "BPM",
+                                                style: TextStyle(
+                                                    fontSize: 8,
+                                                    color: _isBPMSync
+                                                        ? Colors.white
+                                                        : Colors.grey[600]!),
                                               )
-                                            ])),
+                                            ]))
                                       ]),
                                   SizedBox(
                                       width: 25,
                                       height: 25,
                                       child: IconButton(
                                           padding: EdgeInsets.zero,
-                                          onPressed: () {
+                                        onPressed: _isBPMSync
+                                            ? () {
                                             setState(() {
                                               _bpm += 1;
                                             });
                                             _musicPlayerBloc
                                                 .add(MusicPlayerSetBpm(_bpm));
-                                          },
-                                          icon: const Icon(Icons.add))),
+                                              }
+                                            : null,
+                                        icon: Icon(Icons.add,
+                                            color: _isBPMSync
+                                                ? Colors.white
+                                                : Colors.grey[600]!)),
+                                  ),
                                   SizedBox(
                                       width: 35,
                                       height: 35,

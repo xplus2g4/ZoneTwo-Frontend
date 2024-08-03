@@ -1,19 +1,14 @@
-import 'dart:async';
-import 'dart:ui';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:location/location.dart';
-import 'package:vibration/vibration.dart';
+import 'package:keep_screen_on/keep_screen_on.dart';
+import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_player/widgets/scrolling_text.dart';
 import 'package:zonetwo/routes.dart';
-import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 import 'package:zonetwo/workout_page/bloc/workout_page_bloc.dart';
 import 'package:zonetwo/workout_page/widgets/select_playlist_bottom_sheet.dart';
 
@@ -23,34 +18,39 @@ class WorkoutPageArguments {
   final DateTime datetime;
 }
 
-class WorkoutPage extends StatefulWidget {
+class WorkoutPage extends StatelessWidget {
+  final DateTime datetime;
+
   const WorkoutPage({required this.datetime, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (BuildContext context) => WorkoutPageBloc(
+        workoutRepository: context.read<WorkoutRepository>(),
+      ),
+      child: WorkoutPageView(datetime: datetime),
+    );
+  }
+}
+
+class WorkoutPageView extends StatefulWidget {
+  const WorkoutPageView({required this.datetime, super.key});
 
   final DateTime datetime;
 
   @override
-  State<WorkoutPage> createState() => _WorkoutPageState();
+  State<WorkoutPageView> createState() => WorkoutPageViewState();
 }
 
-class _WorkoutPageState extends State<WorkoutPage> {
-  int _countdown = 10;
-  bool _isCountdownOver = false;
-  late final Timer _countdownTimer;
-
-  bool _serviceEnabled = false;
-  bool _isCheckingLocation = false;
-  LocationPermission _permission = LocationPermission.denied;
-  late final StreamSubscription<Position> _locationStreamSubscription;
-  late Position _location;
-  late Position _checkpointLocation;
-
+class WorkoutPageViewState extends State<WorkoutPageView> {
   late final WorkoutPageBloc _workoutPageBloc;
-  late final Stopwatch _stopwatch;
-  bool _isRunning = false;
-  Duration _duration = Duration.zero;
-  double _distance = 0;
-  String _pace = '-';
-  late final Timer _workoutTimer;
+  late int _countdown;
+  late bool _isCountdownOver;
+  late bool _isRunning;
+  late Duration _duration = Duration.zero;
+  late double _distance;
+  late String _pace;
 
   late final MusicPlayerBloc _musicPlayerBloc;
   PlayerState _audioPlayerState = PlayerState.stopped;
@@ -62,113 +62,18 @@ class _WorkoutPageState extends State<WorkoutPage> {
   late bool _isShuffle;
   late bool _isLoop;
 
-  Future<void> _checkLocationService() async {
-    setState(() {
-      _isCheckingLocation = true;
-    });
-
-    bool newServiceEnabled;
-    LocationPermission newPermission;
-
-    newServiceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!newServiceEnabled) {
-      await Location().requestService();
-    }
-
-    newPermission = await Geolocator.checkPermission();
-    if (!(newPermission == LocationPermission.always ||
-        newPermission == LocationPermission.whileInUse)) {
-      newPermission = await Geolocator.requestPermission();
-    }
-    setState(() {
-      _isCheckingLocation = false;
-      _serviceEnabled = newServiceEnabled;
-      _permission = newPermission;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     _workoutPageBloc = context.read<WorkoutPageBloc>();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
 
-    _stopwatch = _workoutPageBloc.state.stopwatch;
     _isRunning = _workoutPageBloc.state.isRunning;
     _duration = _workoutPageBloc.state.duration;
-
-    _checkLocationService();
-
-    _checkpointLocation = _location = Position(
-        latitude: 0,
-        longitude: 0,
-        accuracy: 0,
-        altitude: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        heading: 0,
-        timestamp: DateTime.now(),
-        altitudeAccuracy: 0,
-        headingAccuracy: 0);
-    
-
-    Geolocator.getCurrentPosition().then((value) {
-      _location = value;
-      _checkpointLocation = value;
-    });
-
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (_countdown == 0) {
-        setState(() {
-          _isCountdownOver = true;
-          _isRunning = true;
-        });
-        final hasVibrator = await Vibration.hasVibrator();
-        if (hasVibrator != null && hasVibrator) {
-          Vibration.vibrate();
-        }
-        timer.cancel();
-        _workoutPageBloc.add(const WorkoutPageStart());
-      } else {
-        if (!_isCheckingLocation) {
-          setState(() {
-            _countdown -= 1;
-          });
-        }
-      }
-    });
-
-    _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_isCountdownOver && _isRunning) {
-        setState(() {
-          _duration = _stopwatch.elapsed;
-        });
-        final delta = Geolocator.distanceBetween(
-                _checkpointLocation.latitude,
-                _checkpointLocation.longitude,
-                _location.latitude,
-                _location.longitude) /
-            1000;
-        final timeDifference =
-            _location.timestamp.difference(_checkpointLocation.timestamp);
-        if (timeDifference.inMilliseconds == 0) return;
-        setState(() {
-          _distance += delta;
-          _pace = paceBetween(delta, timeDifference);
-          _checkpointLocation = _location;
-        });
-        _workoutPageBloc.add(WorkoutPageDurationChanged(_duration));
-      }
-    });
-   
-    _locationStreamSubscription =
-        Geolocator.getPositionStream().listen((position) {
-      if (_isCountdownOver && _isRunning) {
-        setState(() {
-          _location = position;
-        });
-      }
-    });
+    _distance = _workoutPageBloc.state.distance;
+    _pace = _workoutPageBloc.state.pace;
+    _countdown = _workoutPageBloc.state.countdown;
+    _isCountdownOver = _workoutPageBloc.state.isCountdownOver;
 
     _bpm = _musicPlayerBloc.state.bpm;
     _playlistIndex = _musicPlayerBloc.state.playlistIndex;
@@ -179,6 +84,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
     _audioPlayerState = _musicPlayerBloc.state.audioPlayerState;
     _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
     _audioPlayerDuration = _musicPlayerBloc.state.audioPlayerDuration;
+
+    _workoutPageBloc.add(const WorkoutPageActivateLocation());
+    KeepScreenOn.turnOn(on: true);
   }
 
   @override
@@ -192,9 +100,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
       ));
     }
     _workoutPageBloc.add(const WorkoutPageStop());
-    _countdownTimer.cancel();
-    _workoutTimer.cancel();
-    _locationStreamSubscription.cancel();
+    KeepScreenOn.turnOff();
   }
 
   MusicEntity? getCurrentMusic() {
@@ -217,15 +123,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
       return '${duration.inHours}:${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
     }
     return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
-  }
-
-  String paceBetween(double delta, Duration duration) {
-    double pace = duration.inMilliseconds / 1000.0 / delta;
-    if (pace.isNaN || pace.isInfinite) return "-";
-    int minutes = pace ~/ 60;
-    int seconds = (pace % 60).round();
-    if (minutes > 20) return "-";
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}/km';
   }
 
   void launchConfirmationDialog() => showDialog(
@@ -289,11 +186,15 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   child: BlocListener<WorkoutPageBloc, WorkoutPageState>(
                     listenWhen: (previous, current) =>
                         previous.duration != current.duration ||
-                        previous.isRunning != current.isRunning,
+                        previous.isRunning != current.isRunning ||
+                        previous.countdown != current.countdown ||
+                        previous.isCountdownOver != current.isCountdownOver,
                     listener: (context, state) {
                       setState(() {
                         _duration = state.duration;
                         _isRunning = state.isRunning;
+                        _countdown = state.countdown;
+                        _isCountdownOver = state.isCountdownOver;
                       });
                     },
                     child: Column(
@@ -337,22 +238,33 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                             ],
                                             fontWeight: FontWeight.bold),
                                       ),
-                                      Text(
-                                        '${_distance.toStringAsFixed(2)}km',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: _isRunning
-                                                ? Colors.white
-                                                : Colors.white24,
-                                            fontSize: 32,
-                                            shadows: const <Shadow>[
-                                              Shadow(
-                                                offset: Offset(1.0, 1.0),
-                                                color: Colors.black45,
-                                                blurRadius: 3.0,
-                                              ),
-                                            ],
-                                            fontWeight: FontWeight.bold),
+                                      BlocListener<WorkoutPageBloc,
+                                          WorkoutPageState>(
+                                        listenWhen: (previous, current) =>
+                                            previous.distance !=
+                                            current.distance,
+                                        listener: (context, state) {
+                                          setState(() {
+                                            _distance = state.distance;
+                                          });
+                                        },
+                                        child: Text(
+                                          '${_distance.toStringAsFixed(2)}km',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: _isRunning
+                                                  ? Colors.white
+                                                  : Colors.white24,
+                                              fontSize: 32,
+                                              shadows: const <Shadow>[
+                                                Shadow(
+                                                  offset: Offset(1.0, 1.0),
+                                                  color: Colors.black45,
+                                                  blurRadius: 3.0,
+                                                ),
+                                              ],
+                                              fontWeight: FontWeight.bold),
+                                        ),
                                       ),
                                     ],
                                   )),
@@ -376,22 +288,32 @@ class _WorkoutPageState extends State<WorkoutPage> {
                                         ],
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  Text(
-                                    _pace,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: _isRunning
-                                            ? Colors.white
-                                            : Colors.white24,
-                                        fontSize: 32,
-                                        shadows: const <Shadow>[
-                                          Shadow(
-                                            offset: Offset(1.0, 1.0),
-                                            color: Colors.black45,
-                                            blurRadius: 3.0,
-                                          ),
-                                        ],
-                                        fontWeight: FontWeight.bold),
+                                  BlocListener<WorkoutPageBloc,
+                                      WorkoutPageState>(
+                                    listenWhen: (previous, current) =>
+                                        previous.pace != current.pace,
+                                    listener: (context, state) {
+                                      setState(() {
+                                        _pace = state.pace;
+                                      });
+                                    },
+                                    child: Text(
+                                      _pace,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: _isRunning
+                                              ? Colors.white
+                                              : Colors.white24,
+                                          fontSize: 32,
+                                          shadows: const <Shadow>[
+                                            Shadow(
+                                              offset: Offset(1.0, 1.0),
+                                              color: Colors.black45,
+                                              blurRadius: 3.0,
+                                            ),
+                                          ],
+                                          fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ],
                               )),
@@ -405,8 +327,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 flex: 5,
                 child: Container(
                   padding: const EdgeInsets.all(12),
-                  child: MultiBlocListener(
-                      listeners: [
+                  child: 
                         BlocListener<MusicPlayerBloc, MusicPlayerState>(
                           listenWhen: (previous, current) =>
                               previous.playlistIndex != current.playlistIndex ||
@@ -416,18 +337,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                               _playlistIndex = state.playlistIndex;
                               _shuffledIndex = state.shuffledIndex;
                             });
-                          },
-                        ),
-                        //you have to drop one of these listeners for async
-                        //queueing methods
-                        BlocListener<MusicPlayerBloc, MusicPlayerState>(
-                            listenWhen: (previous, current) =>
-                                previous.playlistQueue != current.playlistQueue,
-                            listener: (context, state) {
-                              _musicPlayerBloc
-                                  .add(const MusicPlayerPlayAtIndex(0));
-                            })
-                      ],
+                      },
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -514,17 +424,17 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           flex: 1,
                           child:
                               BlocListener<MusicPlayerBloc, MusicPlayerState>(
-                          listenWhen: (previous, current) =>
-                              previous.audioPlayerState !=
-                                  current.audioPlayerState ||
-                              previous.isLoop != current.isLoop ||
-                              previous.isShuffle != current.isShuffle,
-                          listener: (context, state) {
-                            setState(() {
-                              _audioPlayerState = state.audioPlayerState;
-                              _isLoop = state.isLoop;
-                              _isShuffle = state.isShuffle;
-                            });
+                            listenWhen: (previous, current) =>
+                                previous.audioPlayerState !=
+                                    current.audioPlayerState ||
+                                previous.isLoop != current.isLoop ||
+                                previous.isShuffle != current.isShuffle,
+                            listener: (context, state) {
+                              setState(() {
+                                _audioPlayerState = state.audioPlayerState;
+                                _isLoop = state.isLoop;
+                                _isShuffle = state.isShuffle;
+                              });
                             },
                             child: Column(
                               children: [

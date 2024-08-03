@@ -143,7 +143,7 @@ class _PlaylistOverviewViewState extends State<PlaylistOverviewView> {
                   },
                   isSelectionMode: _isSelectionMode,
                   isSelected:
-                      _selectedPlaylists.contains(state.playlists[index]),
+                      _selectedPlaylists.contains(state.playlists[index].id),
                 ),
               );
             },

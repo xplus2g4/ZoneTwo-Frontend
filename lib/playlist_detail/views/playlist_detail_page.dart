@@ -33,6 +33,9 @@ class PlaylistDetail extends StatefulWidget {
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
   late final MusicPlayerBloc _musicPlayerBloc;
+  late bool _isShuffle;
+  late bool _isLoop;
+  late bool _isBPMSync;
   bool _isSelectionMode = false;
   Set<String> _selectedMusic = {};
 
@@ -40,6 +43,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   void initState() {
     super.initState();
     _musicPlayerBloc = context.read<MusicPlayerBloc>();
+    _isShuffle = _musicPlayerBloc.state.isShuffle;
+    _isLoop = _musicPlayerBloc.state.isLoop;
+    _isBPMSync = _musicPlayerBloc.state.isBPMSync;
   }
 
   void _enterSelectionMode(MusicEntity music) {
@@ -92,89 +98,149 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
         return CustomScrollView(
           physics: const ClampingScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              automaticallyImplyLeading: false,
-              leading: Container(
-                  margin: const EdgeInsets.only(left: 8.0),
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    decoration: const ShapeDecoration(
-                      color: Colors.black,
-                      shape: CircleBorder(),
-                    ),
-                    child: const BackButton(),
-                  )),
-              expandedHeight: 160.0,
-              collapsedHeight: 160.0,
-              flexibleSpace: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: state.playlist.coverImage != null
-                        ? ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(16.0),
-                              bottomRight: Radius.circular(16.0),
-                            ),
-                            child: Image.memory(
-                              state.playlist.coverImage!,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : null,
-                  ),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.8),
-                        ],
+            BlocListener<MusicPlayerBloc, MusicPlayerState>(
+              listenWhen: (previous, current) =>
+                  previous.isShuffle != current.isShuffle ||
+                  previous.isLoop != current.isLoop ||
+                  previous.isBPMSync != current.isBPMSync,
+              listener: (context, state) {
+                // TODO: implement listener
+                setState(() {
+                  _isShuffle = state.isShuffle;
+                  _isLoop = state.isLoop;
+                  _isBPMSync = state.isBPMSync;
+                });
+              },
+              child: SliverAppBar(
+                automaticallyImplyLeading: false,
+                leading: Container(
+                    margin: const EdgeInsets.only(left: 8.0),
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      decoration: const ShapeDecoration(
+                        color: Colors.black,
+                        shape: CircleBorder(),
                       ),
-                    ),
-                    child: _isSelectionMode
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.close,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                    onPressed: _exitSelectionMode,
-                                  ),
-                                  Text(
-                                    '${_selectedMusic.length} selected',
-                                  ),
-                                ],
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                color: Theme.of(context).colorScheme.error,
-                                disabledColor:
-                                    Theme.of(context).colorScheme.secondary,
-                                onPressed: _selectedMusic.isEmpty
-                                    ? null
-                                    : () => _removeSelectedMusic(context),
-                              ),
-                            ],
+                      child: const BackButton(),
+                    )),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.graphic_eq,
+                        shadows: const <Shadow>[
+                          Shadow(
+                            offset: Offset(1.0, 1.0),
+                            color: Colors.black45,
+                            blurRadius: 3.0,
                           )
-                        : PlaylistMetadata(
-                            state.playlist,
-                            onNameChanged: (name) {
-                              context.read<PlaylistDetailBloc>().add(
-                                    PlaylistNameChanged(name),
-                                  );
-                            },
-                          ),
+                        ],
+                        color: _isBPMSync
+                            ? const Color.fromARGB(255, 0, 174, 255)
+                            : Colors.white70),
+                    onPressed: () =>
+                        _musicPlayerBloc.add(const MusicPlayerToggleBPMSync()),
                   ),
+                  IconButton(
+                    icon: Icon(Icons.loop,
+                        shadows: const <Shadow>[
+                          Shadow(
+                            offset: Offset(1.0, 1.0),
+                            color: Colors.black45,
+                            blurRadius: 3.0,
+                          )
+                        ],
+                        color: _isLoop
+                            ? const Color.fromARGB(255, 0, 174, 255)
+                            : Colors.white70),
+                    onPressed: () =>
+                        _musicPlayerBloc.add(const MusicPlayerToggleLoop()),
+                  ),
+                  IconButton(
+                      icon: Icon(Icons.shuffle,
+                          shadows: const <Shadow>[
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              color: Colors.black45,
+                              blurRadius: 3.0,
+                            )
+                          ],
+                          color: _isShuffle
+                              ? const Color.fromARGB(255, 0, 174, 255)
+                              : Colors.white60),
+                      onPressed: () => _musicPlayerBloc
+                          .add(const MusicPlayerToggleShuffle())),
                 ],
+                expandedHeight: 160.0,
+                collapsedHeight: 160.0,
+                flexibleSpace: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: state.playlist.coverImage != null
+                          ? ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(16.0),
+                                bottomRight: Radius.circular(16.0),
+                              ),
+                              child: Image.memory(
+                                state.playlist.coverImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : null,
+                    ),
+                    Container(
+                      alignment: Alignment.bottomLeft,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.8),
+                          ],
+                        ),
+                      ),
+                      child: _isSelectionMode
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.close,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                      onPressed: _exitSelectionMode,
+                                    ),
+                                    Text(
+                                      '${_selectedMusic.length} selected',
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  color: Theme.of(context).colorScheme.error,
+                                  disabledColor:
+                                      Theme.of(context).colorScheme.secondary,
+                                  onPressed: _selectedMusic.isEmpty
+                                      ? null
+                                      : () => _removeSelectedMusic(context),
+                                ),
+                              ],
+                            )
+                          : PlaylistMetadata(
+                              state.playlist,
+                              onNameChanged: (name) {
+                                context.read<PlaylistDetailBloc>().add(
+                                      PlaylistNameChanged(name),
+                                    );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
             SliverList(
@@ -190,10 +256,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                       if (_isSelectionMode) {
                         _toggleSelection(currMusic);
                       } else {
-                        _musicPlayerBloc
-                            .add(MusicPlayerQueueMusic(state.music));
-                        _musicPlayerBloc
-                            .add(MusicPlayerPlayThisMusic(currMusic));
+                        _musicPlayerBloc.add(MusicPlayerQueueMusic(
+                            state.music, state.playlist.name,
+                            playMusicEntity: currMusic));
                       }
                     },
                   );
