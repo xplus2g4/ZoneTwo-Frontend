@@ -38,8 +38,10 @@ class WorkoutRepository {
           workoutData.distance,
           ]);
 
-      await txn.rawInsert(
+      if (workoutData.points.isNotEmpty) {
+        await txn.rawInsert(
           "INSERT INTO $joinTableName(id, workout_id, order_priority, latitude, longitude) VALUES ${workoutData.points.map((point) => "('${const UuidV4().generate()}', '$newId', '${point.orderPriority}', '${point.latitude}', '${point.longitude}')").join(", ")}");
+      }
     });
     final workout = [..._workoutStreamController.value];
     final newWorkout = workoutData.update(id: newId);

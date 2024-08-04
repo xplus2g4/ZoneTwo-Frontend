@@ -13,12 +13,12 @@ class WorkoutDetailMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return points.isEmpty
-        ? const CircularProgressIndicator()
+        ? const Text("No location data for this workout")
         : GoogleMap(
             initialCameraPosition: CameraPosition(
                 target:
                     WorkoutPoint.approximateMidpoint(points.first, points.last),
-                zoom: math.e /
+                zoom: 50 /
                     WorkoutPoint.distanceBetween(points.first, points.last)),
             markers: {
               Marker(

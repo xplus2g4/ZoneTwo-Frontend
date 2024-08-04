@@ -56,7 +56,8 @@ class WorkoutDetailPageViewState extends State<WorkoutDetailPageView> {
           return SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: Column(children: [
-                SizedBox(
+                Container(
+                  alignment: Alignment.center,
                   height: 300,
                   child: WorkoutDetailMap(
                       workoutId: state.workout.id, points: state.points),

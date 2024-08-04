@@ -3,7 +3,7 @@ import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:keep_screen_on/keep_screen_on.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
@@ -92,7 +92,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
     _audioPlayerDuration = _musicPlayerBloc.state.audioPlayerDuration;
 
     _workoutPageBloc.add(const WorkoutPageActivateLocation());
-    KeepScreenOn.turnOn(on: true);
+    WakelockPlus.enable();
   }
 
   @override
@@ -107,7 +107,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
       ));
     }
     _workoutPageBloc.add(const WorkoutPageStop());
-    KeepScreenOn.turnOff();
+    WakelockPlus.disable();
   }
 
   MusicEntity? getCurrentMusic() {
@@ -203,6 +203,12 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                     },
                     child: Column(
                       children: [
+                        const Text(
+                            "Keep this screen on for the best workout experience",
+                            style: TextStyle(
+                                color: Colors.white30,
+                                fontSize: 8,
+                                fontStyle: FontStyle.italic)),  
                         if (!_isCountdownOver)
                           Text(
                             'Starting in $_countdown',

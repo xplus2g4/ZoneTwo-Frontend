@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_background/flutter_background.dart'
+    as FlutterBackground;
 import 'package:geolocator/geolocator.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:location/location.dart';
+import 'package:vibration/vibration.dart';
 import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 
@@ -54,7 +57,7 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
 
   late final Timer _countdownTimer;
   late final Timer _workoutTimer;
-  late final StreamSubscription<Position> _locationStreamSubscription;
+  late StreamSubscription<Position> _locationStreamSubscription;
   bool _isLocationInitalized = false;
 
   Future<void> _onActivateLocation(
@@ -66,7 +69,6 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     if (!serviceEnabled) {
       serviceEnabled = await Location().requestService();
       if (!serviceEnabled) {
-        _locationStreamSubscription.cancel();
         emit(state.copyWith(
             serviceEnabled: () => serviceEnabled,
             permission: () => LocationPermission.denied));
@@ -79,13 +81,13 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     if (!(permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always)) {
       permission = await Geolocator.requestPermission();
-      if ((permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always)) {
-        _initializeLocation();
-      }
     }
+
     emit(state.copyWith(
         serviceEnabled: () => serviceEnabled, permission: () => permission));
+    if (_isLocationActive()) {
+      _initializeLocation();
+    }
     add(const WorkoutPageCountdownStart());
     return;
   }
@@ -107,6 +109,9 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     if (event.countdown == 0) {
       add(const WorkoutPageCountdownOver());
       add(const WorkoutPageStart());
+      Vibration.hasVibrator().then((value) {
+        if (value != null && value == true) Vibration.vibrate(duration: 500);
+      });
     }
     emit(state.copyWith(countdown: () => event.countdown));
   }
@@ -199,9 +204,12 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
         }
         add(WorkoutPageCheckpointLocationUpdated(state.location));
       } else {
-        _terminateLocation();
+        if (_isLocationInitalized) {
+          _terminateLocation();
+        }
       }
     });
+
     emit(state.copyWith(isRunning: () => true));
   }
 
@@ -258,6 +266,24 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
   }
 
   void _initializeLocation() async {
+    if (_isLocationInitalized) return; 
+
+    const androidConfig = FlutterBackground.FlutterBackgroundAndroidConfig(
+      notificationTitle: "A ZoneTwo Workout is running in the background",
+      notificationText:
+          "Keep this notification to enable your ZoneTwo Workout to run in the background",
+        notificationImportance:
+            FlutterBackground.AndroidNotificationImportance.Default,
+        notificationIcon: FlutterBackground.AndroidResource(
+            name: 'ic_launcher', defType: 'drawable')
+    );
+    bool success =
+        await FlutterBackground.FlutterBackground.initialize(
+        androidConfig: androidConfig);
+    if (success) {
+      await FlutterBackground.FlutterBackground.enableBackgroundExecution();
+    }
+
     await Geolocator.getCurrentPosition().then((position) {
       add(WorkoutPageLocationChanged(position));
       add(WorkoutPageCheckpointLocationUpdated(position));
@@ -273,12 +299,14 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
         add(WorkoutPageLocationChanged(position));
       }
     });
+
     _isLocationInitalized = true;
   }
 
   void _terminateLocation() {
     _locationStreamSubscription.cancel();
     _isLocationInitalized = false;
+    FlutterBackground.FlutterBackground.disableBackgroundExecution();
   }
 
   static String pace(double dx, Duration dt) {
