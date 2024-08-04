@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -24,68 +23,69 @@ class DownloadClient {
     String link,
     ProgressCallback? progressCallback,
   ) async {
-    final response = await httpClient.get<List<int>>(
-      "/api/music/download",
-      onReceiveProgress: progressCallback,
-      queryParameters: {
-        "json_data": jsonEncode({
-          "url": link,
-        }),
-      },
-      options: Options(
-          headers: {'Connection': 'Keep-Alive', 'Accept-Encoding': '*'},
-          responseType: ResponseType.bytes),
-    );
-
-    if (response.statusCode == 200 && response.data != null) {
-      final contentDisposition = response.headers.value('content-disposition');
-
-      String? rawFilename;
-      if (contentDisposition != null) {
-        // Extract the filename from the header
-        final regex = RegExp(r"filename\*=UTF-8\'\'?(.+)?");
-        final match = regex.firstMatch(contentDisposition);
-        if (match != null) {
-          rawFilename = match.group(1);
-        }
-      }
-
-      if (rawFilename != null) {
-        final filename = Uri.decodeFull(rawFilename);
-        final filePath = await _writeToFile(filename, response.data!);
-        final metadata = await _decodeMusicMetadata(filePath);
-        return MusicDownloadInfo(
-            title: filename.replaceAll('.mp3', ''),
-            savePath: filePath,
-            bpm: metadata.bpm,
-            coverImage: metadata.image);
-      } else {
-        throw ApiError(message: "Filename not found in response");
-      }
-    } else {
-      final results =
-          json.decode(utf8.decode(response.data!)) as Map<String, dynamic>;
-      throw ApiError.fromJson(results);
-    }
-  }
-
-  Future<String> _writeToFile(String filename, List<int> bytes) async {
     final saveFolder =
         this.saveFolder ?? (await getApplicationCacheDirectory()).path;
-    final path = p.join(saveFolder, filename);
-    final file = File(path);
-    await file.writeAsBytes(bytes);
-    return path;
+    String filename = "";
+    final cancelToken = CancelToken();
+    try {
+      await httpClient.download(
+        "/api/music/download",
+        (Headers headers) {
+          final rawFilename = decodeFilename(headers);
+
+          if (rawFilename == null) {
+            cancelToken.cancel();
+            throw ApiError(message: "Filename not found in response");
+          }
+          filename = rawFilename;
+
+          return p.join(saveFolder, filename);
+        },
+        cancelToken: cancelToken,
+        onReceiveProgress: progressCallback,
+        queryParameters: {
+          "json_data": jsonEncode({
+            "url": link,
+          }),
+        },
+      );
+    } catch (e) {
+      throw ApiError(message: "api error");
+    }
+
+    final filePath = p.join(saveFolder, filename);
+    final metadata = await _decodeMusicMetadata(filePath);
+    return MusicDownloadInfo(
+        title: filename.replaceAll('.mp3', ''),
+        savePath: filePath,
+        bpm: metadata.bpm,
+        coverImage: metadata.image);
+  }
+
+  String? decodeFilename(Headers headers) {
+    final contentDisposition = headers.value('content-disposition');
+    if (contentDisposition == null) {
+      return null;
+    }
+    final regex = RegExp(r"filename\*=UTF-8\'\'?(.+)?");
+    final match = regex.firstMatch(contentDisposition);
+    if (match == null) {
+      return null;
+    }
+    return Uri.decodeFull(match.group(1)!);
   }
 
   Future<MusicMetadata> _decodeMusicMetadata(String filePath) async {
     try {
       final parser = ID3TagReader.path(filePath);
       final metadata = parser.readTagSync();
+      print("parsed ${metadata.frames}");
       final num bpm =
           num.parse(metadata.frameWithName("TBPM")!.toDictionary()["value"]);
       final Uint8List image =
           Uint8List.fromList(metadata.pictures.first.imageData);
+
+      print("parsed $bpm");
 
       return MusicMetadata(image: image, bpm: bpm);
     } catch (e) {
