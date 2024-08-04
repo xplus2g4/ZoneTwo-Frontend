@@ -104,7 +104,6 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                   previous.isLoop != current.isLoop ||
                   previous.isBPMSync != current.isBPMSync,
               listener: (context, state) {
-                // TODO: implement listener
                 setState(() {
                   _isShuffle = state.isShuffle;
                   _isLoop = state.isLoop;
@@ -112,7 +111,6 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 });
               },
               child: SliverAppBar(
-                automaticallyImplyLeading: false,
                 leading: Container(
                     margin: const EdgeInsets.only(left: 8.0),
                     alignment: Alignment.topLeft,

@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_overview/bloc/music_overview_bloc.dart';
-import 'package:zonetwo/playlists_overview/bloc/playlists_overview_bloc.dart';
+import 'package:zonetwo/playlists_overview/widgets/delete_confirmation_dialog.dart';
+import 'package:zonetwo/routes.dart';
+import 'package:zonetwo/workout_detail/views/workout_detail_page.dart';
+import 'package:zonetwo/workout_overview/entities/workout_entity.dart';
 import 'package:zonetwo/workout_overview/widgets/start_workout_button.dart';
 
 import '../bloc/workout_overview_bloc.dart';
@@ -23,9 +27,9 @@ class WorkoutOverviewPage extends StatelessWidget {
               workoutRepository: context.read<WorkoutRepository>(),
                   )..add(const WorkoutOverviewSubscriptionRequested())),
           BlocProvider(
-              create: (context) => PlaylistsOverviewBloc(
-                    playlistRepository: context.read<PlaylistRepository>(),
-                  )..add(const PlaylistsOverviewSubscriptionRequested())),
+              create: (context) => WorkoutOverviewBloc(
+                    workoutRepository: context.read<WorkoutRepository>(),
+                  )..add(const WorkoutOverviewSubscriptionRequested())),
           BlocProvider(
               create: (context) => MusicOverviewBloc(
                     musicRepository: context.read<MusicRepository>(),
@@ -58,6 +62,33 @@ class WorkoutOverviewView extends StatefulWidget {
 }
 
 class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
+  bool _isSelectionMode = false;
+  Set<String> _selectedWorkouts = {};
+
+  void _enterSelectionMode(WorkoutEntity workout) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedWorkouts = {};
+    });
+    _toggleSelection(workout);
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedWorkouts = {};
+    });
+  }
+
+  void _toggleSelection(WorkoutEntity workout) {
+    setState(() {
+      if (_selectedWorkouts.contains(workout.id)) {
+        _selectedWorkouts.remove(workout.id);
+      } else {
+        _selectedWorkouts.add(workout.id);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -70,7 +101,37 @@ class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
           builder: (context, state) {
       return Scaffold(
           appBar: AppBar(
+            leading: _isSelectionMode
+                ? IconButton(
+                    onPressed: _exitSelectionMode,
+                    icon: const Icon(Icons.close))
+                : null,
             title: const Text("Workout History"),
+            actions: [
+              if (_isSelectionMode)
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  color: Theme.of(context).colorScheme.error,
+                  disabledColor: Theme.of(context).disabledColor,
+                  onPressed: _selectedWorkouts.isEmpty
+                      ? null
+                      : () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                const DeleteConfirmationDialog(),
+                          ).then((value) {
+                            if (value == true) {
+                              context.read<WorkoutOverviewBloc>().add(
+                                    WorkoutOverviewWorkoutsDeleted(
+                                        _selectedWorkouts.toList()),
+                                  );
+                              _exitSelectionMode();
+                            }
+                          });
+                        },
+                ),
+            ],
           ),
           floatingActionButton: const StartWorkoutButton(),
           body: Builder(builder: (context) {
@@ -93,9 +154,21 @@ class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
               itemBuilder: (context, index) => WorkoutListTile(
                   workout: state.workouts[index],
                   onTap: () {
-                    //TODO: workout details
-                  }),
-            );
+                        if (_isSelectionMode) {
+                          _toggleSelection(state.workouts[index]);
+                        } else {
+                          context.goNamed(workoutDetailPath,
+                              extra: WorkoutDetailPageArguments(
+                                  state.workouts[index]));
+                        }
+                      },
+                      onLongPress: () {
+                        _enterSelectionMode(state.workouts[index]);
+                      },
+                      isSelectionMode: _isSelectionMode,
+                      isSelected:
+                          _selectedWorkouts.contains(state.workouts[index].id),
+                    ));
           }));
     });
   }

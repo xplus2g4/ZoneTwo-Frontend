@@ -10,3 +10,12 @@ sealed class WorkoutOverviewEvent extends Equatable {
 final class WorkoutOverviewSubscriptionRequested extends WorkoutOverviewEvent {
   const WorkoutOverviewSubscriptionRequested();
 }
+
+final class WorkoutOverviewWorkoutsDeleted extends WorkoutOverviewEvent {
+  const WorkoutOverviewWorkoutsDeleted(this.workoutIds);
+
+  final List<String> workoutIds;
+
+  @override
+  List<Object> get props => [workoutIds];
+}

@@ -4,9 +4,11 @@ import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 
 class MiniPlaylistListview extends StatelessWidget {
-  const MiniPlaylistListview({required this.onPlaylistSelected, super.key});
+  const MiniPlaylistListview(
+      {required this.onPlaylistSelected, this.containsAll, super.key});
 
   final ValueChanged<PlaylistEntity> onPlaylistSelected;
+  final bool? containsAll;
 
   @override
   Widget build(BuildContext context) {
@@ -14,26 +16,33 @@ class MiniPlaylistListview extends StatelessWidget {
       create: (context) => PlaylistsOverviewBloc(
         playlistRepository: context.read<PlaylistRepository>(),
       )..add(const PlaylistsOverviewSubscriptionRequested()),
-      child: _MiniPlaylistListview(onPlaylistSelected: onPlaylistSelected),
+      child: _MiniPlaylistListview(
+          onPlaylistSelected: onPlaylistSelected,
+          containsAll: containsAll ?? false),
     );
   }
 }
 
 class _MiniPlaylistListview extends StatelessWidget {
-  const _MiniPlaylistListview({required this.onPlaylistSelected});
+  const _MiniPlaylistListview(
+      {required this.onPlaylistSelected, required this.containsAll});
 
   final ValueChanged<PlaylistEntity> onPlaylistSelected;
+  final bool containsAll;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PlaylistsOverviewBloc, PlaylistsOverviewState>(
       builder: (context, state) {
-        return state.playlists.isEmpty
+        final playlists = containsAll
+            ? [PlaylistEntity.ALL_MUSIC, ...state.playlists]
+            : state.playlists;
+        return playlists.isEmpty
             ? const SizedBox()
             : ListView.builder(
-                itemCount: state.playlists.length,
+                itemCount: playlists.length,
                 itemBuilder: (context, index) {
-                  final playlist = state.playlists[index];
+                  final playlist = playlists[index];
                   return Material(
                       child: ListTile(
                     leading: Container(

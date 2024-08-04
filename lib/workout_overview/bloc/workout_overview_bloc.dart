@@ -13,6 +13,7 @@ class WorkoutOverviewBloc
   })  : _workoutRepository = workoutRepository,
         super(const WorkoutOverviewState()) {
     on<WorkoutOverviewSubscriptionRequested>(_onSubscriptionRequested);
+    on<WorkoutOverviewWorkoutsDeleted>(_onWorkoutsDeleted);
   }
 
   final WorkoutRepository _workoutRepository;
@@ -22,8 +23,33 @@ class WorkoutOverviewBloc
     Emitter<WorkoutOverviewState> emit,
   ) async {
     emit(state.copyWith(status: () => WorkoutOverviewStatus.loading));
-
     await _workoutRepository.getAllWorkouts();
+    await emit.forEach<List<WorkoutEntity>>(
+      _workoutRepository.getWorkoutStream().map(
+          (workoutList) => workoutList.map(WorkoutEntity.fromData).toList()),
+      onData: (workouts) => state.copyWith(
+        status: () => WorkoutOverviewStatus.success,
+        workouts: () =>
+            workouts..sort((a, b) => b.datetime.compareTo(a.datetime)),
+      ),
+      onError: (_, __) => state.copyWith(
+        status: () => WorkoutOverviewStatus.failure,
+      ),
+    );
+  }
+
+  Future<void> _onWorkoutsDeleted(
+    WorkoutOverviewWorkoutsDeleted event,
+    Emitter<WorkoutOverviewState> emit,
+  ) async {
+    emit(state.copyWith(status: () => WorkoutOverviewStatus.loading));
+
+    await _workoutRepository.deleteWorkouts(
+      state.workouts
+          .where((workout) => event.workoutIds.contains(workout.id))
+          .map((workout) => workout.toData())
+          .toList(),
+    );
     await emit.forEach<List<WorkoutEntity>>(
       _workoutRepository.getWorkoutStream().map(
           (workoutList) => workoutList.map(WorkoutEntity.fromData).toList()),

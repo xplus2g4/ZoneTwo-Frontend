@@ -8,7 +8,9 @@ A new Flutter project.
 
 ### Introduction
 
-Fill it up later
+ZoneTwo syncs your running cadence to the tempo of the song you're playing in
+order to maintain a consistent, low-intesity pace and provide an enjoyable
+running experience.
 
 ### Features
 

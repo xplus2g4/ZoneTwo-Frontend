@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/v4.dart';
-import 'package:workout_repository/workout_repository.dart';
 import 'package:rxdart/subjects.dart';
+
+import 'data_models/data_models.dart';
 
 class WorkoutRepository {
   static const tableName = "workouts";
+  static const joinTableName = "workout_points";
   WorkoutRepository(this._db);
 
   final Database _db;
@@ -15,20 +17,32 @@ class WorkoutRepository {
     const [],
   );
 
+  late final _workoutWithPointsStreamController =
+      BehaviorSubject<WorkoutWithPointsData>();
+
   Stream<List<WorkoutData>> getWorkoutStream() =>
       _workoutStreamController.asBroadcastStream();
+      
+  Stream<WorkoutWithPointsData> getWorkoutWithPointsStream() =>
+      _workoutWithPointsStreamController.asBroadcastStream();
 
-  Future<void> addWorkoutData(WorkoutData workoutData) async {
-    // Update database
+  Future<void> addWorkoutData(WorkoutWithPointsData workoutData) async {
     final newId = const UuidV4().generate();
-    await _db.rawInsert(
+    await _db.transaction((txn) async {
+      await txn.rawInsert(
         "INSERT INTO $tableName(id, datetime, duration, distance) VALUES(?, ?, ?, ?)",
         [
           newId,
           workoutData.datetime,
           workoutData.duration,
           workoutData.distance,
-        ]);
+          ]);
+
+      if (workoutData.points.isNotEmpty) {
+        await txn.rawInsert(
+          "INSERT INTO $joinTableName(id, workout_id, order_priority, latitude, longitude) VALUES ${workoutData.points.map((point) => "('${const UuidV4().generate()}', '$newId', '${point.orderPriority}', '${point.latitude}', '${point.longitude}')").join(", ")}");
+      }
+    });
     final workout = [..._workoutStreamController.value];
     final newWorkout = workoutData.update(id: newId);
     workout.add(newWorkout);
@@ -41,8 +55,22 @@ class WorkoutRepository {
     _workoutStreamController.add(workout);
   }
 
+  Future<void> getWorkoutWithPoints(WorkoutData workout) async {
+    final points = (await _db.rawQuery('''
+      SELECT * FROM $joinTableName
+      WHERE workout_id = ?
+    ''', [workout.id])).map(WorkoutPointData.fromRow).toList();
+    points.sort((a, b) => a.orderPriority.compareTo(b.orderPriority));
+    _workoutWithPointsStreamController.add(WorkoutWithPointsData(
+        id: workout.id,
+        datetime: workout.datetime,
+        duration: workout.duration,
+        distance: workout.distance,
+        points: points));
+  }
+
+//no plans for this atm
   Future<void> updateWorkoutData(WorkoutData workoutData) async {
-    // Update database
     await _db.rawUpdate(
         "UPDATE $tableName SET datetime = ?, duration = ?, distance = ? WHERE id = ?",
         [
@@ -52,7 +80,6 @@ class WorkoutRepository {
           workoutData.id,
         ]);
 
-    // Publish to stream
     final workout = [..._workoutStreamController.value];
     final workoutIndex = workout.indexWhere((t) => t.id == workoutData.id);
     if (workoutIndex >= 0) {
@@ -63,11 +90,15 @@ class WorkoutRepository {
     _workoutStreamController.add(workout);
   }
 
-  Future<void> deleteWorkoutData(WorkoutData workoutData) async {
-    await _db.delete(tableName, where: "id = ?", whereArgs: [workoutData.id]);
-    final workout = [..._workoutStreamController.value]
-        .where((workout) => workout.id != workoutData.id)
+  Future<void> deleteWorkouts(List<WorkoutData> workouts) async {
+    final workoutIds = workouts.map((workout) => workout.id).toList();
+    final queryPlaceholder = List.filled(workoutIds.length, '?').join(',');
+    await _db.delete(tableName,
+        where: "id IN ($queryPlaceholder)", whereArgs: workoutIds);
+    final newWorkouts = _workoutStreamController.value
+        .where((workout) => !workoutIds.contains(workout.id))
         .toList();
-    _workoutStreamController.add(workout);
+    _workoutStreamController.add(newWorkouts);
   }
+
 }

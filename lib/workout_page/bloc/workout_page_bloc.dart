@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_background/flutter_background.dart'
+    as FlutterBackground;
 import 'package:geolocator/geolocator.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:location/location.dart';
+import 'package:vibration/vibration.dart';
 import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 
@@ -42,6 +45,7 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     on<WorkoutPageDurationChanged>(_onDurationChanged);
     on<WorkoutPageDistanceChanged>(_onDistanceChanged);
     on<WorkoutPagePaceChanged>(_onPaceChanged);
+    on<WorkoutPageWorkoutPointAdded>(_onWorkoutPointAdded);
     on<WorkoutPageStart>(_onStart);
     on<WorkoutPagePause>(_onPause);
     on<WorkoutPageResume>(_onResume);
@@ -53,24 +57,18 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
 
   late final Timer _countdownTimer;
   late final Timer _workoutTimer;
-  late final StreamSubscription<Position> _locationStreamSubscription;
+  late StreamSubscription<Position> _locationStreamSubscription;
+  bool _isLocationInitalized = false;
 
   Future<void> _onActivateLocation(
     WorkoutPageActivateLocation event,
     Emitter<WorkoutPageState> emit,
   ) async {
-    _locationStreamSubscription =
-        Geolocator.getPositionStream().listen((position) {
-      if (!isClosed) {
-        add(WorkoutPageLocationChanged(position));
-      }
-    });
 
     var serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await Location().requestService();
       if (!serviceEnabled) {
-        _locationStreamSubscription.cancel();
         emit(state.copyWith(
             serviceEnabled: () => serviceEnabled,
             permission: () => LocationPermission.denied));
@@ -85,13 +83,11 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
       permission = await Geolocator.requestPermission();
     }
 
-    if (!(permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always)) {
-      _locationStreamSubscription.cancel();
-    }
-
     emit(state.copyWith(
         serviceEnabled: () => serviceEnabled, permission: () => permission));
+    if (_isLocationActive()) {
+      _initializeLocation();
+    }
     add(const WorkoutPageCountdownStart());
     return;
   }
@@ -113,6 +109,9 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     if (event.countdown == 0) {
       add(const WorkoutPageCountdownOver());
       add(const WorkoutPageStart());
+      Vibration.hasVibrator().then((value) {
+        if (value != null && value == true) Vibration.vibrate(duration: 500);
+      });
     }
     emit(state.copyWith(countdown: () => event.countdown));
   }
@@ -160,18 +159,31 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     emit(state.copyWith(pace: () => event.pace));
   }
 
+  //will this give me a race condition? maybe, but having 2 points with the
+  //same orderPriority is not a big deal
+  Future<void> _onWorkoutPointAdded(WorkoutPageWorkoutPointAdded event,
+      Emitter<WorkoutPageState> emit) async {
+    emit(state.copyWith(
+      points: () => [...state.points, event.point],
+    ));
+  }
+
   Future<void> _onStart(
       WorkoutPageStart event, Emitter<WorkoutPageState> emit) async {
     state.stopwatch.start();
 
-    if (isLocationActive()) {
+    if (_isLocationActive()) {
       add(WorkoutPageCheckpointLocationUpdated(state.location));
     }
 
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       add(WorkoutPageDurationChanged(state.stopwatch.elapsed));
 
-      if (isLocationActive()) {
+      if (_isLocationActive()) {
+        if (!_isLocationInitalized) {
+          _initializeLocation();
+          return;
+        }
         if (state.isRunning) {
           final dt = state.location.timestamp
               .difference(state.checkpointLocation.timestamp);
@@ -184,10 +196,20 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
               1000;
           add(WorkoutPageDistanceChanged(state.distance + dx));
           add(WorkoutPagePaceChanged(pace(dx, dt)));
+          add(WorkoutPageWorkoutPointAdded(WorkoutPoint(
+            latitude: state.location.latitude,
+            longitude: state.location.longitude,
+            orderPriority: state.points.length,
+          )));
         }
         add(WorkoutPageCheckpointLocationUpdated(state.location));
+      } else {
+        if (_isLocationInitalized) {
+          _terminateLocation();
+        }
       }
     });
+
     emit(state.copyWith(isRunning: () => true));
   }
 
@@ -215,7 +237,7 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     state.stopwatch.reset();
     _workoutTimer.cancel();
     _countdownTimer.cancel();
-    _locationStreamSubscription.cancel();
+    _terminateLocation();
     emit(state.copyWith(
       isRunning: () => false,
       duration: () => Duration.zero,
@@ -227,21 +249,67 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     WorkoutPageSave event,
     Emitter<WorkoutPageState> emit,
   ) async {
-    await workoutRepository.addWorkoutData(WorkoutData.newData(
+    workoutRepository.addWorkoutData(WorkoutWithPointsData(
+      id: "",
       datetime: event.datetime.toIso8601String(),
       duration: event.duration.inSeconds,
       distance: event.distance,
+      points: event.points.map((point) => point.toData()).toList(),
     ));
   }
 
-  //Helper
-  bool isLocationActive() {
+  //Helpers
+  bool _isLocationActive() {
     return state.serviceEnabled &&
         (state.permission == LocationPermission.whileInUse ||
             state.permission == LocationPermission.always);
   }
 
-  String pace(double dx, Duration dt) {
+  void _initializeLocation() async {
+    if (_isLocationInitalized) return; 
+
+    const androidConfig = FlutterBackground.FlutterBackgroundAndroidConfig(
+      notificationTitle: "A ZoneTwo Workout is running in the background",
+      notificationText:
+          "Keep this notification to enable your ZoneTwo Workout to run in the background",
+        notificationImportance:
+            FlutterBackground.AndroidNotificationImportance.Default,
+        notificationIcon: FlutterBackground.AndroidResource(
+            name: 'ic_launcher', defType: 'drawable')
+    );
+    bool success =
+        await FlutterBackground.FlutterBackground.initialize(
+        androidConfig: androidConfig);
+    if (success) {
+      await FlutterBackground.FlutterBackground.enableBackgroundExecution();
+    }
+
+    await Geolocator.getCurrentPosition().then((position) {
+      add(WorkoutPageLocationChanged(position));
+      add(WorkoutPageCheckpointLocationUpdated(position));
+      add(WorkoutPageWorkoutPointAdded(WorkoutPoint(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        orderPriority: state.points.length,
+      )));
+    });
+    _locationStreamSubscription =
+        Geolocator.getPositionStream().listen((position) {
+      if (!isClosed) {
+        add(WorkoutPageLocationChanged(position));
+      }
+    });
+
+    _isLocationInitalized = true;
+  }
+
+  void _terminateLocation() {
+    _locationStreamSubscription.cancel();
+    _isLocationInitalized = false;
+    FlutterBackground.FlutterBackground.disableBackgroundExecution();
+  }
+
+  static String pace(double dx, Duration dt) {
     double pace = dt.inMilliseconds / 1000.0 / dx;
     if (pace.isNaN || pace.isInfinite) return "-";
     int minutes = pace ~/ 60;

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:zonetwo/bootstrap.dart';
 
 import 'settings/settings.dart';
@@ -22,22 +23,16 @@ Future<void> main() async {
         : await getApplicationDocumentsDirectory(),
   );
 
-  const androidConfig = FlutterBackgroundAndroidConfig(
-    notificationTitle: "ZoneTwo is running in the background",
-    notificationText:
-        "Keep this notification to enable ZoneTwo to run in the background",
-    notificationImportance: AndroidNotificationImportance.Default,
-  );
-  bool success = await FlutterBackground.initialize(androidConfig: androidConfig);
-  if (success) await FlutterBackground.enableBackgroundExecution();
+  await Permission.notification.isDenied.then((value) {
+    if (value) {
+      Permission.notification.request();
+    }
+  });
 
   bool? isBatteryOptimizationDisabled =
       await DisableBatteryOptimization.isBatteryOptimizationDisabled;
   if (isBatteryOptimizationDisabled == false) {
-    DisableBatteryOptimization
-        .showDisableManufacturerBatteryOptimizationSettings(
-            "Your device has additional battery optimization",
-            "Disable them to allow the app to work in the background.");
+    DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
   }
 
   bootstrap(database: database, downloadDirectory: appDirectory);

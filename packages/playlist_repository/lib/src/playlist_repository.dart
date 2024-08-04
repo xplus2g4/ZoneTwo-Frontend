@@ -92,14 +92,11 @@ class PlaylistRepository {
   }
 
   Future<void> updatePlaylistData(PlaylistData playlist) async {
-    // Update database
     await _db.rawUpdate('''
       UPDATE $tableName
       SET name = ?, cover_image = ?
       WHERE id = ?
     ''', [playlist.name, playlist.coverImage, playlist.id]);
-
-    // Publish to stream
     final playlists = [..._playlistStreamController.value];
     final playlistIndex = playlists.indexWhere((t) => t.id == playlist.id);
     if (playlistIndex >= 0) {
