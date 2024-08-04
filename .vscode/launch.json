@@ -7,7 +7,8 @@
       "flutterMode": "debug",
       "program": "lib/main.dart",
       "toolArgs": [
-        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771"
+        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771",
+        "--dart-define", "google_maps_api=<FILL_IT_UP>",
       ]
     },
     {
@@ -18,7 +19,8 @@
       "flutterMode": "debug",
       "program": "lib/main.dart",
       "toolArgs": [
-        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771"
+        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771",
+        "--dart-define", "google_maps_api=<FILL_IT_UP>",
       ]
     }
   ],
