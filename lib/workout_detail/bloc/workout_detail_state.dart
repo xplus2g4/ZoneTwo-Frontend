@@ -1,20 +1,21 @@
 part of 'workout_detail_bloc.dart';
 
 final class WorkoutDetailState extends Equatable {
-  const WorkoutDetailState(this.workout, {this.music = const []});
+  const WorkoutDetailState(this.workout, {this.points = const []});
 
   final WorkoutEntity workout;
-  final List<MusicEntity> music;
+  final List<WorkoutPoint> points;
 
   WorkoutDetailState copyWith({
     WorkoutEntity Function()? workout,
-    List<MusicEntity> Function()? music,
+    List<WorkoutPoint> Function()? points,
   }) {
     return WorkoutDetailState(
       workout != null ? workout() : this.workout,
+      points: points != null ? points() : this.points,
     );
   }
 
   @override
-  List<Object> get props => [workout, music];
+  List<Object> get props => [workout];
 }

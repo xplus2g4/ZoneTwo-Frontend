@@ -394,6 +394,7 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
           ? state.shuffledQueue[state.shuffledIndex]
           : null;
   
+  //ALWAYS UPDATE STATE FIRST BEFORE USING THIS GETTER
   double get _playbackRate =>
       state.isBPMSync
       ? state.bpm / (_currentMusic == null ? state.bpm : _currentMusic!.bpm)

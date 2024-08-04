@@ -9,6 +9,8 @@ import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/music_player/widgets/scrolling_text.dart';
 import 'package:zonetwo/routes.dart';
+import 'package:zonetwo/utils/functions/format_duration.dart';
+import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 import 'package:zonetwo/workout_page/bloc/workout_page_bloc.dart';
 import 'package:zonetwo/workout_page/widgets/select_playlist_bottom_sheet.dart';
 
@@ -51,12 +53,14 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
   late Duration _duration = Duration.zero;
   late double _distance;
   late String _pace;
+  late List<WorkoutPoint> _points;
 
   late final MusicPlayerBloc _musicPlayerBloc;
   PlayerState _audioPlayerState = PlayerState.stopped;
   Duration _audioPlayerPosition = Duration.zero;
   Duration _audioPlayerDuration = Duration.zero;
   late num _bpm;
+  late String _playlistName;
   late int _playlistIndex;
   late int _shuffledIndex;
   late bool _isShuffle;
@@ -72,10 +76,12 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
     _duration = _workoutPageBloc.state.duration;
     _distance = _workoutPageBloc.state.distance;
     _pace = _workoutPageBloc.state.pace;
+    _points = _workoutPageBloc.state.points;
     _countdown = _workoutPageBloc.state.countdown;
     _isCountdownOver = _workoutPageBloc.state.isCountdownOver;
 
     _bpm = _musicPlayerBloc.state.bpm;
+    _playlistName = _musicPlayerBloc.state.playlistName;
     _playlistIndex = _musicPlayerBloc.state.playlistIndex;
     _shuffledIndex = _musicPlayerBloc.state.shuffledIndex;
     _isShuffle = _musicPlayerBloc.state.isShuffle;
@@ -97,6 +103,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
         widget.datetime,
         _duration,
         _distance,
+        _points
       ));
     }
     _workoutPageBloc.add(const WorkoutPageStop());
@@ -118,13 +125,6 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
             : null;
   }
 
-  String formatDuration(Duration duration) {
-    if (duration.inHours > 0) {
-      return '${duration.inHours}:${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
-    }
-    return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
-  }
-
   void launchConfirmationDialog() => showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -139,12 +139,15 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                 },
               ),
               TextButton(
-                child: const Text('Quit', style: TextStyle(color: Colors.red)),
+                child: Text(_isCountdownOver ? 'Save and Exit' : 'Exit',
+                    style: const TextStyle(color: Colors.red)),
                 onPressed: () {
                   context.pop();
                   context.go(workoutOverviewPath);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Workout saved!')));
+                  if (_isCountdownOver) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Workout saved!')));
+                  }
                 },
               ),
             ],
@@ -160,7 +163,8 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
           if (didPop) {
             if (_isCountdownOver) {
               _workoutPageBloc
-                  .add(WorkoutPageSave(widget.datetime, _duration, _distance));
+                  .add(WorkoutPageSave(
+                  widget.datetime, _duration, _distance, _points));
             }
             _workoutPageBloc.add(const WorkoutPageStop());
             return;
@@ -180,7 +184,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   child: BlocListener<WorkoutPageBloc, WorkoutPageState>(
@@ -246,6 +250,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                         listener: (context, state) {
                                           setState(() {
                                             _distance = state.distance;
+                                            _points = state.points;
                                           });
                                         },
                                         child: Text(
@@ -324,23 +329,54 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                 ),
               ),
               Expanded(
-                flex: 5,
+                flex: 7,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   child: 
                         BlocListener<MusicPlayerBloc, MusicPlayerState>(
                           listenWhen: (previous, current) =>
                               previous.playlistIndex != current.playlistIndex ||
-                              previous.shuffledIndex != current.shuffledIndex,
+                          previous.shuffledIndex != current.shuffledIndex ||
+                          previous.playlistName != current.playlistName,
                           listener: (context, state) {
                             setState(() {
                               _playlistIndex = state.playlistIndex;
                               _shuffledIndex = state.shuffledIndex;
+                          _playlistName = state.playlistName;
                             });
                       },
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('Currently playing from ',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            blurRadius: 1.0,
+                                            color: Colors.black),
+                                      ],
+                                      fontSize: 9,
+                                    )),
+                                Text(_playlistName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                            offset: Offset(1.0, 1.0),
+                                            blurRadius: 1.0,
+                                            color: Colors.black),
+                                      ],
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    )),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
                               child: getCurrentMusic() == null
@@ -413,7 +449,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                 ),
               ),
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: IntrinsicHeight(
                   child: Container(
                     padding: const EdgeInsets.only(top: 12, bottom: 12),

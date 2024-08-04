@@ -1,3 +1,5 @@
+import 'package:workout_repository/src/data_models/workout_point_data.dart';
+
 class WorkoutData {
   final String id;
   final String datetime;
@@ -48,11 +50,14 @@ class WorkoutData {
   }
 }
 
-//for next time...
 class WorkoutWithPointsData extends WorkoutData {
   WorkoutWithPointsData(
       {required super.id,
       required super.datetime,
       required super.duration,
-      required super.distance});
+      required super.distance,
+      required this.points});
+
+  final List<WorkoutPointData> points;
 }
+

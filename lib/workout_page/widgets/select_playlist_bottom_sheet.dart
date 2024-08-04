@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zonetwo/music_player/bloc/music_player_bloc.dart';
+import 'package:zonetwo/playlists_overview/entities/playlist_entity.dart';
 import 'package:zonetwo/playlists_overview/widgets/mini_playlist_listview.dart';
 
 class SelectPlaylistBottomSheet extends StatelessWidget {
@@ -26,10 +27,15 @@ class SelectPlaylistBottomSheet extends StatelessWidget {
           ),
           Expanded(
             child: MiniPlaylistListview(onPlaylistSelected: (playlist) {
-              _musicPlayerBloc
-                  .add(MusicPlayerQueuePlaylistMusic(playlist, playIndex: 0));
+                if (playlist.id == PlaylistEntity.ALL_MUSIC.id) {
+                  _musicPlayerBloc.add(const MusicPlayerQueueAllMusic());
+                } else {
+                  _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(playlist));
+                }
               Navigator.pop(context);
-            }),
+              },
+              containsAll: true,
+            ),
           ),
         ],
       ),

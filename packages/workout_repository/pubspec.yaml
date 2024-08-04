@@ -18,6 +18,7 @@ dependencies:
     path: ../music_repository
   playlist_repository:
     path: ../playlist_repository
+  geolocator: ^12.0.0
 
 dev_dependencies:
   flutter_test:

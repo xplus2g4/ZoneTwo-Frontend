@@ -99,12 +99,14 @@ final class WorkoutPageStop extends WorkoutPageEvent {
 }
 
 final class WorkoutPageSave extends WorkoutPageEvent {
-  const WorkoutPageSave(this.datetime, this.duration, this.distance);
+  const WorkoutPageSave(
+      this.datetime, this.duration, this.distance, this.points);
 
   final DateTime datetime;
   final Duration duration;
   final double distance;
+  final List<WorkoutPoint> points;
 
   @override
-  List<Object> get props => [datetime, duration, distance];
+  List<Object> get props => [datetime, duration, distance, points];
 }

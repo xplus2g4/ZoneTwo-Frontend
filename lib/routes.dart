@@ -4,6 +4,7 @@ import 'package:zonetwo/home/home.dart';
 import 'package:zonetwo/music_overview/music_overview.dart';
 import 'package:zonetwo/playlist_detail/playlist_detail.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
+import 'package:zonetwo/workout_detail/views/workout_detail_page.dart';
 import 'package:zonetwo/workout_overview/views/workout_overview_page.dart';
 import 'package:zonetwo/workout_page/views/workout_page.dart';
 
@@ -20,7 +21,8 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>();
 const musicOverviewPath = '/music_overview';
 const playlistOverviewPath = '/playlist_overview';
 const playlistDetailPath = 'player_detail';
-const workoutOverviewPath = '/workout_overview'; 
+const workoutOverviewPath = '/workout_overview';
+const workoutDetailPath = 'workout_detail';
 const workoutPage = 'workout_page';
 
 const settingsPath = '/settings';
@@ -97,6 +99,19 @@ final router = GoRouter(
                       );
                     },
                   ),
+                  GoRoute(
+                      parentNavigatorKey: _workoutOverviewNavigatorKey,
+                      name: workoutDetailPath,
+                      path: workoutDetailPath,
+                      pageBuilder: (context, state) {
+                        final args = state.extra as WorkoutDetailPageArguments;
+                        return MaterialPage(
+                          key: state.pageKey,
+                          child: WorkoutDetailPage(
+                            workout: args.workout,
+                          ),
+                        );
+                      }),
                 ],
               )
             ]),
@@ -134,4 +149,3 @@ final router = GoRouter(
     )
   ],
 );
-

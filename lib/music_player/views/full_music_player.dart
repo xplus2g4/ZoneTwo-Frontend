@@ -354,7 +354,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                   ),
                                 ],
                               ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Stack(
                             children: [
                               Container(

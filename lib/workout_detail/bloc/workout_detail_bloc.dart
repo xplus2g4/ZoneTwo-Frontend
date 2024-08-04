@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/workout_overview/entities/workout_entity.dart';
+import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 
 part 'workout_detail_event.dart';
 part 'workout_detail_state.dart';
@@ -22,6 +23,12 @@ class WorkoutDetailBloc extends Bloc<WorkoutDetailEvent, WorkoutDetailState> {
     WorkoutDetailSubscriptionRequested event,
     Emitter<WorkoutDetailState> emit,
   ) async {
-    //TODO: Implement
+    await _workoutRepository.getWorkoutWithPoints(event.workout.toData());
+    await emit.forEach(_workoutRepository.getWorkoutWithPointsStream(),
+        onData: (workoutWithPoints) => state.copyWith(
+              workout: () => WorkoutEntity.fromData(workoutWithPoints),
+              points: () =>
+                  workoutWithPoints.points.map(WorkoutPoint.fromData).toList(),
+            ));
   }
 }
