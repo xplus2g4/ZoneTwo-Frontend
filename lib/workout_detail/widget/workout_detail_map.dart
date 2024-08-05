@@ -18,7 +18,8 @@ class WorkoutDetailMap extends StatelessWidget {
             initialCameraPosition: CameraPosition(
                 target:
                     WorkoutPoint.approximateMidpoint(points.first, points.last),
-                zoom: 50 /
+                zoom: 15 -
+                    0.1 *
                     WorkoutPoint.distanceBetween(points.first, points.last)),
             markers: {
               Marker(

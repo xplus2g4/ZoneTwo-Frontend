@@ -91,7 +91,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
     _audioPlayerPosition = _musicPlayerBloc.state.audioPlayerPosition;
     _audioPlayerDuration = _musicPlayerBloc.state.audioPlayerDuration;
 
-    _workoutPageBloc.add(const WorkoutPageActivateLocation());
+    _workoutPageBloc.add(const WorkoutPageInitializeLocation());
     WakelockPlus.enable();
   }
 

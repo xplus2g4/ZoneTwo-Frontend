@@ -7,8 +7,6 @@ final class WorkoutPageState extends Equatable {
   final double distance;
   final String pace;
   final List<WorkoutPoint> points;
-  final bool serviceEnabled;
-  final LocationPermission permission;
   final int countdown;
   final bool isCountdownStarted;
   final bool isCountdownOver;
@@ -22,8 +20,6 @@ final class WorkoutPageState extends Equatable {
     this.distance = 0,
     this.pace = "-",
     this.points = const [],
-    this.serviceEnabled = false,
-    this.permission = LocationPermission.denied,
     this.countdown = 10,
     this.isCountdownOver = false,
     this.isCountdownStarted = false,
@@ -53,9 +49,6 @@ final class WorkoutPageState extends Equatable {
       distance: distance != null ? distance() : this.distance,
       pace: pace != null ? pace() : this.pace,
       points: points != null ? points() : this.points,
-      serviceEnabled:
-          serviceEnabled != null ? serviceEnabled() : this.serviceEnabled,
-      permission: permission != null ? permission() : this.permission,
       location: location != null ? location() : this.location,
       checkpointLocation: checkpointLocation != null
           ? checkpointLocation()
@@ -77,8 +70,6 @@ final class WorkoutPageState extends Equatable {
         points,
         distance,
         pace,
-        serviceEnabled,
-        permission,
         location,
         checkpointLocation,
         countdown,

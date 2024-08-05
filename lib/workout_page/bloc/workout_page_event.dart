@@ -7,8 +7,8 @@ sealed class WorkoutPageEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class WorkoutPageActivateLocation extends WorkoutPageEvent {
-  const WorkoutPageActivateLocation();
+final class WorkoutPageInitializeLocation extends WorkoutPageEvent {
+  const WorkoutPageInitializeLocation();
 }
 
 final class WorkoutPageCountdownStart extends WorkoutPageEvent {
