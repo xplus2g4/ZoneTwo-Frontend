@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
@@ -16,6 +18,9 @@ EventTransformer<Event> debounce<Event>(Duration duration) {
   return (events, mapper) => events.debounce(duration).switchMap(mapper);
 }
 
+//in general we rely on state to be our source of truth, because the audio
+//player has a mind of its own.
+//always update state first before doing anything with the audio
 class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
   MusicPlayerBloc({
     required MusicRepository musicRepository,
@@ -40,7 +45,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     on<MusicPlayerResume>(_onResume);
     on<MusicPlayerSeek>(_onSeek);
     on<MusicPlayerSetBpm>(_onSetBpm, transformer: debounce(_duration));
-    on<MusicPlayerEnterFullscreen>(_onEnterFullscreen);
     on<MusicPlayerStop>(_onStop);
   }
 
@@ -86,26 +90,21 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     Emitter<MusicPlayerState> emit,
   ) async {
     await _musicRepository.getAllMusicData();
-    await emit.forEach<List<MusicEntity>>(
-        _musicRepository
-            .getMusic()
-            .map((musicList) => musicList.map(MusicEntity.fromData).toList()),
-        onData: (music) {
-      final newPlaylistQueue = List<MusicEntity>.from(music);
-      final newShuffledQueue = List<MusicEntity>.from(music);
+    await _musicRepository.getMusic().first.then((music) {
+      final newPlaylistQueue = music.map(MusicEntity.fromData).toList();
+      final newShuffledQueue = List<MusicEntity>.from(newPlaylistQueue);
       newShuffledQueue.shuffle();
-      final newState = state.copyWith(
+      emit(state.copyWith(
         playlistQueue: () => newPlaylistQueue,
         shuffledQueue: () => newShuffledQueue,
         playlistName: () => 'All Music',
-      );
+      ));
       if (event.playIndex != null) {
         add(MusicPlayerPlayAtIndex(event.playIndex!));
       }
       if (event.playMusicEntity != null) {
         add(MusicPlayerPlayThisMusic(event.playMusicEntity!));
       }
-      return newState;
     });
   }
 
@@ -114,24 +113,26 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     Emitter<MusicPlayerState> emit,
   ) async {
     await _playlistRepository.getPlaylistWithMusic(event.playlist.toData());
-    await emit.forEach<PlaylistWithMusicData>(
-        _playlistRepository.getPlaylistWithMusicStream(), onData: (playlist) {
+    await _playlistRepository
+        .getPlaylistWithMusicStream()
+        .first
+        .then((playlist) {
       final newPlaylistQueue =
-          List<MusicEntity>.from(playlist.music.map(MusicEntity.fromData));
+          playlist.music.map(MusicEntity.fromData).toList();
       final newShuffledQueue =
           List<MusicEntity>.from(playlist.music.map(MusicEntity.fromData));
       newShuffledQueue.shuffle();
-      final newState = state.copyWith(
+      emit(state.copyWith(
         playlistQueue: () => newPlaylistQueue,
         shuffledQueue: () => newShuffledQueue,
-      );
+      ));
       if (event.playIndex != null) {
         add(MusicPlayerPlayAtIndex(event.playIndex!));
       }
       if (event.playMusicEntity != null) {
         add(MusicPlayerPlayThisMusic(event.playMusicEntity!));
       }
-      return newState;
+
     });
   }
 
@@ -349,15 +350,6 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
     state.audioPlayer.setPlaybackRate(_playbackRate);
   }
 
-  Future<void> _onEnterFullscreen(
-    MusicPlayerEnterFullscreen event,
-    Emitter<MusicPlayerState> emit,
-  ) async {
-    emit(state.copyWith(
-      audioPlayer: () => state.audioPlayer,
-    ));
-  }
-
   Future<void> _onSeek(
     MusicPlayerSeek event,
     Emitter<MusicPlayerState> emit,
@@ -384,6 +376,7 @@ class MusicPlayerBloc extends HydratedBloc<MusicPlayerEvent, MusicPlayerState> {
   }
 
   //Helpers
+  //ALWAYS UPDATE STATE FIRST BEFORE USING THIS GETTER
   MusicEntity? get _currentMusic => !state.isShuffle
       ? state.playlistIndex >= 0 &&
               state.playlistIndex < state.playlistQueue.length

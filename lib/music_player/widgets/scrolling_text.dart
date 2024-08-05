@@ -88,7 +88,7 @@ class ScrollingTextState extends State<ScrollingText>
 
   Widget getBothEndsChild() {
     if (widget.scrollAxis == Axis.vertical) {
-      String newString = widget.text.split("").join("\n");
+      String newString = widget.text.padRight(32).split("").join("\n");
       return Center(
         child: Text(
           newString,
@@ -99,7 +99,7 @@ class ScrollingTextState extends State<ScrollingText>
     }
     return Center(
         child: Text(
-      widget.text,
+      widget.text.padRight(32),
       style: widget.textStyle,
     ));
   }

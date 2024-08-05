@@ -28,9 +28,11 @@ class SelectPlaylistBottomSheet extends StatelessWidget {
           Expanded(
             child: MiniPlaylistListview(onPlaylistSelected: (playlist) {
                 if (playlist.id == PlaylistEntity.ALL_MUSIC.id) {
-                  _musicPlayerBloc.add(const MusicPlayerQueueAllMusic());
+                  _musicPlayerBloc
+                      .add(const MusicPlayerQueueAllMusic(playIndex: 0));
                 } else {
-                  _musicPlayerBloc.add(MusicPlayerQueuePlaylistMusic(playlist));
+                  _musicPlayerBloc.add(
+                      MusicPlayerQueuePlaylistMusic(playlist, playIndex: 0));
                 }
               Navigator.pop(context);
               },

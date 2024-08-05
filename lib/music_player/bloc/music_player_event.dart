@@ -130,10 +130,6 @@ final class MusicPlayerLoadMusic extends MusicPlayerEvent {
   final MusicEntity music;
 }
 
-final class MusicPlayerEnterFullscreen extends MusicPlayerEvent {
-  const MusicPlayerEnterFullscreen();
-}
-
 final class MusicPlayerStop extends MusicPlayerEvent {
   const MusicPlayerStop();
 }
