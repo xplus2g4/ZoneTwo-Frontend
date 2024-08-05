@@ -138,8 +138,6 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                           MaterialPageRoute(
                               builder: (context) => const FullMusicPlayer()),
                         );
-                        _musicPlayerBloc
-                            .add(const MusicPlayerEnterFullscreen());
                       },
                       onHorizontalDragEnd: (details) {
                         if (details.primaryVelocity! < 0) {
