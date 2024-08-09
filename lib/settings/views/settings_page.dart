@@ -73,7 +73,15 @@ class _SettingsState extends State<SettingsPage> {
                 }
               });
             },
-          )
+          ),
+          ListTile(
+            leading: const Icon(Icons.question_mark),
+            title: const Text('FAQ'),
+            subtitle: const Text('Learn more about the app'),
+            onTap: () {
+              context.pushNamed(settingsFaqPath);
+            },
+          ),
         ],
       ),
     );

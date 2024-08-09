@@ -27,6 +27,7 @@ const workoutPage = 'workout_page';
 
 const settingsPath = '/settings';
 const settingsEditFieldPath = 'edit_field';
+const settingsFaqPath = 'faq';
 
 final router = GoRouter(
   initialLocation: musicOverviewPath,
@@ -140,6 +141,15 @@ final router = GoRouter(
                       ),
                     );
                   },
+                ),
+                GoRoute(
+                  parentNavigatorKey: _rootNavigatorKey,
+                  name: settingsFaqPath,
+                  path: settingsFaqPath,
+                  pageBuilder: (context, state) => MaterialPage(
+                    key: state.pageKey,
+                    child: const FaqPage(),
+                  ),
                 ),
               ],
             ),
