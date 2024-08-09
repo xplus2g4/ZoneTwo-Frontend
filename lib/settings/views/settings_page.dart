@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:zonetwo/routes.dart';
 import 'package:zonetwo/settings/settings.dart';
 
+import '../widgets/field_edit_option_dialog.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -12,6 +14,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsState extends State<SettingsPage> {
   late var defaultBpm = SettingsRepository.defaultBpm;
+  late var themeMode = SettingsRepository.themeMode.value;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +50,30 @@ class _SettingsState extends State<SettingsPage> {
                   ),
                 );
               }),
+          ListTile(
+            leading: const Icon(Icons.palette),
+            trailing: Text(themeMode.name),
+            title: Text(SettingsEnum.themeMode.label),
+            subtitle: const Text('Set the theme for the app'),
+            onTap: () {
+              showDialog<ThemeMode>(
+                context: context,
+                builder: (BuildContext context) => FieldEditOptionDialog(
+                    currentOption: themeMode, options: ThemeMode.values),
+              ).then((value) {
+                if (value != null) {
+                  SettingsRepository.setThemeMode(value).then((_) {
+                    setState(() {
+                      themeMode = value;
+                    });
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error.toString())));
+                  });
+                }
+              });
+            },
+          )
         ],
       ),
     );

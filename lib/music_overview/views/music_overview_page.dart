@@ -51,6 +51,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
   late bool _isShuffle;
   late bool _isLoop;
   late bool _isBPMSync;
+  late final theme = Theme.of(context);
 
   @override
   void initState() {
@@ -127,8 +128,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                   : const Text("All Music"),
               leading: state.isSelectionMode
                   ? IconButton(
-                      icon: Icon(Icons.close,
-                          color: Theme.of(context).colorScheme.primary),
+                      icon: Icon(Icons.close, color: theme.colorScheme.primary),
                       onPressed: () {
                         _musicOverviewBloc
                             .add(const MusicOverviewExitSelectionMode());
@@ -139,7 +139,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                   ? [
                       IconButton(
                         icon: const Icon(Icons.edit),
-                        color: Theme.of(context).colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         onPressed: state.selected.length != 1
                             ? null
                             : () => _showEditDialog(
@@ -151,7 +151,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        color: Theme.of(context).colorScheme.error,
+                        color: theme.colorScheme.error,
                         onPressed: state.selected.isEmpty
                             ? null
                             : () => _showDeleteDialog(context),
@@ -159,17 +159,19 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                     ]
                   : [
                       IconButton(
-                        icon: Icon(Icons.graphic_eq,
-                            shadows: const <Shadow>[
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                color: Colors.black45,
-                                blurRadius: 3.0,
-                              )
-                            ],
-                            color: _isBPMSync
-                                ? const Color.fromARGB(255, 0, 174, 255)
-                                : Colors.white70),
+                        icon: Icon(
+                          Icons.graphic_eq,
+                          shadows: const <Shadow>[
+                            Shadow(
+                              offset: Offset(1.0, 1.0),
+                              color: Colors.black45,
+                              blurRadius: 3.0,
+                            )
+                          ],
+                          color: _isBPMSync
+                              ? const Color.fromARGB(255, 0, 174, 255)
+                              : theme.colorScheme.primary,
+                        ),
                         onPressed: () => _musicPlayerBloc
                             .add(const MusicPlayerToggleBPMSync()),
                       ),
@@ -177,7 +179,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                         icon: Icon(Icons.loop,
                             color: _isLoop
                                 ? const Color.fromARGB(255, 0, 174, 255)
-                                : Colors.white24),
+                                : theme.colorScheme.primary),
                         onPressed: () =>
                             _musicPlayerBloc.add(const MusicPlayerToggleLoop()),
                       ),
@@ -185,7 +187,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                           icon: Icon(Icons.shuffle,
                               color: _isShuffle
                                   ? const Color.fromARGB(255, 0, 174, 255)
-                                  : Colors.white24),
+                                  : theme.colorScheme.primary),
                           onPressed: () => _musicPlayerBloc
                               .add(const MusicPlayerToggleShuffle())),
                     ],
@@ -201,7 +203,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                     return Center(
                         child: Text(
                       "Add your music now!",
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: theme.textTheme.bodySmall,
                     ));
                   }
                 }
@@ -219,8 +221,7 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                                 MusicOverviewToggleSelectedMusic(
                                     currentMusic.id));
                           } else {
-                            _musicPlayerBloc
-                                .add(MusicPlayerQueueMusic(
+                            _musicPlayerBloc.add(MusicPlayerQueueMusic(
                                 state.music, 'All Music',
                                 playMusicEntity: currentMusic));
                           }
