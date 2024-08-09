@@ -1,5 +1,6 @@
 enum SettingsEnum {
   defaultBpm('DEFAULT_BPM', 'Default BPM'),
+  themeMode('THEME_MODE', 'Theme'),
   ;
 
   final String key;

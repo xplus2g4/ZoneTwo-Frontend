@@ -27,6 +27,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
   late bool _isShuffle;
   late bool _isLoop;
   late bool _isBPMSync;
+  late final theme = Theme.of(context);
 
   //TODO put these in the BLoC one day...
   late final StreamSubscription<Duration> _positionSubscription;
@@ -151,31 +152,30 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                           _musicPlayerBloc.add(const MusicPlayerStop());
                         }
                       },
-                  child: Padding(
-                      padding:
-                              const EdgeInsets.only(left: 8, right: 8),
-                              child: Column(children: [
-                                Row(
+                      child: Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 8),
+                          child: Column(children: [
+                            Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceAround,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.0),
-                                child: Image.memory(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: Image.memory(
                                       currentMusic.coverImage,
                                       width: 60,
                                       height: 45,
-                                  fit: BoxFit.cover,
-                                ),
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                  Container(
+                                  SizedBox(
                                       height: 60,
                                       width: 150,
                                       child: ScrollingText(
                                         text: currentMusic.title,
-                                        textStyle:
-                                            const TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                        textStyle: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       )),
                                   SizedBox(
                                       width: 25,
@@ -212,7 +212,7 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                                 _bpm.round().toString(),
                                                 style: TextStyle(
                                                     color: _isBPMSync
-                                                        ? Colors.white
+                                                        ? null
                                                         : Colors.grey[600]!),
                                               ),
                                               Text(
@@ -220,28 +220,28 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                                 style: TextStyle(
                                                     fontSize: 8,
                                                     color: _isBPMSync
-                                                        ? Colors.white
+                                                        ? null
                                                         : Colors.grey[600]!),
                                               )
                                             ]))
                                       ]),
                                   SizedBox(
-                                      width: 25,
-                                      height: 25,
-                                      child: IconButton(
-                                          padding: EdgeInsets.zero,
+                                    width: 25,
+                                    height: 25,
+                                    child: IconButton(
+                                        padding: EdgeInsets.zero,
                                         onPressed: _isBPMSync
                                             ? () {
-                                            setState(() {
-                                              _bpm += 1;
-                                            });
-                                            _musicPlayerBloc
-                                                .add(MusicPlayerSetBpm(_bpm));
+                                                setState(() {
+                                                  _bpm += 1;
+                                                });
+                                                _musicPlayerBloc.add(
+                                                    MusicPlayerSetBpm(_bpm));
                                               }
                                             : null,
                                         icon: Icon(Icons.add,
                                             color: _isBPMSync
-                                                ? Colors.white
+                                                ? null
                                                 : Colors.grey[600]!)),
                                   ),
                                   SizedBox(
@@ -251,15 +251,16 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                                               PlayerState.playing
                                           ? IconButton(
                                               padding: EdgeInsets.zero,
-                                    onPressed: () => _musicPlayerBloc
-                                        .add(const MusicPlayerPause()),
-                                    icon: const Icon(Icons.pause))
+                                              onPressed: () =>
+                                                  _musicPlayerBloc.add(
+                                                      const MusicPlayerPause()),
+                                              icon: const Icon(Icons.pause))
                                           : IconButton(
                                               padding: EdgeInsets.zero,
-                                    onPressed: () {
-                                      _musicPlayerBloc
-                                          .add(const MusicPlayerResume());
-                                    },
+                                              onPressed: () {
+                                                _musicPlayerBloc.add(
+                                                    const MusicPlayerResume());
+                                              },
                                               icon: const Icon(
                                                   Icons.play_arrow))),
                                 ]),
@@ -280,17 +281,18 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.only(left: 8, right: 8),
-                                    width: double.infinity,
-                                    child: ProgressBar(
-                                      progress: _audioPlayerPosition,
-                                      total: _audioPlayerDuration,
-                                      thumbRadius: 0,
-                                      timeLabelTextStyle: const TextStyle(
-                                        fontSize: 0,
-                                      ),
-                                      barHeight: 2,
-                                      baseBarColor: Colors.grey[800]!,
-                                      progressBarColor: Colors.white30,
+                                width: double.infinity,
+                                child: ProgressBar(
+                                  progress: _audioPlayerPosition,
+                                  total: _audioPlayerDuration,
+                                  thumbRadius: 0,
+                                  timeLabelTextStyle: const TextStyle(
+                                    fontSize: 0,
+                                  ),
+                                  barHeight: 2,
+                                  baseBarColor: theme.colorScheme.primary,
+                                  progressBarColor:
+                                      theme.colorScheme.inversePrimary,
                                 ),
                               ),
                             ),
