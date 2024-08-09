@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:zonetwo/utils/functions/format_datetime.dart';
 import '../entities/workout_entity.dart';
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:playlist_repository/playlist_repository.dart';
 import 'package:zonetwo/playlists_overview/playlists_overview.dart';
 import 'package:zonetwo/routes.dart';
+import 'package:zonetwo/utils/widgets/appbar_actions.dart';
 
 import '../widgets/delete_confirmation_dialog.dart';
 import '../widgets/playlist_list_tile.dart';
@@ -83,8 +84,8 @@ class _PlaylistOverviewViewState extends State<PlaylistOverviewView> {
                     icon: const Icon(Icons.close))
                 : null,
             title: const Text("All Playlists"),
-            actions: [
-              if (_isSelectionMode)
+            actions: _isSelectionMode
+                ? [
                 IconButton(
                   icon: const Icon(Icons.delete),
                   color: Theme.of(context).colorScheme.error,
@@ -106,8 +107,9 @@ class _PlaylistOverviewViewState extends State<PlaylistOverviewView> {
                             }
                           });
                         },
-                ),
-            ],
+                    )
+                  ]
+                : AppBarActions.getActions(),
           ),
           body: Builder(
             builder: (context) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zonetwo/routes.dart';
 import 'package:zonetwo/settings/settings.dart';
+import 'package:zonetwo/utils/widgets/appbar_actions.dart';
 
 import '../widgets/field_edit_option_dialog.dart';
 
@@ -21,6 +22,7 @@ class _SettingsState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
+        actions: AppBarActions.getActions(),
       ),
       body: ListView(
         children: [

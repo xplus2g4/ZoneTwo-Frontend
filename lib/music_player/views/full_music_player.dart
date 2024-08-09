@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/music_player/music_player.dart';
+import 'package:zonetwo/utils/widgets/appbar_actions.dart';
 
 class FullMusicPlayer extends StatefulWidget {
   const FullMusicPlayer({super.key});
@@ -26,7 +27,6 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
   late int _playlistIndex;
   late int _shuffledIndex;
   late bool _isShuffle;
-  late bool _isLoop;
   late bool _isBPMSync;
   late List<Color> _colors;
 
@@ -39,7 +39,6 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
     _playlistName = _musicPlayerBloc.state.playlistName;
     _bpm = _musicPlayerBloc.state.bpm;
     _isShuffle = _musicPlayerBloc.state.isShuffle;
-    _isLoop = _musicPlayerBloc.state.isLoop;
     _isBPMSync = _musicPlayerBloc.state.isBPMSync;
     _colors = [];
 
@@ -83,7 +82,6 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           previous.playlistIndex != current.playlistIndex ||
           previous.shuffledIndex != current.shuffledIndex ||
           previous.isShuffle != current.isShuffle ||
-          previous.isLoop != current.isLoop ||
           previous.isBPMSync != current.isBPMSync ||
           previous.audioPlayerState != current.audioPlayerState,
       listener: (context, state) {
@@ -91,7 +89,6 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
           _playlistIndex = state.playlistIndex;
           _shuffledIndex = state.shuffledIndex;
           _isShuffle = state.isShuffle;
-          _isLoop = state.isLoop;
           _isBPMSync = state.isBPMSync;
           _audioPlayerState = state.audioPlayerState;
         });
@@ -130,53 +127,8 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                             Navigator.of(context).pop();
                           },
                         ),
-                        backgroundColor: Colors.transparent,
-                        actions: [
-                          IconButton(
-                        icon: Icon(Icons.graphic_eq,
-                            shadows: const <Shadow>[
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                color: Colors.black45,
-                                blurRadius: 3.0,
-                              )
-                            ],
-                            color: _isBPMSync
-                                ? const Color.fromARGB(255, 0, 174, 255)
-                                : Colors.white70),
-                        onPressed: () => _musicPlayerBloc
-                            .add(const MusicPlayerToggleBPMSync()),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.loop,
-                            shadows: const <Shadow>[
-                              Shadow(
-                                offset: Offset(1.0, 1.0),
-                                color: Colors.black45,
-                                blurRadius: 3.0,
-                              )
-                            ],
-                            color: _isLoop
-                                ? const Color.fromARGB(255, 0, 174, 255)
-                                : Colors.white70),
-                        onPressed: () =>
-                            _musicPlayerBloc.add(const MusicPlayerToggleLoop()),
-                      ),
-                      IconButton(
-                              icon: Icon(Icons.shuffle,
-                                  shadows: const <Shadow>[
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      color: Colors.black45,
-                                      blurRadius: 3.0,
-                                    )
-                                  ],
-                                  color: _isShuffle
-                                      ? const Color.fromARGB(255, 0, 174, 255)
-                                      : Colors.white60),
-                              onPressed: () => _musicPlayerBloc
-                                  .add(const MusicPlayerToggleShuffle())),
-                        ],
+                    actions: AppBarActions.getActions(),
+                    backgroundColor: Colors.transparent,
                       ),
                       backgroundColor: Colors.transparent,
                       body: Builder(builder: (context) {
@@ -358,7 +310,8 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                           Stack(
                             children: [
                               Container(
-                                width: 250,
+                                // width: double.infinity,
+                                margin: const EdgeInsets.all(16),
                                 padding: const EdgeInsets.all(16),
                                 foregroundDecoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
@@ -386,20 +339,52 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                           CrossAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.max,
                                       children: [
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                            shape: const CircleBorder(),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _bpm -= 5;
+                                            });
+                                            _musicPlayerBloc
+                                                .add(MusicPlayerSetBpm(_bpm));
+                                          },
+                                          child: const Text(
+                                            "-5",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                shadows: <Shadow>[
+                                                  Shadow(
+                                                      offset: Offset(1.0, 1.0),
+                                                      blurRadius: 3.0,
+                                                      color: Colors.black),
+                                                ],
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
                                         IconButton(
                                             onPressed: _isBPMSync
                                                 ? () {
-                                              setState(() {
-                                                _bpm -= 1;
-                                              });
-                                              _musicPlayerBloc
-                                                  .add(MusicPlayerSetBpm(_bpm));
+                                                    setState(() {
+                                                      _bpm -= 1;
+                                                    });
+                                                    _musicPlayerBloc.add(
+                                                        MusicPlayerSetBpm(
+                                                            _bpm));
                                                   }
                                                 : null,
                                             icon: const Icon(Icons.remove,
-                                                color: Colors.white),
+                                              color: Colors.white,
+                                              shadows: [
+                                                Shadow(
+                                                    offset: Offset(1.0, 1.0),
+                                                    blurRadius: 3.0,
+                                                    color: Colors.black),
+                                              ],
+                                            ),
                                             iconSize: 36),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 8),
                                         BlocListener<MusicPlayerBloc,
                                                 MusicPlayerState>(
                                             listenWhen: (previous, current) =>
@@ -423,7 +408,7 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 40),
                                             )),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: 8),
                                         IconButton(
                                           onPressed: _isBPMSync
                                               ? () {
@@ -435,8 +420,38 @@ class _FullMusicPlayerState extends State<FullMusicPlayer> {
                                                 }
                                               : null,
                                           icon: const Icon(Icons.add,
-                                              color: Colors.white),
+                                            color: Colors.white,
+                                            shadows: [
+                                              Shadow(
+                                                  offset: Offset(1.0, 1.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black),
+                                            ],
+                                          ),
                                           iconSize: 36,
+                                        ),
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                              shape: const CircleBorder()),
+                                          onPressed: () {
+                                            setState(() {
+                                              _bpm += 5;
+                                            });
+                                            _musicPlayerBloc
+                                                .add(MusicPlayerSetBpm(_bpm));
+                                          },
+                                          child: const Text(
+                                            "+5",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                shadows: <Shadow>[
+                                                  Shadow(
+                                                      offset: Offset(1.0, 1.0),
+                                                      blurRadius: 3.0,
+                                                      color: Colors.black),
+                                                ],
+                                                fontWeight: FontWeight.bold),
+                                          ),
                                         )
                                       ]),
                                   const Text(
