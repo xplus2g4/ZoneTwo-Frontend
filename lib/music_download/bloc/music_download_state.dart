@@ -1,44 +1,49 @@
 part of "music_download_bloc.dart";
 
-sealed class MusicDownloadState extends Equatable {
-  const MusicDownloadState();
+class MusicDownloadProgress {
+  final String url;
+  final double progress;
+  final String? error;
+  final String? filename;
 
-  @override
-  List<Object> get props => [];
+  MusicDownloadProgress(this.url,
+      {this.progress = 0, this.error, this.filename});
+
+  MusicDownloadProgress onError(String error) {
+    return MusicDownloadProgress(url,
+        progress: progress, error: error, filename: filename);
+  }
+
+  MusicDownloadProgress updateFilename(String filename) {
+    return MusicDownloadProgress(url,
+        progress: progress, error: error, filename: filename);
+  }
+
+  MusicDownloadProgress updateProgress(double progress) {
+    return MusicDownloadProgress(url,
+        progress: progress, error: error, filename: filename);
+  }
 }
 
-final class MusicDownloadStateIdle extends MusicDownloadState {}
+class MusicDownloadState extends Equatable {
+  const MusicDownloadState(
+      {this.progress = const [], this.linkValidationError = ""});
 
-final class MusicDownloadStateLoading extends MusicDownloadState {
-  MusicDownloadStateLoading(double percentage)
-      : percentage = percentage.toStringAsFixed(2);
-
-  final String percentage;
-
-  @override
-  List<Object> get props => [percentage];
+  final List<MusicDownloadProgress> progress;
+  final String linkValidationError;
 
   @override
-  String toString() => 'MusicDownloadStateLoading { progress: $percentage%} }';
-}
+  List<Object> get props => [progress, linkValidationError];
 
-final class MusicDownloadStateSuccess extends MusicDownloadState {
-  const MusicDownloadStateSuccess(this.music);
-
-  final MusicDownloadInfo music;
-
-  @override
-  List<Object> get props => [music];
-
-  @override
-  String toString() => 'MusicDownloadStateSuccess { music: ${music.title} }';
-}
-
-final class MusicDownloadStateError extends MusicDownloadState {
-  const MusicDownloadStateError(this.error);
-
-  final String error;
-
-  @override
-  List<Object> get props => [error];
+  MusicDownloadState copyWith({
+    List<MusicDownloadProgress> Function()? progress,
+    String Function()? linkValidationError,
+  }) {
+    return MusicDownloadState(
+      progress: progress != null ? progress() : this.progress,
+      linkValidationError: linkValidationError != null
+          ? linkValidationError()
+          : this.linkValidationError,
+    );
+  }
 }

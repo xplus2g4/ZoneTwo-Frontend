@@ -27,3 +27,16 @@ final class LinkSharedEvent extends MusicDownloadEvent {
   @override
   String toString() => 'LinkSharedEvent { link: $sharedMediaFile }';
 }
+
+final class RetryDownloadEvent extends MusicDownloadEvent {
+  const RetryDownloadEvent(this.videoIdentifier);
+
+  final String videoIdentifier;
+
+  @override
+  List<Object> get props => [videoIdentifier];
+
+  @override
+  String toString() =>
+      'RetryDownloadEvent { videoIdentifier: $videoIdentifier }';
+}
