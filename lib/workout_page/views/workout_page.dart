@@ -13,6 +13,7 @@ import 'package:zonetwo/utils/functions/format_duration.dart';
 import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 import 'package:zonetwo/workout_page/bloc/workout_page_bloc.dart';
 import 'package:zonetwo/workout_page/widgets/select_playlist_bottom_sheet.dart';
+import 'package:zonetwo/workout_page/widgets/talk_test_dialog.dart';
 
 class WorkoutPageArguments {
   WorkoutPageArguments({required this.datetime});
@@ -184,7 +185,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                flex: 4,
+                flex: 3,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   child: BlocListener<WorkoutPageBloc, WorkoutPageState>(
@@ -206,7 +207,6 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                         const Text(
                             "Keep this screen on for the best workout experience",
                             style: TextStyle(
-                                color: Colors.white30,
                                 fontSize: 8,
                                 fontStyle: FontStyle.italic)),  
                         if (!_isCountdownOver)
@@ -219,12 +219,14 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                           Text(
                             formatDuration(_duration),
                             style: TextStyle(
-                                color:
-                                    _isRunning ? Colors.white : Colors.white24,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .headlineLarge!
+                                    .color!
+                                    .withOpacity(_isRunning ? 1 : 0.24),
                                 fontSize: 48,
                                 fontWeight: FontWeight.bold),
                           ),
-                        const SizedBox(height: 12),
                         IntrinsicHeight(
                             child: Row(
                                 mainAxisAlignment:
@@ -239,13 +241,6 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                             fontSize: 12,
-                                            shadows: <Shadow>[
-                                              Shadow(
-                                                offset: Offset(1.0, 1.0),
-                                                color: Colors.black45,
-                                                blurRadius: 3.0,
-                                              ),
-                                            ],
                                             fontWeight: FontWeight.bold),
                                       ),
                                       BlocListener<WorkoutPageBloc,
@@ -263,24 +258,19 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                           '${_distance.toStringAsFixed(2)}km',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                              color: _isRunning
-                                                  ? Colors.white
-                                                  : Colors.white24,
-                                              fontSize: 32,
-                                              shadows: const <Shadow>[
-                                                Shadow(
-                                                  offset: Offset(1.0, 1.0),
-                                                  color: Colors.black45,
-                                                  blurRadius: 3.0,
-                                                ),
-                                              ],
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineLarge!
+                                                  .color!
+                                                  .withOpacity(
+                                                      _isRunning ? 1 : 0.24),
+                                              fontSize: 33,
                                               fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     ],
                                   )),
                               const VerticalDivider(
-                                color: Colors.white60,
                               ),
                               Expanded(
                                   child: Column(
@@ -290,13 +280,6 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         fontSize: 12,
-                                        shadows: <Shadow>[
-                                          Shadow(
-                                            offset: Offset(1.0, 1.0),
-                                            color: Colors.black45,
-                                            blurRadius: 3.0,
-                                          ),
-                                        ],
                                         fontWeight: FontWeight.bold),
                                   ),
                                   BlocListener<WorkoutPageBloc,
@@ -312,17 +295,13 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                       _pace,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                          color: _isRunning
-                                              ? Colors.white
-                                              : Colors.white24,
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .headlineLarge!
+                                              .color!
+                                              .withOpacity(
+                                                  _isRunning ? 1 : 0.24),
                                           fontSize: 32,
-                                          shadows: const <Shadow>[
-                                            Shadow(
-                                              offset: Offset(1.0, 1.0),
-                                              color: Colors.black45,
-                                              blurRadius: 3.0,
-                                            ),
-                                          ],
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -337,7 +316,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
               Expanded(
                 flex: 7,
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.only(left: 12, right: 12),
                   child: 
                         BlocListener<MusicPlayerBloc, MusicPlayerState>(
                           listenWhen: (previous, current) =>
@@ -359,24 +338,10 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                               children: [
                                 const Text('Currently playing from ',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                            offset: Offset(1.0, 1.0),
-                                            blurRadius: 1.0,
-                                            color: Colors.black),
-                                      ],
                                       fontSize: 9,
                                     )),
                                 Text(_playlistName,
                                     style: const TextStyle(
-                                      color: Colors.white,
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                            offset: Offset(1.0, 1.0),
-                                            blurRadius: 1.0,
-                                            color: Colors.black),
-                                      ],
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold,
                                     )),
@@ -448,19 +413,122 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                             .add(MusicPlayerSeek(position));
                                       },
                                       barHeight: 8,
-                                      baseBarColor: Colors.white12,
-                                      progressBarColor: Colors.white54,
+                                      baseBarColor: Theme.of(context)
+                                          .colorScheme
+                                          .inverseSurface,
+                                      progressBarColor: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
                                     ))),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: Colors.black12),
+                              child: Column(children: [
+                                Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          shape: const CircleBorder(),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _bpm -= 5;
+                                          });
+                                          _musicPlayerBloc
+                                              .add(MusicPlayerSetBpm(_bpm));
+                                        },
+                                        child: const Text(
+                                          "-5",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _bpm -= 1;
+                                            });
+                                            _musicPlayerBloc
+                                                .add(MusicPlayerSetBpm(_bpm));
+                                          },
+                                          icon: const Icon(
+                                            Icons.remove,
+                                          ),
+                                          iconSize: 32),
+                                      BlocListener<MusicPlayerBloc,
+                                              MusicPlayerState>(
+                                          listenWhen: (previous, current) =>
+                                              previous.bpm != current.bpm,
+                                          listener: (context, state) {
+                                            setState(() {
+                                              _bpm = state.bpm;
+                                            });
+                                          },
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                _bpm.round().toString(),
+                                                style: const TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const Text("BPM",
+                                                  style:
+                                                      TextStyle(fontSize: 12)),
+                                            ],
+                                          )),
+                                      IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _bpm += 1;
+                                          });
+                                          _musicPlayerBloc
+                                              .add(MusicPlayerSetBpm(_bpm));
+                                        },
+                                        icon: const Icon(
+                                          Icons.add,
+                                        ),
+                                        iconSize: 32,
+                                      ),
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          shape: const CircleBorder(),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _bpm += 5;
+                                          });
+                                          _musicPlayerBloc
+                                              .add(MusicPlayerSetBpm(_bpm));
+                                        },
+                                        child: const Text(
+                                          "+5",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ]),
+                              ]),
+                            ),
                           ])),
                 ),
               ),
               Expanded(
-                flex: 4,
+                flex: 3,
                 child: IntrinsicHeight(
                   child: Container(
-                    padding: const EdgeInsets.only(top: 12, bottom: 12),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Expanded(
                           flex: 1,
@@ -482,13 +550,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                               children: [
                                 const Text(
                                   'Music Controls',
-                                  style: TextStyle(shadows: <Shadow>[
-                                    Shadow(
-                                      offset: Offset(1.0, 1.0),
-                                      color: Colors.black45,
-                                      blurRadius: 3.0,
-                                    )
-                                  ], fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
@@ -553,7 +615,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 9),
+                                const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
@@ -624,13 +686,7 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                             child: Column(children: [
                               const Text(
                                 'Workout Controls',
-                                style: TextStyle(shadows: <Shadow>[
-                                  Shadow(
-                                    offset: Offset(1.0, 1.0),
-                                    color: Colors.black45,
-                                    blurRadius: 3.0,
-                                  )
-                                ], fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 8),
                               Row(
@@ -688,78 +744,17 @@ class WorkoutPageViewState extends State<WorkoutPageView> {
                                     ),
                                   ]),
                               const SizedBox(height: 8),
-                              Container(
-                                width: 200,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: Colors.black12),
-                                child: Column(children: [
-                                  Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: [
-                                        IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _bpm -= 1;
-                                              });
-                                              _musicPlayerBloc
-                                                  .add(MusicPlayerSetBpm(_bpm));
-                                            },
-                                            icon: const Icon(Icons.remove,
-                                                color: Colors.white),
-                                            iconSize: 24),
-                                        BlocListener<MusicPlayerBloc,
-                                                MusicPlayerState>(
-                                            listenWhen: (previous, current) =>
-                                                previous.bpm != current.bpm,
-                                            listener: (context, state) {
-                                              setState(() {
-                                                _bpm = state.bpm;
-                                              });
-                                            },
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  _bpm.round().toString(),
-                                                  style: const TextStyle(
-                                                      color: Colors.white,
-                                                      shadows: <Shadow>[
-                                                        Shadow(
-                                                          offset:
-                                                              Offset(1.0, 1.0),
-                                                          blurRadius: 3.0,
-                                                          color: Colors.black,
-                                                        ),
-                                                      ],
-                                                      fontSize: 24,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                                const Text("BPM",
-                                                    style: TextStyle(
-                                                        color: Colors.white54,
-                                                        fontSize: 12)),
-                                              ],
-                                            )),
-                                        IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _bpm += 1;
-                                            });
-                                            _musicPlayerBloc
-                                                .add(MusicPlayerSetBpm(_bpm));
-                                          },
-                                          icon: const Icon(Icons.add,
-                                              color: Colors.white),
-                                          iconSize: 24,
-                                        )
-                                      ]),
-                                ]),
-                              ),
+                              TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                      backgroundColor: Colors.blue),
+                                  onPressed: () => showDialog(context: context, builder: (context) => const TalkTestDialog()),
+                                  icon: const Icon(
+                                    Icons.mic,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text("Talk Test",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16))),
                             ])),
                       ],
                     ),

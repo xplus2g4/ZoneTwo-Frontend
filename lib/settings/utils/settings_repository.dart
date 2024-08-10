@@ -23,11 +23,11 @@ class SettingsRepository {
   }
 
   static Future<bool> setDefaultBpm(int value) {
-    return _preferences.setInt(SettingsEnum.defaultBpm.key, value);
+    return _preferences.setInt(SettingsEnum.manualBpm.key, value);
   }
 
   static int get defaultBpm {
-    return _preferences.getInt(SettingsEnum.defaultBpm.key) ?? 150;
+    return _preferences.getInt(SettingsEnum.manualBpm.key) ?? 150;
   }
 
   static Future<bool> setThemeMode(ThemeMode mode) {
@@ -37,5 +37,9 @@ class SettingsRepository {
 
   static ValueNotifier<ThemeMode> get themeMode {
     return _themeMode;
+  }
+
+  static Future<bool> requestPermission(bool value) {
+    return _preferences.setBool(SettingsEnum.requestPermission.key, value);
   }
 }
