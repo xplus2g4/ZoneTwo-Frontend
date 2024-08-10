@@ -8,6 +8,7 @@ import 'package:zonetwo/workout_detail/views/workout_detail_page.dart';
 import 'package:zonetwo/workout_overview/views/workout_overview_page.dart';
 import 'package:zonetwo/workout_page/views/workout_page.dart';
 
+import 'music_download/music_download.dart';
 import 'settings/settings.dart';
 
 //tabs keys
@@ -19,6 +20,8 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>();
 
 //pages paths
 const musicOverviewPath = '/music_overview';
+const musicDownloadPath = 'music_download';
+
 const playlistOverviewPath = '/playlist_overview';
 const playlistDetailPath = 'player_detail';
 const workoutOverviewPath = '/workout_overview';
@@ -46,12 +49,21 @@ final router = GoRouter(
           navigatorKey: _musicOverviewNavigatorKey,
           routes: [
             GoRoute(
-              path: musicOverviewPath,
-              pageBuilder: (context, state) => NoTransitionPage(
-                key: state.pageKey,
-                child: const MusicOverviewPage(),
-              ),
-            ),
+                path: musicOverviewPath,
+                pageBuilder: (context, state) => NoTransitionPage(
+                      key: state.pageKey,
+                      child: const MusicOverviewPage(),
+                    ),
+                routes: [
+                  GoRoute(
+                    name: musicDownloadPath,
+                    path: musicDownloadPath,
+                    pageBuilder: (context, state) => NoTransitionPage(
+                      key: state.pageKey,
+                      child: MusicDownloadPage(),
+                    ),
+                  ),
+                ]),
           ],
         ),
         StatefulShellBranch(

@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:download_repository/download_repository.dart';
-import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:music_repository/music_repository.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -11,9 +11,10 @@ part 'music_download_state.dart';
 class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
   MusicDownloadBloc(
       {required this.downloadRepository, required this.musicRepository})
-      : super(MusicDownloadStateIdle()) {
-    on<DownloadClicked>(_onDownloadClicked, transformer: droppable());
-    on<LinkSharedEvent>(_onLinkSharedEvent, transformer: droppable());
+      : super(const MusicDownloadState()) {
+    on<DownloadClicked>(_onDownloadClicked);
+    on<LinkSharedEvent>(_onLinkSharedEvent);
+    on<RetryDownloadEvent>(_onRetryDownloadEvent);
   }
 
   final DownloadRepository downloadRepository;
@@ -31,43 +32,77 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
     return null;
   }
 
-  Future<void> _onDownloadClicked(
-    DownloadClicked event,
-    Emitter<MusicDownloadState> emit,
-  ) async {
-    if (event.link.isEmpty) {
-      emit(const MusicDownloadStateError('link is empty'));
-      return;
-    }
-    final videoIdentifier = validateLink(event.link);
-    if (videoIdentifier == null) {
-      emit(const MusicDownloadStateError('invalid link'));
-      return;
-    }
+  ValueChanged<String> _onFilenameConfirmed(
+      Emitter<MusicDownloadState> emit, String videoIdentifier) {
+    return (String filename) {
+      emit(state.copyWith(
+        progress: () => state.progress
+            .map((p) =>
+                p.url == videoIdentifier ? p.updateFilename(filename) : p)
+            .toList(),
+      ));
+    };
+  }
 
+  Future<void> _downloadMusic(
+    Emitter<MusicDownloadState> emit,
+    String videoIdentifier,
+  ) async {
     final downloadLink = 'https://www.youtube.com/watch?v=$videoIdentifier';
-    emit(MusicDownloadStateLoading(0));
 
     try {
       final musicDownloadInfo = await downloadRepository.downloadByYoutubeLink(
         downloadLink,
         progressCallback: (actualBytes, int totalBytes) {
-          emit(MusicDownloadStateLoading((actualBytes / totalBytes * 100)));
+          emit(state.copyWith(
+            progress: () => state.progress
+                .map((p) => p.url == videoIdentifier
+                    ? p.updateProgress(actualBytes / totalBytes)
+                    : p)
+                .toList(),
+          ));
         },
+        onFilenameCallback: _onFilenameConfirmed(emit, videoIdentifier),
       );
       await musicRepository.addMusicData(MusicData.newData(
           title: musicDownloadInfo.title,
           savePath: musicDownloadInfo.savePath,
           bpm: musicDownloadInfo.bpm,
           coverImage: musicDownloadInfo.coverImage));
-      emit(MusicDownloadStateSuccess(musicDownloadInfo));
+      // TODO: show snackbar
+      // emit(MusicDownloadStateSuccess(musicDownloadInfo));
     } catch (error) {
-      emit(
-        error is ApiError
-            ? MusicDownloadStateError(error.message)
-            : const MusicDownloadStateError('something went wrong'),
-      );
+      final errorMessage =
+          error is ApiError ? error.message : 'something went wrong';
+      emit(state.copyWith(
+        progress: () => state.progress
+            .map((p) => p.url == videoIdentifier ? p.onError(errorMessage) : p)
+            .toList(),
+      ));
     }
+  }
+
+  Future<void> _onDownloadClicked(
+    DownloadClicked event,
+    Emitter<MusicDownloadState> emit,
+  ) async {
+    if (event.link.isEmpty) {
+      emit(state.copyWith(linkValidationError: () => 'link cannot be empty'));
+      return;
+    }
+    final videoIdentifier = validateLink(event.link);
+    if (videoIdentifier == null) {
+      emit(state.copyWith(linkValidationError: () => 'invalid link'));
+      return;
+    }
+
+    emit(state.copyWith(
+      linkValidationError: () => '',
+      progress: () =>
+          [MusicDownloadProgress(videoIdentifier), ...state.progress],
+    ));
+
+    await _downloadMusic(emit, videoIdentifier);
   }
 
   Future<void> _onLinkSharedEvent(
@@ -76,29 +111,33 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
   ) async {
     final videoIdentifier = validateLink(event.sharedMediaFile.path);
     if (videoIdentifier == null) {
-      emit(const MusicDownloadStateError('invalid link'));
+      emit(state.copyWith(linkValidationError: () => 'invalid link'));
       return;
     }
 
-    final downloadLink = 'https://www.youtube.com/watch?v=$videoIdentifier';
-    emit(MusicDownloadStateLoading(0));
+    emit(state.copyWith(
+      linkValidationError: () => '',
+      progress: () =>
+          [MusicDownloadProgress(videoIdentifier), ...state.progress],
+    ));
 
-    try {
-      final musicDownloadInfo = await downloadRepository.downloadByYoutubeLink(
-        downloadLink,
-      );
-      await musicRepository.addMusicData(MusicData.newData(
-          title: musicDownloadInfo.title,
-          savePath: musicDownloadInfo.savePath,
-          bpm: musicDownloadInfo.bpm,
-          coverImage: musicDownloadInfo.coverImage));
-      emit(MusicDownloadStateSuccess(musicDownloadInfo));
-    } catch (error) {
-      emit(
-        error is ApiError
-            ? MusicDownloadStateError(error.message)
-            : const MusicDownloadStateError('something went wrong'),
-      );
-    }
+    await _downloadMusic(emit, videoIdentifier);
+  }
+
+  Future<void> _onRetryDownloadEvent(
+    RetryDownloadEvent event,
+    Emitter<MusicDownloadState> emit,
+  ) async {
+    emit(state.copyWith(
+      progress: () => state.progress
+          .map((p) => p.url == event.videoIdentifier
+              ? MusicDownloadProgress(
+                  event.videoIdentifier,
+                  filename: p.filename,
+                )
+              : p)
+          .toList(),
+    ));
+    await _downloadMusic(emit, event.videoIdentifier);
   }
 }

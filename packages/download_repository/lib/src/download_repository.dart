@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:download_repository/download_repository.dart';
+import 'package:flutter/foundation.dart';
 
 class DownloadRepository {
   DownloadRepository({String? saveFolder})
@@ -10,7 +11,9 @@ class DownloadRepository {
   final DownloadClient _client;
 
   Future<MusicDownloadInfo> downloadByYoutubeLink(String link,
-      {ProgressCallback? progressCallback}) async {
-    return await _client.downloadByYoutubeLink(link, progressCallback);
+      {ProgressCallback? progressCallback,
+      ValueChanged<String>? onFilenameCallback}) async {
+    return await _client.downloadByYoutubeLink(
+        link, progressCallback, onFilenameCallback);
   }
 }

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:zonetwo/routes.dart';
 
 import '../bloc/music_download_bloc.dart';
 
@@ -30,8 +32,8 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
       for (var media in sharedMedia) {
         _musicDownloadBloc.add(LinkSharedEvent(media));
       }
-    }, onError: (err) {
-    });
+      context.pushNamed(musicDownloadPath);
+    }, onError: (err) {});
 
     // For sharing images coming from outside the app while the app is closed
     ReceiveSharingIntent.instance
@@ -40,6 +42,7 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
       for (var media in sharedMedia) {
         _musicDownloadBloc.add(LinkSharedEvent(media));
       }
+      context.pushNamed(musicDownloadPath);
     });
   }
 
@@ -52,27 +55,17 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<MusicDownloadBloc, MusicDownloadState>(
-        listenWhen: (previous, current) =>
-            previous.runtimeType != current.runtimeType,
-        listener: (context, state) {
-          final message = _getSnackerbarMessage(state);
-          if (message != null) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar
-              ..showSnackBar(SnackBar(
-                content: Text(message),
-              ));
-          }
-        },
-        child: widget.child);
-  }
-
-  String? _getSnackerbarMessage(MusicDownloadState state) {
-    return switch (state) {
-      MusicDownloadStateSuccess() => "Downloaded!",
-      MusicDownloadStateLoading() => "Downloading...",
-      MusicDownloadStateError() => state.error,
-      _ => null,
-    };
+      listenWhen: (previous, current) =>
+          previous.progress.length != current.progress.length,
+      listener: (context, state) {
+        const message = "downloading...";
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar
+          ..showSnackBar(const SnackBar(
+            content: Text(message),
+          ));
+      },
+      child: widget.child,
+    );
   }
 }

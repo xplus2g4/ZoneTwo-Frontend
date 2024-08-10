@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:download_repository/download_repository.dart';
+import 'package:flutter/material.dart';
 import 'package:id3tag/id3tag.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +23,7 @@ class DownloadClient {
   Future<MusicDownloadInfo> downloadByYoutubeLink(
     String link,
     ProgressCallback? progressCallback,
+    ValueChanged<String>? onFilenameCallback,
   ) async {
     final saveFolder =
         this.saveFolder ?? (await getApplicationCacheDirectory()).path;
@@ -38,6 +40,7 @@ class DownloadClient {
             throw ApiError(message: "Filename not found in response");
           }
           filename = rawFilename;
+          onFilenameCallback?.call(filename);
 
           return p.join(saveFolder, filename);
         },
