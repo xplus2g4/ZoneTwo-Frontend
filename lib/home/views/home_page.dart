@@ -41,18 +41,22 @@ class _HomePageState extends State<HomePage> {
           selectedIndex: _selectedIndex,
           destinations: const [
             NavigationDestination(
+              key: ValueKey('music_tab'),
               icon: Icon(Icons.music_note),
               label: 'Music',
             ),
             NavigationDestination(
+              key: ValueKey('playlist_tab'),
               icon: Icon(Icons.library_music),
               label: 'Playlists',
             ),
             NavigationDestination(
+              key: ValueKey('workout_tab'),
               icon: Icon(Icons.directions_run),
               label: 'Workouts',
             ),
             NavigationDestination(
+              key: ValueKey('settings_tab'),
               icon: Icon(Icons.settings),
               label: 'Settings',
             ),

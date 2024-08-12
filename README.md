@@ -121,6 +121,10 @@ Furthermore, the presentation layer manages the lifecycle of UI components, ensu
 
 By encapsulating these responsibilities, the presentation layer ensures a responsive and interactive user interface while maintaining a clean separation between UI and business logic.
 
+## Testing
+
+`flutter test integration_test --dart-define download_api_endpoint=http://10.0.2.2:7111 --dart-define google_maps_api=abc`
+
 ## DevOps & Project Management
 
 - Linter
@@ -129,7 +133,6 @@ By encapsulating these responsibilities, the presentation layer ensures a respon
 - Github Actions
 - Secrets
 - Git Workflow
-- Automated testing?
 
 ## Tech Stack
 
