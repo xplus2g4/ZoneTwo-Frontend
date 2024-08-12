@@ -123,7 +123,7 @@ By encapsulating these responsibilities, the presentation layer ensures a respon
 
 ## Testing
 
-`flutter test integration_test --dart-define download_api_endpoint=http://10.0.2.2:7111 --dart-define google_maps_api=abc`
+`flutter test integration_test/music_download_page_test.dart -d emulator --dart-define downloader_api_endpoint=http://10.0.2.2:7771 --dart-define google_maps_api=abc`
 
 ## DevOps & Project Management
 
