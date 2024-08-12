@@ -82,13 +82,10 @@ class DownloadClient {
     try {
       final parser = ID3TagReader.path(filePath);
       final metadata = parser.readTagSync();
-      print("parsed ${metadata.frames}");
       final num bpm =
           num.parse(metadata.frameWithName("TBPM")!.toDictionary()["value"]);
       final Uint8List image =
           Uint8List.fromList(metadata.pictures.first.imageData);
-
-      print("parsed $bpm");
 
       return MusicMetadata(image: image, bpm: bpm);
     } catch (e) {
