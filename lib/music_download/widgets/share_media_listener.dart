@@ -32,7 +32,6 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
       for (var media in sharedMedia) {
         _musicDownloadBloc.add(LinkSharedEvent(media));
       }
-      context.pushNamed(musicDownloadPath);
     }, onError: (err) {});
 
     // For sharing images coming from outside the app while the app is closed
@@ -42,7 +41,6 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
       for (var media in sharedMedia) {
         _musicDownloadBloc.add(LinkSharedEvent(media));
       }
-      context.pushNamed(musicDownloadPath);
     });
   }
 
@@ -58,6 +56,9 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
       listenWhen: (previous, current) =>
           previous.progress.length != current.progress.length,
       listener: (context, state) {
+        if (GoRouterState.of(context).name != musicDownloadPath) {
+          context.pushNamed(musicDownloadPath);
+        }
         const message = "downloading...";
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar

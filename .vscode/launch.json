@@ -1,6 +1,16 @@
 {
   "configurations": [
     {
+      "name": "Flutter: Run all Tests",
+      "type": "dart",
+      "request": "launch",
+      "program": "integration_test/",
+      "toolArgs": [
+        "--dart-define", "downloader_api_endpoint=http://10.0.2.2:7771",
+        "--dart-define", "google_maps_api=<FILL_IT_UP>",
+      ]
+    },
+    {
       "name": "Android 1",
       "request": "launch",
       "type": "dart",
