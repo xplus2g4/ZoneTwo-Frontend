@@ -22,7 +22,7 @@ class MusicListTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-        key: Key('todoListTile_${music.id}'),
+        key: ValueKey('todoListTile_${music.id}'),
         child: InkWell(
             onTap: onTap,
             onLongPress: onLongPress,

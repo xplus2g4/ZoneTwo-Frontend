@@ -28,7 +28,8 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         body: Scaffold(
           body: widget.child,
-          bottomNavigationBar: const FloatingMusicPlayer(),
+          bottomNavigationBar:
+              const FloatingMusicPlayer(key: ValueKey('floating_music_player')),
         ),
         bottomNavigationBar: NavigationBar(
           onDestinationSelected: (index) {

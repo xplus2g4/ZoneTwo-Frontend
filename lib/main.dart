@@ -28,11 +28,11 @@ Future<void> main() async {
     }
   });
 
-  bool? isBatteryOptimizationDisabled =
-      await DisableBatteryOptimization.isBatteryOptimizationDisabled;
-  if (isBatteryOptimizationDisabled == false) {
-    DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
-  }
+  await DisableBatteryOptimization.isBatteryOptimizationDisabled.then((value) {
+    if (value == null || !value) {
+      DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+    }
+  });
 
   bootstrap(database: database, downloadDirectory: appDirectory);
 }

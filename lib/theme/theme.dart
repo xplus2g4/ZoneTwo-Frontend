@@ -7,6 +7,12 @@ class FlutterZoneTwoTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFFA0EA95),
       ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(
+            color: Colors.black, fontSize: 48, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(
+            color: Colors.black, fontSize: 36, fontWeight: FontWeight.bold),
+      ),
       snackBarTheme: const SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
       ),
@@ -21,6 +27,12 @@ class FlutterZoneTwoTheme {
       colorScheme: ColorScheme.fromSeed(
         brightness: Brightness.dark,
         seedColor: const Color(0xFFA0EA95),
+      ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(
+            color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(
+            color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
       ),
       snackBarTheme: const SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

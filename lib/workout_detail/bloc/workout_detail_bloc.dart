@@ -1,7 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:workout_repository/workout_repository.dart';
-import 'package:zonetwo/music_overview/entities/music_entity.dart';
 import 'package:zonetwo/workout_overview/entities/workout_entity.dart';
 import 'package:zonetwo/workout_overview/entities/workout_point.dart';
 

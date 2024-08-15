@@ -55,6 +55,7 @@ dependencies:
   stream_transform: ^2.0.0
   vibration: ^1.9.0
   wakelock_plus: ^1.2.7
+  word_generator: ^0.4.4
 
   database:
     path: packages/database

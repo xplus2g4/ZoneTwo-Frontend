@@ -8,6 +8,7 @@ import 'package:workout_repository/workout_repository.dart';
 import 'package:zonetwo/music_overview/bloc/music_overview_bloc.dart';
 import 'package:zonetwo/playlists_overview/widgets/delete_confirmation_dialog.dart';
 import 'package:zonetwo/routes.dart';
+import 'package:zonetwo/utils/widgets/appbar_actions.dart';
 import 'package:zonetwo/workout_detail/views/workout_detail_page.dart';
 import 'package:zonetwo/workout_overview/entities/workout_entity.dart';
 import 'package:zonetwo/workout_overview/widgets/start_workout_button.dart';
@@ -62,6 +63,7 @@ class WorkoutOverviewView extends StatefulWidget {
 }
 
 class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
+  late final WorkoutOverviewBloc _workoutOverviewBloc;
   bool _isSelectionMode = false;
   Set<String> _selectedWorkouts = {};
 
@@ -93,6 +95,7 @@ class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
   @override
   void initState() {
     super.initState();
+    _workoutOverviewBloc = context.read<WorkoutOverviewBloc>();
   }
   
   @override
@@ -107,31 +110,32 @@ class WorkoutOverviewViewState extends State<WorkoutOverviewView> {
                     icon: const Icon(Icons.close))
                 : null,
             title: const Text("Workout History"),
-            actions: [
-              if (_isSelectionMode)
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  color: Theme.of(context).colorScheme.error,
-                  disabledColor: Theme.of(context).disabledColor,
-                  onPressed: _selectedWorkouts.isEmpty
-                      ? null
-                      : () {
-                          showDialog(
-                            context: context,
-                            builder: (context) =>
-                                const DeleteConfirmationDialog(),
-                          ).then((value) {
-                            if (value == true) {
-                              context.read<WorkoutOverviewBloc>().add(
+            actions: _isSelectionMode
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      color: Theme.of(context).colorScheme.error,
+                      disabledColor: Theme.of(context).disabledColor,
+                      onPressed: _selectedWorkouts.isEmpty
+                          ? null
+                          : () {
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const DeleteConfirmationDialog(),
+                              ).then((value) {
+                                if (value == true) {
+                                  _workoutOverviewBloc.add(
                                     WorkoutOverviewWorkoutsDeleted(
                                         _selectedWorkouts.toList()),
                                   );
-                              _exitSelectionMode();
-                            }
-                          });
-                        },
-                ),
-            ],
+                                  _exitSelectionMode();
+                                }
+                              });
+                            },
+                    ),
+                  ]
+                : AppBarActions.getActions(),
           ),
           floatingActionButton: const StartWorkoutButton(),
           body: Builder(builder: (context) {

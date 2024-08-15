@@ -59,7 +59,7 @@ class _ShareMediaListenerState extends State<ShareMediaListener> {
         if (GoRouterState.of(context).name != musicDownloadPath) {
           context.pushNamed(musicDownloadPath);
         }
-        const message = "downloading...";
+        const message = "Downloading...";
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar
           ..showSnackBar(const SnackBar(
