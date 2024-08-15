@@ -56,5 +56,15 @@ void main() {
 
       expect(find.text("Small short test video.mp3"), findsOneWidget);
     });
+    testWidgets("download invalid music link", (tester) async {
+      await tester.pumpWidget(await fakeApp());
+      await tester.enterText(
+        find.byType(TextField),
+        'abc',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      expect(find.text("invalid link"), findsOneWidget);
+    });
   });
 }
