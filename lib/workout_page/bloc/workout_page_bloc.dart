@@ -69,30 +69,29 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
     var serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await Location().requestService();
-      if (!serviceEnabled) {
-        add(const WorkoutPageCountdownStart());
-        return;
+    }
+
+    if (serviceEnabled) {
+      var permission = await Geolocator.checkPermission();
+      if (!(permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always)) {
+        permission = await Geolocator.requestPermission();
       }
-    }
 
-    var permission = await Geolocator.checkPermission();
-    if (!(permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always)) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (serviceEnabled &&
-        (permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always)) {
-      _activateLocation();
+      if (serviceEnabled &&
+          (permission == LocationPermission.whileInUse ||
+              permission == LocationPermission.always)) {
+        _activateLocation();
+      }
     }
 
     _canActivateLocationTimer =
         Timer.periodic(const Duration(seconds: 1), (timer) async {
-      final canActivateLocation = await Geolocator.isLocationServiceEnabled() &&
-          (await Geolocator.checkPermission() ==
-                  LocationPermission.whileInUse ||
-              await Geolocator.checkPermission() == LocationPermission.always);
+      final permission = await Geolocator.checkPermission();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final canActivateLocation = (permission == LocationPermission.always ||
+              permission == LocationPermission.whileInUse) &&
+          serviceEnabled;
       if (canActivateLocation) {
         _activateLocation();
       } else {
@@ -233,7 +232,9 @@ class WorkoutPageBloc extends Bloc<WorkoutPageEvent, WorkoutPageState> {
   ) async {
     state.stopwatch.stop();
     state.stopwatch.reset();
-    _workoutTimer.cancel();
+    if (state.isCountdownOver) {
+      _workoutTimer.cancel();
+    }
     _countdownTimer.cancel();
     _canActivateLocationTimer.cancel();
     _terminateLocation();

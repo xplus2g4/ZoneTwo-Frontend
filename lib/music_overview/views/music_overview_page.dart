@@ -162,6 +162,8 @@ class MusicOverviewViewState extends State<MusicOverviewView> {
                   itemBuilder: (context, index) {
                     final currentMusic = state.music[index];
                     return MusicListTile(
+                      key: ValueKey(
+                          'overview_music_list_tile_${currentMusic.title}'),
                       music: currentMusic,
                       isSelectionMode: state.isSelectionMode,
                       isSelected: state.selected.contains(currentMusic.id),

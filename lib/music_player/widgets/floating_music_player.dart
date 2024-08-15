@@ -92,11 +92,10 @@ class FloatingMusicPlayerState extends State<FloatingMusicPlayer> {
 
   @override
   void dispose() {
+    super.dispose();
     _positionSubscription.cancel();
     _durationSubscription.cancel();
     _playerStateSubscription.cancel();
-
-    super.dispose();
   }
 
   @override
