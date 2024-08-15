@@ -82,6 +82,8 @@ packages/
 
 The project uses Business Logic Component (BLoC) architecture, which is commonly used in flutter. This architecture contain 3 layers: Presentation, Domain and Data Layers.
 
+# [!architecture_diagram](/docs/architecture_diagram.png)
+
 ### Data Layer
 
 The data layer, located in the `packages/repository` folders, is responsible for retrieving and manipulating data from various sources. This layer is divided into two main parts:
@@ -99,7 +101,7 @@ As the lowest level of the application, the data layer interacts directly with d
 
 The domain layer, located in the `bloc` and `entities` folder within the feature folders, is responsible for application state management, which is very similar to [redux](https://redux.js.org/tutorials/essentials/part-1-overview-concepts).
 
-_Insert a data flow image here, use the redux one_
+# [!redux_workflow](/docs/redux_workflow.png)
 
 In this layer, the business logic component (BloC) listens to input (events) from the presentation layer, extracts the payload of the event, process the data, and responds the presentation layer with the new states produced.
 
@@ -107,7 +109,7 @@ The domain layer also provides entity definitions to facilitate the complex obje
 
 On a special note, BLoCs within the domain layer are indepdendent and do not listen the states of one another. This rule is enforced to avoid the creation of tightly coupled BLoCs which is difficult to maintain.
 
-_Insert a diagram to illustrate bloc-to-bloc communication_
+# [!bloc_interactions](/docs/bloc_interactions.png)
 
 In the situation where a bloc needs to respond to another bloc, the communication will be done in either the presentation layer or the data layer.
 
@@ -134,21 +136,8 @@ By encapsulating these responsibilities, the presentation layer ensures a respon
 - Secrets
 - Git Workflow
 
-## Tech Stack
-
-## Feature Design Details
-
-## Technical & Design Decisions Q&A
-
-> Why Flutter?
-
-> Why BLoC?
-
-> Streams vs Future?
-
-> Why Dark Mode Only?
-
 ### References
 
 - https://bloclibrary.dev/architecture/#business-logic-layer
 - https://reactivex.io/intro.html
+- https://redux.js.org/tutorials/essentials/part-1-overview-concepts
