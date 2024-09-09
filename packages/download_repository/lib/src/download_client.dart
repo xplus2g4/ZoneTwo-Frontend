@@ -13,9 +13,10 @@ import 'package:path_provider/path_provider.dart';
 import 'models/music_metadata.dart';
 
 class DownloadClient {
-  DownloadClient({this.saveFolder})
+  DownloadClient({this.saveFolder, required String baseUrl})
       : httpClient = Dio(BaseOptions(
-            baseUrl: const String.fromEnvironment("downloader_api_endpoint")));
+          baseUrl: baseUrl,
+        ));
 
   final Dio httpClient;
   final String? saveFolder;

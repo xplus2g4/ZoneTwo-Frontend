@@ -60,7 +60,7 @@ final router = GoRouter(
                     path: musicDownloadPath,
                     pageBuilder: (context, state) => NoTransitionPage(
                       key: state.pageKey,
-                      child: MusicDownloadPage(),
+                      child: const MusicDownloadPage(),
                     ),
                   ),
                 ]),

@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:zonetwo/music_player/music_player.dart';
 import 'package:zonetwo/routes.dart';
 import 'package:zonetwo/settings/settings.dart';
+import 'package:zonetwo/settings/widgets/backend_ip_dialog.dart';
 import 'package:zonetwo/settings/widgets/manual_input_bpm_dialog.dart';
 import 'package:zonetwo/utils/widgets/appbar_actions.dart';
 
@@ -21,6 +22,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsState extends State<SettingsPage> {
   late var defaultBpm = SettingsRepository.defaultBpm;
   late var themeMode = SettingsRepository.themeMode.value;
+  late var backendApi = SettingsRepository.backendApi.value;
   late final MusicPlayerBloc _musicPlayerBloc;
   late num _bpm;
 
@@ -83,6 +85,29 @@ class _SettingsState extends State<SettingsPage> {
                   SettingsRepository.setThemeMode(value).then((_) {
                     setState(() {
                       themeMode = value;
+                    });
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error.toString())));
+                  });
+                }
+              });
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.api),
+            trailing: Text(backendApi),
+            title: Text(SettingsEnum.backendApi.label),
+            subtitle: const Text("Restart app to apply changes"),
+            onTap: () {
+              showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => BackendIpDialog(backendApi),
+              ).then((value) {
+                if (value != null) {
+                  SettingsRepository.setBackendApi(value).then((_) {
+                    setState(() {
+                      backendApi = value;
                     });
                   }).catchError((error) {
                     ScaffoldMessenger.of(context).showSnackBar(
