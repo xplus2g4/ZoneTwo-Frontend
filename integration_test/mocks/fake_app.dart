@@ -22,7 +22,8 @@ Future<Widget> fakeApp() async {
 
   final musicRepository = MusicRepository(database);
   final playlistRepository = PlaylistRepository(database);
-  final downloadRepository = DownloadRepository();
+  final downloadRepository =
+      DownloadRepository(baseUrl: SettingsRepository.backendApi.value);
   final workoutRepository = WorkoutRepository(database);
 
   return App(

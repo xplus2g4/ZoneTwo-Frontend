@@ -42,4 +42,13 @@ class SettingsRepository {
   static Future<bool> requestPermission(bool value) {
     return _preferences.setBool(SettingsEnum.requestPermission.key, value);
   }
+
+  static ValueNotifier<String> get backendApi {
+    return ValueNotifier(_preferences.getString(SettingsEnum.backendApi.key) ??
+        const String.fromEnvironment("downloader_api_endpoint"));
+  }
+
+  static Future<bool> setBackendApi(String value) {
+    return _preferences.setString(SettingsEnum.backendApi.key, value);
+  }
 }

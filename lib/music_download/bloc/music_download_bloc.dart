@@ -69,8 +69,6 @@ class MusicDownloadBloc extends Bloc<MusicDownloadEvent, MusicDownloadState> {
           savePath: musicDownloadInfo.savePath,
           bpm: musicDownloadInfo.bpm,
           coverImage: musicDownloadInfo.coverImage));
-      // TODO: show snackbar
-      // emit(MusicDownloadStateSuccess(musicDownloadInfo));
     } catch (error) {
       final errorMessage =
           error is ApiError ? error.message : 'something went wrong';
